@@ -1,6 +1,5 @@
 // Injectable adapter: keep the network and explicit wallet approval invariant.
-import { setupTransactions } from './testnet-setup.mjs';
-export function meteorAdapter(client, actionCreators, publicKeyFrom) {
+export function meteorAdapter(client, actionCreators) {
   const target = { blockchain: 'near', network: 'testnet' };
   async function current() {
     const account = await client.getAccount(target);

@@ -2,7 +2,6 @@ import { setupWalletSelector } from '@near-wallet-selector/core';
 import { setupMyNearWallet } from '@near-wallet-selector/my-near-wallet';
 import { MeteorConnect, webpage_local_storage } from '@meteorwallet/sdk';
 import { actionCreators } from 'meteor-transactions';
-import { PublicKey } from 'meteor-crypto';
 import { meteorAdapter } from '../src/meteor-wallet.mjs';
 import { setupTransactions } from '../src/testnet-setup.mjs';
 import { prepareTestnet, treasuryAction, checkTransaction } from '../src/treasury-policy.mjs';
@@ -30,24 +29,6 @@ $('setup-preview').onclick = () => action(async () => {
 });
 $('setup-sign').onclick = () => action(async () => {
   throw Error('Account setup disabled: Meteor blocks Full Access Key requests.');
-  if (!setupPlan || wallet !== meteor) throw Error('Preview setup with Meteor selected first');
-  await account(); const prepared = setupTransactions(setupPlan, actor);
-  const marker = `flashfirm:setup:${prepared.plan.contractId}`;
-  if (localStorage.getItem(marker)) throw Error('A setup request was already attempted. Inspect account creation before retrying; no automatic replay.');
-  const network = await nearRpc('status', []); if (network.chain_id !== 'testnet') throw Error('Wrong RPC network');
-  const buyerAccount = await nearRpc('query', { request_type: 'view_account', finality: 'final', account_id: actor });
-  const storage = BigInt(buyerAccount.storage_usage) * 10n ** 19n;
-  const locked = BigInt(buyerAccount.locked), liquid = BigInt(buyerAccount.amount) - (storage > locked ? storage - locked : 0n);
-  if (liquid < 305n * 10n ** 22n) throw Error('Setup needs at least 3.05 liquid testnet NEAR: 3 for accounts and a 0.05 gas reserve. Only 3 NEAR is transferred.');
-  for (const tx of prepared.transactions) {
-    try { await nearRpc('query', { request_type: 'view_account', finality: 'final', account_id: tx.receiverId }); }
-    catch (e) { if (e.rpcCause === 'UNKNOWN_ACCOUNT') continue; throw e; }
-    throw Error('A setup account already exists. Stop and inspect partial completion.');
-  }
-  localStorage.setItem(marker, JSON.stringify({ attemptedAt: new Date().toISOString(), accounts: setupPlan.accounts.map(a => a.accountId) }));
-  const outcomes = await wallet.signSetup(setupPlan);
-  $('setup-outcome').textContent = JSON.stringify({ status: 'WALLET_RETURNED_NOT_YET_VERIFIED', hashes: Array.isArray(outcomes) ? outcomes.map(o => o.transaction?.hash) : [], next: 'Verify each account and key before deploying. Partial batches are not retried automatically.' }, null, 2);
-  message('Setup returned. This is not deployment or settlement proof; verify all six accounts next.');
 });
 async function selectWallet() {
   invalidate(); actor = ''; $('wallet-account').textContent = 'Disconnected';
@@ -129,7 +110,7 @@ try {
   selector = await setupWalletSelector({ network: 'testnet', modules: [setupMyNearWallet({ walletUrl: 'https://testnet.mynearwallet.com' })], debug: false });
   const client = new MeteorConnect();
   await client.initialize({ storage: webpage_local_storage, mobileBridge: { enabled: false } });
-  meteor = meteorAdapter(client, actionCreators, key => PublicKey.from(key));
+  meteor = meteorAdapter(client, actionCreators);
   $('wallet-provider').value = sessionStorage.getItem('flashfirm:wallet-provider') === 'my-near-wallet' ? 'my-near-wallet' : 'meteor';
   await selectWallet();
   message(pending ? 'A previous signing intent is retained. Verify its hash before attempting another transaction.' : 'Ready. Connect a testnet wallet and load your public treasury configuration.');

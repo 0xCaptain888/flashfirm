@@ -1,0 +1,30 @@
+# Independent testnet deployment
+
+Meteor rejected the historical six-child Full Access Key request. Do not retry it, route it through another wallet, or use account recovery to evade the restriction. The old plan remains archived and does not establish a deployed treasury.
+
+The independent route uses a new developer-owned testnet account created by the official NEAR CLI faucet service. It does not import the buyer's key or spend from `0xcaptain888.testnet`. The buyer can later approve ordinary contract calls in Meteor.
+
+Official references checked on 2026-11-02:
+
+- https://github.com/near/near-cli-rs/blob/main/README.md
+- https://github.com/near/near-cli-rs/blob/main/docs/GUIDE.en.md#sponsor-by-faucet-service---i-would-like-the-faucet-service-sponsor-to-cover-the-cost-of-creating-an-account-testnet-only-for-now
+
+## User-owned account creation
+
+The official CLI can run with `npx near-cli-rs`. For a dedicated account (check availability first), the documented flow is:
+
+```sh
+npx near-cli-rs account create-account sponsor-by-faucet-service flashfirm-dev-0xcaptain888.testnet autogenerate-new-keypair save-to-keychain network-config testnet create
+```
+
+This command is a prepared handoff, not an executed creation or proof of funding. Keep the generated key in the local system keychain. Do not paste keys, seed phrases or keychain exports into chat, Pages, logs or GitHub. Faucet availability and limits are external conditions; never substitute a buyer-funded transaction automatically.
+
+## Deployment gates
+
+1. Verify the new account, network, public key and balance at a final RPC block.
+2. Prepare a new public role/configuration manifest. Preserve the archived six-account plan and its keys unchanged. Do not silently reuse its parent-account assumptions.
+3. Preview any developer-account spending and account controls before provisioning the treasury and test roles. Same-operator roles remain explicitly development-only.
+4. Deploy the tested Wasm and initialize atomically, signed by the treasury itself. The contract requires predecessor == current account for initialization. Never deploy over the buyer account or an existing contract.
+5. Verify code hash and all pinned configuration, then test an explicitly approved small buyer deposit, quorum, appeal timing and fixed-recipient payout. Check final execution receipts and transfer callbacks.
+
+No public deployment, independent review, or actual testnet settlement is claimed until these gates have evidence. The existing local deployment script expects the archived child-account layout and must not be pointed at a different account without updating and testing its configuration checks.
