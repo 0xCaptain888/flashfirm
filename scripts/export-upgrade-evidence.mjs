@@ -7,6 +7,9 @@ if(job.state!=='SUCCEEDED'||job.receiptValid!==true||!verifyLiveReceipt(job.rece
 const exceptions=await read('.runtime/testnet-exceptions/evidence-public.json');
 if(exceptions.status!=='VERIFIED'||exceptions.scenarios.some(s=>s.network!=='testnet'||s.phase!=='Closed'||s.userWalletFundsUsed!==false))throw Error('Exception evidence incomplete');
 const report={version:'flashfirm-integration-upgrade/1',checkedAt:new Date().toISOString(),ai:{jobId:job.jobId,state:job.state,attempts:job.attempts,receiptValid:true,qualityState:job.receipt.payload.state,settlementExecuted:false,cumulativeCalls:budget.calls.length,conservativeReservedCny:budget.reservedFen/100,capCny:20,actualInvoiceCost:null,issues:job.receipt.payload.workers.flatMap(w=>w.checks.issues.map(issue=>({worker:w.worker.id,issue})))},testnet:{scenarios:exceptions.scenarios.map(s=>({scenario:s.scenario,contractId:s.contractId,phase:s.phase,amountYocto:s.amountYocto,transactions:s.transactions})),failedTransferRecovery:'SANDBOX_ONLY',independentOperators:false},reviewerBinding:{implemented:true,independentOperatorsOnboarded:0},tee:{verifierImplemented:true,hardwareVerified:false,workloadDeployed:false},intents:{previewAdapter:true,liveQuoteVerified:false,paymentVerified:false,blocker:'Official endpoint returned HTTP 521'},backend:{managedModeHttpTested:true,encryptedBackupRestoreTested:true,containerBuilt:false,publicDeployment:false}};
+const container = await read('evidence/managed-container.json');
+report.backend.containerBuilt = container.status === 'CI_BUILD_AND_SMOKE_TEST_PASSED';
+report.backend.containerVerification = container;
 await writeFile(new URL('evidence/queued-live-receipt.json',root),JSON.stringify(job.receipt,null,2));
 await writeFile(new URL('evidence/testnet-exceptions.json',root),JSON.stringify(exceptions,null,2));
 await writeFile(new URL('evidence/integration-upgrade.json',root),JSON.stringify(report,null,2));

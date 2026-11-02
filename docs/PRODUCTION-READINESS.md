@@ -4,7 +4,7 @@
 
 The Dockerfile and `deploy/compose.yaml` package a single-host service with a persistent volume, a non-root process, a read-only root filesystem, health checks and graceful worker draining. Public mode requires an exact HTTPS origin and persistent runtime path; it rejects mismatched Host/Origin and unauthenticated workspace requests. Mutable fixture endpoints are disabled in public mode. A TLS reverse proxy must preserve the original Host and expose only the intended domain. Do not expose port 43180 directly.
 
-GitHub Pages remains a static evidence site. No cloud account is currently available; the container has not been built on this computer (Docker unavailable) or deployed. Real Node HTTP tests exercise managed-mode controls. Current bearer tokens are owner-scoped, expiring and revocable, but organization login/SSO, operator provisioning, notification delivery and external uptime monitoring still require deployment decisions.
+GitHub Pages remains a static evidence site. No cloud account is currently available. Although Docker is unavailable locally, GitHub Actions successfully built the container and verified startup, health and denied unauthenticated/wrong-Host requests at commit `329ec46` (run `41463440742`, job `125338033260`). It is not deployed to a public backend. Current bearer tokens are owner-scoped, expiring and revocable, but organization login/SSO, operator provisioning, notification delivery and external uptime monitoring still require deployment decisions.
 
 Example deployment after provisioning a suitable host:
 

@@ -1,0 +1,10 @@
+{
+  "status": "CI_BUILD_AND_SMOKE_TEST_PASSED",
+  "testedCommit": "329ec46d0965f06361cbba9d7d40a85347ae7eef",
+  "workflowRun": 41463440742,
+  "jobId": 125338033260,
+  "completedAt": "2026-11-02T14:36:22Z",
+  "checks": ["docker build", "non-root read-only container startup", "health endpoint", "unauthenticated workspace rejection", "wrong Host rejection"],
+  "publicBackendDeployed": false,
+  "cloudAccountAvailable": false
+}
