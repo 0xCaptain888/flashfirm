@@ -1,5 +1,7 @@
 # Testnet handoff
 
+**2026-11-02 correction: the wallet-funded Full Access Key setup described below is blocked by Meteor policy and has been disabled in both the UI and adapter. These setup instructions are historical, not a working deployment recommendation. Do not retry the batch, reset its attempt marker or use another transport to bypass the block. Inspect all six account IDs before deciding how to proceed. A separate, user-controlled deployment path remains unimplemented.**
+
 ## Wallet-funded deployment setup
 
 The Meteor connection for `0xcaptain888.testnet` was observed successfully in Chrome on 2026-11-02. This is wallet connectivity evidence, not deployment/payment evidence.

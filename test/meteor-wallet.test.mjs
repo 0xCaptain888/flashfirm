@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { meteorAdapter } from '../src/meteor-wallet.mjs';
+test('blocked full-access setup never opens a wallet request', async () => {
+  let called = false;
+  const wallet = meteorAdapter({ createAction() { called = true; } }, {});
+  await assert.rejects(wallet.signSetup({}), /blocks Full Access/);
+  assert.equal(called, false);
+});
 function fixture(network = 'testnet') {
   const requests = [];
   const client = {

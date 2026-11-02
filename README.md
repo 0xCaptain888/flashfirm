@@ -1,5 +1,7 @@
 # FlashFirm
 
+Wallet setup update: Meteor blocks Full Access Key creation by ordinary dApps. The six-account creation flow is disabled; deployment is still pending. Existing setup descriptions are historical and must not be retried. Meteor connection and ordinary contract-call support remain available.
+
 Temporary agent teams. Reproducible contribution allocation. Proof before payout.
 
 [Public demo](https://0xCaptain888.github.io/flashfirm/) · [Recorded real AI analysis](https://0xCaptain888.github.io/flashfirm/live.html) · [Testnet wallet console](https://0xCaptain888.github.io/flashfirm/treasury.html) · [Delivery status](docs/DELIVERY-STATUS.md)

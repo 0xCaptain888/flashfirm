@@ -14,7 +14,7 @@ let wallet, selector, meteor, plan, preview, actor = '', pending = null, busy = 
 let setupPlan;
 try { pending = JSON.parse(sessionStorage.getItem(pendingKey) || 'null'); } catch { sessionStorage.removeItem(pendingKey); }
 function invalidate() { preview = null; $('preview').hidden = true; }
-function controls() { $('connect').disabled = busy || !wallet; $('wallet-provider').disabled = busy; $('disconnect').disabled = busy || !wallet; for (const id of ['setup-file', 'setup-preview', 'setup-sign', 'inspect', 'prepare', 'sign', 'verify-transaction', 'operation', 'treasury-config', 'action-input']) $(id).disabled = busy; }
+function controls() { $('connect').disabled = busy || !wallet; $('wallet-provider').disabled = busy; $('disconnect').disabled = busy || !wallet; for (const id of ['setup-file', 'setup-preview', 'inspect', 'prepare', 'sign', 'verify-transaction', 'operation', 'treasury-config', 'action-input']) $(id).disabled = busy; $('setup-sign').disabled = true; $('setup-sign').textContent = 'Unavailable: Meteor blocks Full Access Keys'; }
 $('setup-file').onchange = () => { setupPlan = null; $('setup-confirm').hidden = true; };
 $('setup-json').oninput = () => { setupPlan = null; $('setup-confirm').hidden = true; };
 $('setup-preview').onclick = () => action(async () => {
@@ -26,9 +26,10 @@ $('setup-preview').onclick = () => action(async () => {
   setupPlan = input;
   $('setup-details').textContent = JSON.stringify({ controller: actor, totalTestnetNear: '3', gasAdditional: true, localDevelopmentKeys: true, independentReviewers: false, transactions: prepared.transactions }, null, 2);
   $('setup-confirm').hidden = false;
-  message('Review six NEW subaccounts, 3 testnet NEAR total plus gas, and their full-access development keys. Your parent account receives no new key.');
+  message('Read-only historical setup plan. Meteor blocks Full Access Key requests. Do not fund or retry this setup; check account state first.');
 });
 $('setup-sign').onclick = () => action(async () => {
+  throw Error('Account setup disabled: Meteor blocks Full Access Key requests.');
   if (!setupPlan || wallet !== meteor) throw Error('Preview setup with Meteor selected first');
   await account(); const prepared = setupTransactions(setupPlan, actor);
   const marker = `flashfirm:setup:${prepared.plan.contractId}`;

@@ -11,15 +11,8 @@ export function meteorAdapter(client, actionCreators, publicKeyFrom) {
     return (await client.createAction({ id, input })).promptForExecution();
   }
   return {
-    async signSetup(setup) {
-      const a = await current();
-      if (!a) throw Error('Connect Meteor on testnet first');
-      const { transactions } = setupTransactions(setup, a.identifier.accountId);
-      return run('near::sign_transactions', { target: a.identifier, useFunctionCallKey: false,
-        transactions: transactions.map(tx => ({ receiverId: tx.receiverId, actions: [
-          actionCreators.createAccount(), actionCreators.transfer(BigInt(tx.actions[1].params.deposit)),
-          actionCreators.addKey(publicKeyFrom(tx.actions[2].params.publicKey), actionCreators.fullAccessKey())
-        ] })) });
+    async signSetup() {
+      throw Error('Meteor blocks Full Access Key requests. Account setup is disabled; do not retry this flow.');
     },
     async getAccounts() { const a = await current(); return a ? [{ accountId: a.identifier.accountId }] : []; },
     async signIn() { await run('near::sign_in', { target }); await current(); },
