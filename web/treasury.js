@@ -1,7 +1,7 @@
 import { setupWalletSelector } from '@near-wallet-selector/core';
 import { setupMyNearWallet } from '@near-wallet-selector/my-near-wallet';
 import { MeteorConnect, webpage_local_storage } from '@meteorwallet/sdk';
-import { actionCreators } from '@near-js/transactions';
+import { actionCreators } from 'meteor-transactions';
 import { meteorAdapter } from '../src/meteor-wallet.mjs';
 import { prepareTestnet, treasuryAction, checkTransaction } from '../src/treasury-policy.mjs';
 import { inspectTreasury, nearRpc } from '../src/near-rpc.mjs';
