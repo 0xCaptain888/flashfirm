@@ -1,0 +1,48 @@
+{
+  "status": "PASS",
+  "network": "LOCAL_SANDBOX",
+  "wasmSha256": "2147e4577299113f0f892cfeb11f40806bad61bd1155004c1e28b05347d3d24e",
+  "checks": [
+    "Buyer-only one-time funding",
+    "Exact allocation, pinned reviewers and 2-of-3 quorum enforced",
+    "Real sandbox transfer callback closes accounting; duplicate claim rejected",
+    "Missing sandbox recipient causes real transfer failure; callback restores credit and sponsored retry succeeds",
+    "Unapproved expired task returns full funding through buyer claim"
+  ],
+  "closedStatus": {
+    "buyer": "buyer.test.near",
+    "evaluators": [
+      "review-a.test.near",
+      "review-b.test.near",
+      "review-c.test.near"
+    ],
+    "recipients": [
+      "buyer.test.near",
+      "worker.test.near"
+    ],
+    "task_root": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "plan_hash": "5b3c4c42de28b6e509e5b5d4102e1f8d5eff1363a2ea2a71540868086f0a3968",
+    "evidence_root": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "deadline_ns": "1793615532826000000",
+    "phase": "Closed",
+    "funded_yocto": "10000",
+    "credits_yocto": [
+      "0",
+      "0"
+    ],
+    "pending_yocto": [
+      "0",
+      "0"
+    ],
+    "paid_yocto": "10000",
+    "approvals": [
+      true,
+      true,
+      false
+    ]
+  },
+  "testnetDeployed": false,
+  "failedTransferCallbackTested": true,
+  "faultInjection": "Deleted and recreated a disposable local sandbox recipient; no user account involved",
+  "at": "2026-11-02T09:33:21.545Z"
+}

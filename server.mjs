@@ -5,11 +5,30 @@ import path from 'node:path';
 import { Engine, createTask, agents } from './src/engine.mjs';
 import { verifyReceipt, rubric } from './src/protocol.mjs';
 import { verifyLiveReceipt } from './src/live.mjs';
+import { openStore } from './src/local-store.mjs';
+import { commitPolicy, assessReview, resolveAppeal, selectSignedOffers } from './src/governance.mjs';
+import { scoreContributions } from './src/contribution.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const runtime = path.join(root, '.runtime');
 await mkdir(runtime, { recursive: true, mode: 0o700 });
 await chmod(runtime, 0o700);
+const store=await openStore(runtime);
+const limiter=new Map();
+let workerBusy=false;
+const worker=setInterval(()=>{
+  if(workerBusy)return;workerBusy=true;
+  try {
+    const job=store.claim();if(!job)return;
+    try {
+      const receipt=job.input.receipt;
+      const result=receipt?.payload?.version==='flashfirm-live/0.1'?verifyLiveReceipt(receipt):verifyReceipt(receipt);
+      store.finish(job.id,job.lease,result);
+    }catch{store.finish(job.id,job.lease,{error:'Receipt verification failed'},true);}
+  }catch(error){console.error('Background verifier failed:',error.code??'INTERNAL_ERROR');}
+  finally{workerBusy=false;}
+},500);
+worker.unref();
 const readJson = async name => { try { return JSON.parse(await readFile(path.join(runtime, name), 'utf8')); } catch (e) { if (e.code === 'ENOENT') return null; throw e; } };
 const save = async (name, value) => { const target = path.join(runtime, name); await writeFile(target + '.tmp', JSON.stringify(value), { mode: 0o600 }); await rename(target + '.tmp', target); };
 const engine = new Engine(await readJson('identities.json'));
@@ -29,6 +48,49 @@ const server = http.createServer(async (req, res) => {
     if (![`127.0.0.1:${port}`, `localhost:${port}`].includes(host)) return send(res, 403, { error: 'Local host required' });
     if (req.headers.origin && ![`http://127.0.0.1:${port}`, `http://localhost:${port}`].includes(req.headers.origin)) return send(res, 403, { error: 'Origin denied' });
     const url = new URL(req.url, `http://${host}`);
+    if(url.pathname.startsWith('/api/workspaces')) {
+      const token=req.headers.authorization?.replace(/^Bearer /,'');
+      const owner=store.authenticate(token);
+      if(!owner)return send(res,401,{error:'Valid operator token required'});
+      const now=Date.now(),window=limiter.get(owner);
+      if(!window||window.until<=now)limiter.set(owner,{until:now+60000,count:1});
+      else if(++window.count>120){res.setHeader('Retry-After','60');return send(res,429,{error:'Request limit reached'});}
+      if(req.method==='POST'&&url.pathname==='/api/workspaces/evaluate'){
+        const input=await body(req);let result;
+        switch(input.operation){
+          case 'COMMIT_POLICY':result=commitPolicy(input.policy);break;
+          case 'REVIEW':result=assessReview(input.commitment,input.resultRoot,input.decisions,Date.now());break;
+          case 'APPEAL':result=resolveAppeal(input.commitment,input.resultRoot,input.decisions,input.appeal,input.resolution,Date.now());break;
+          case 'SELECT_TEAM':result=selectSignedOffers({...input.tender,now:Date.now()});break;
+          case 'SCORE':result=scoreContributions(input.scoring);break;
+          default:throw Error('Unknown evaluation operation');
+        }
+        return send(res,200,{result,settlementExecuted:false,scope:'Stateless validation of supplied commitments; no external identity certification or transaction authorization'});
+      }
+      if(url.pathname==='/api/workspaces') {
+        if(req.method==='GET')return send(res,200,store.list(owner));
+        if(req.method==='POST')return send(res,201,store.create(owner,(await body(req)).title));
+      }
+      const m=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)(?:\/(events|documents|jobs|dissolve|review|decision|appeal|resolution)(?:\/([a-f0-9-]+))?)?$/);
+      if(m) {
+        const [,id,action,item]=m;
+        if(req.method==='GET'&&!action)return send(res,200,store.access(owner,id));
+        if(action==='review'&&!item){
+          if(req.method==='GET')return send(res,200,store.review(owner,id));
+          if(req.method==='POST'){const input=await body(req);return send(res,201,store.pinReview(owner,id,input.policy,input.resultRoot));}
+        }
+        if(req.method==='POST'&&!item&&['decision','appeal','resolution'].includes(action)){
+          const input=await body(req),operation={decision:'decide',appeal:'appeal',resolution:'resolve'}[action];return send(res,200,store[operation](owner,id,input));
+        }
+        if(req.method==='GET'&&action==='events')return send(res,200,store.events(owner,id));
+        if(req.method==='POST'&&action==='documents'&&!item)return send(res,201,{id:store.put(owner,id,await body(req))});
+        if(req.method==='GET'&&action==='documents'&&item)return send(res,200,store.get(owner,id,item));
+        if(req.method==='POST'&&action==='jobs'&&!item)return send(res,202,store.enqueue(owner,id,req.headers['idempotency-key'],await body(req)));
+        if(req.method==='GET'&&action==='jobs'&&item)return send(res,200,store.job(owner,id,item));
+        if(req.method==='POST'&&action==='dissolve'&&!item)return send(res,200,store.dissolve(owner,id));
+      }
+      return send(res,404,{error:'Unknown workspace operation'});
+    }
     if(req.method==='GET'&&['/api/live-review','/api/live-receipt'].includes(url.pathname)){
       const receipt=await readJson('live-review.json');
       if(!receipt)return send(res,404,{error:'No completed live model review yet'});
@@ -59,6 +121,8 @@ const server = http.createServer(async (req, res) => {
       if (req.method === 'GET' && !match[2]) return send(res, 200, t);
     }
     const staticFiles = { '/': ['index.html','text/html'], '/live.html':['live.html','text/html'], '/live.js':['live.js','text/javascript'], '/app.js': ['app.js','text/javascript'], '/style.css': ['style.css','text/css'], '/favicon.svg': ['favicon.svg','image/svg+xml'] };
+    staticFiles['/workspace.html']=['workspace.html','text/html'];
+    staticFiles['/workspace.js']=['workspace.js','text/javascript'];
     if (req.method === 'GET' && staticFiles[url.pathname]) {
       const [file, type] = staticFiles[url.pathname]; res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' }); return res.end(await readFile(path.join(root, 'web', file)));
     }

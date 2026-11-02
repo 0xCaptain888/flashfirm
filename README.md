@@ -2,18 +2,34 @@
 
 Temporary agent teams. Reproducible contribution allocation. Proof before payout.
 
+[Public demo](https://0xCaptain888.github.io/flashfirm/) · [Recorded real AI analysis](https://0xCaptain888.github.io/flashfirm/live.html) · [Operations and SDK](docs/OPERATIONS.md)
+
+Development status: real model output + local durable backend + sandbox-tested NEAR treasury. **Not a production service; testnet settlement, independent operators, TEE and Intents are not live.**
+
 ## Run locally
 
-Requires Node.js 22 or newer. No package installation or API key required.
+Requires Node.js >=22.13 (24 recommended). The local application and JavaScript tests need no package installation or API key. Sandbox tests require `npm ci`.
 
 ```sh
 npm start
 # http://127.0.0.1:43180
 npm test
 npm run verify -- /absolute/path/to/downloaded-receipt.json
+npm run operator:token
+# http://127.0.0.1:43180/workspace.html
 ```
 
 ## What works in v0.1.0
+
+### Durable workspace and signed coordination
+
+- SQLite transactions, ownership isolation, expiring/revocable operator tokens, request limits and durable activity history.
+- AES-256-GCM encrypted private documents and queued inputs; local key storage, not TEE.
+- Background receipt verification with idempotency keys, restart recovery, worker leases and stale-completion rejection.
+- Workspace closure cancels unfinished work and removes active documents; it does not certify backup erasure or blockchain refunds.
+- Signed capability/price offers, complete-team selection under budget, pinned review keys, challenge/appeal verification, and signed-rubric counterfactual coverage scoring. These validation modules are not yet a live multi-operator marketplace or on-chain appeal mechanism.
+- Integration client in `src/client.mjs` and API instructions in [Operations](docs/OPERATIONS.md).
+- 34 JavaScript tests, 9 pure Rust accounting tests, HTTP integration checks and actual local NEAR sandbox execution, including failed-transfer recovery. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
 
 ### Live-model development milestone
 
@@ -31,25 +47,25 @@ Exact source quotation checks and the live receipt verifier pass. This is not a 
 - Deterministic leave-one-out **fixture rubric coverage** scoring, not exact Shapley values or a claim of objective fairness.
 - Integer largest-remainder allocation, 2% fee, zero payout for failed work, full refund for an empty eligible set.
 - Standalone Node verifier recomputing signatures, graph, sources, coverage and payouts.
-- NEAR treasury contract source with fixed recipients, two-of-three approval, pull claims, failed-transfer recovery and expired-task refunds. Nine pure Rust accounting tests cover the core; deployment and SDK sandbox validation remain pending.
+- Compiled NEAR treasury with fixed recipients, two-of-three approval, pull claims, callback recovery and expired-task refunds. Actual sandbox execution validates authorization, quorum, payout and refund. No testnet deployment is claimed.
 
 ## Honest boundaries
 
 The main console is a **local fixture implementation**, not a production autonomous company or payment service. Its documents are synthetic and outputs deterministic. The separate live report uses real public source retrieval and model calls as described above. All fixture worker keys are owned by one coordinator; the live report is signed by one coordinator. Embedded keys establish consistency, not independent identity. The verifier is a separate entry point using the same reference implementation; it is not an independent security audit.
 
-The last state is `PLANNED`, not `SETTLED` or `DISSOLVED`. No wallet is connected, no real funds are held or transferred, no NEAR contract is deployed, no TEE exists, and no independent evaluator quorum is configured. The evidence checker receives no performance payout in this initial coverage model. Availability pay, sealed bids, live AI scoring, trusted identity registry and provider economics remain unfinished.
+The sample console's last state is `PLANNED`. Private workspace closure is local data/work management, not on-chain dissolution. No user wallet is connected and no mainnet/testnet funds have moved; the treasury has only run on a disposable local sandbox. No TEE or independent operator quorum is configured. The evidence checker receives no performance payout in the initial fixture model. Availability pay, sealed bids, live model-based counterfactual scoring, trusted identity onboarding and provider economics remain unfinished.
 
 ## Next integration milestones
 
 1. NEAR testnet treasury: buyer deposit, trusted evaluator quorum, unique settlement nonce, replay protection, budget enforcement, refund and revocation.
-2. Real specialist adapters with validated structured outputs and source retrieval; pin task rubric before funding.
-3. Bind an external evaluator allowlist to each task; refuse self-appointed evaluator keys.
+2. Generalize the recorded real specialist flow into authorized persistent model jobs; pin task rubric before funding.
+3. Onboard independent evaluators and bind durable review/appeal commitments to settlement.
 4. Confidential execution with independently checked attestation; keep synthetic inputs until then.
 5. Live settlement verification and, afterward, Intents payout delivery.
 
 ## GitHub Pages deployment
 
-`npm run build:pages` creates `dist/`: an explicitly labeled, read-only build-time sample with a signed receipt. Asset URLs are relative so repository Pages paths work. `.github/workflows/pages.yml` builds and deploys it after GitHub Pages is enabled with GitHub Actions as the source. The workflow does not require any model credential. This is not the interactive Node backend and does not invoke paid models.
+`npm run build:pages` creates `dist/`: an explicitly labeled read-only sample, recorded real AI report, signed receipts and sandbox evidence. Asset URLs are relative. `.github/workflows/pages.yml` builds and deploys with GitHub Actions. The workflow requires no model credential. Pages does not host the authenticated Node backend and viewing the site invokes no paid models. Only approved public-source artifacts under `evidence/` are copied; `.runtime/` is never published.
 
 The user-selected gateway is `https://api.apikey.fan/v1`. Authenticated discovery and real JSON completions have passed using `deepseek-flash`. The private local policy records the approved CNY 20 development cap. `.env.example` documents settings, while current CLI execution reads ignored `.runtime` JSON configuration. Paid model calls are available only through the CLI; viewing the report never incurs model calls. Do not upload the runtime directory or credentials to GitHub.
 

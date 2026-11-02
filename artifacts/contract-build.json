@@ -1,0 +1,8 @@
+{
+  "version": "flashfirm-build/1",
+  "sha256": "2147e4577299113f0f892cfeb11f40806bad61bd1155004c1e28b05347d3d24e",
+  "bytes": 145460,
+  "network": "UNDEPLOYED",
+  "instructionSet": "WASM_MVP",
+  "builtAt": "2026-11-02T09:31:58.774Z"
+}

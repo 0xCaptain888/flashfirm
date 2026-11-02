@@ -1,0 +1,18 @@
+import { readFile,writeFile,mkdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { verifyLiveReceipt } from '../src/live.mjs';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const raw=await readFile(root+'.runtime/live-review.json','utf8'),receipt=JSON.parse(raw);
+if(!verifyLiveReceipt(receipt).valid)throw Error('Invalid live receipt');
+if(receipt.payload.project.revision!=='c64a1edb67b6e3f4a15cca8909c9482ad33a02b0'||receipt.payload.sources.some(s=>!s.url.startsWith('https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/')))throw Error('Source publication not allowlisted');
+if(/PRIVATE KEY|sk-[A-Za-z0-9]{12}|ghp_[A-Za-z0-9]{12}|"(?:apiKey|privateKey|secret|authorization)"\s*:/i.test(raw))throw Error('Sensitive material detected');
+const secrets=JSON.parse(await readFile(root+'.runtime/provider-secret.json','utf8'));
+for(const [k,v] of Object.entries(secrets))if(/key|secret|token/i.test(k)&&typeof v==='string'&&v.length>12&&raw.includes(v))throw Error('Credential appears in public output');
+const budget=JSON.parse(await readFile(root+'.runtime/provider-budget.json','utf8'));
+await mkdir(root+'evidence',{recursive:true});
+await writeFile(root+'evidence/live-receipt.json',JSON.stringify(receipt,null,2));
+await writeFile(root+'evidence/live-review.json',JSON.stringify({receipt,verification:verifyLiveReceipt(receipt),budget:{capCny:20,reservedCny:budget.reservedFen/100,calls:budget.calls.length,actualInvoiceCost:null}},null,2));
+const sandbox=JSON.parse(await readFile(root+'.runtime/sandbox-evidence.json','utf8'));
+if(sandbox.status!=='PASS'||sandbox.network!=='LOCAL_SANDBOX')throw Error('Missing sandbox success evidence');
+await writeFile(root+'evidence/sandbox.json',JSON.stringify(sandbox,null,2));
+console.log(JSON.stringify({status:'EXPORTED',scope:'Public OpenZeppelin sources, signed model outputs and local sandbox evidence',privateFilesCopied:false}));

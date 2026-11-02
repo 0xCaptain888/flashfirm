@@ -1,6 +1,27 @@
 {
-  "name": "flashfirm", "version": "0.1.0", "private": true, "type": "module",
+  "name": "flashfirm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
   "description": "Evidence-first temporary agent teams with reproducible contribution allocation",
-  "engines": {"node": ">=22"},
-  "scripts": {"start": "node server.mjs", "dev": "node --watch server.mjs", "test": "node --test", "test:http": "node scripts/check-http.mjs", "build:pages": "node scripts/build-pages.mjs", "model:probe": "node scripts/probe-models.mjs", "live:run": "node scripts/run-live.mjs", "verify": "node scripts/verify.mjs"}
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test",
+    "test:http": "node scripts/check-http.mjs",
+    "test:sandbox": "node scripts/check-sandbox.mjs",
+    "build:contract": "node scripts/build-contract.mjs",
+    "operator:token": "node scripts/operator-token.mjs",
+    "build:pages": "node scripts/build-pages.mjs",
+    "model:probe": "node scripts/probe-models.mjs",
+    "live:run": "node scripts/run-live.mjs",
+    "verify": "node scripts/verify.mjs"
+  },
+  "overrides": { "tar": "7.5.22" },
+  "devDependencies": {
+    "near-workspaces": "5.0.0"
+  }
 }

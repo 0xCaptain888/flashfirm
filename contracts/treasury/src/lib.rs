@@ -171,11 +171,16 @@ impl Treasury {
     }
     pub fn claim(&mut self) -> Promise {
         let recipient = env::predecessor_account_id();
+        self.claim_for(recipient)
+    }
+    // Anyone may pay the gas for a fixed recipient. The caller cannot redirect
+    // funds or change the approved amount; this also supports recovery retries.
+    pub fn claim_for(&mut self, recipient: AccountId) -> Promise {
         let index = self
             .recipients
             .iter()
             .position(|a| a == &recipient)
-            .expect("Recipient only");
+            .expect("Recipient not allowlisted");
         let mut l = self.ledger();
         let amount = l.claim(index).expect("Claim unavailable");
         self.apply(l);

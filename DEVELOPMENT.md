@@ -43,3 +43,10 @@ Earlier entries below are retained as chronological checkpoints; this section su
 3. Add a real worker provider to the same evidence schema, retain immutable task/source manifests, and measure citation failures on non-synthetic tasks.
 4. Implement independent evaluator approval and bind its identity set before funding.
 5. Add wallet UI and verified payout receipts only after real transaction/state evidence is available.
+# 2026-11-02 · Durable workspace and sandbox milestone
+
+Current status supersedes earlier historical checkpoints above. Added SQLite-backed authenticated workspaces, encrypted documents/job inputs, leased idempotent background receipt verification, local dissolution and event history, signed provider offers, durable reviewer/appeal validation, and reviewer-attested counterfactual coverage scoring. These are local development capabilities, not a live independent provider market.
+
+NEAR Wasm compilation succeeded after using a sparse registry override. Raw modern Rust Wasm failed sandbox deserialization; lowering to MVP using Binaryen fixed loading. The contract now passes actual sandbox authorization/quorum/payout/refund tests. No user funds or testnet accounts were used. Real AI outputs remain the existing five successful model calls; no extra model spending in this milestone.
+
+Public Pages build now includes approved public-source live evidence, separately labeled fixture evidence, and sandbox results. Private operator browser login was blocked by automatic approval review; API integration tests passed, but authenticated browser interaction is not claimed verified.

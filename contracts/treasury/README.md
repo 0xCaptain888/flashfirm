@@ -1,6 +1,6 @@
 # Single-task NEAR treasury — development implementation
 
-Native NEAR only. Not deployed, audited, or connected to the sample USD ledger.
+Native NEAR only. Compiled and tested in a local NEAR sandbox. Not deployed to testnet/mainnet, audited, or connected to the sample USD ledger.
 
 Each contract holds one task. Initialize from its own deployment account with a fixed buyer, three distinct evaluators, fixed recipient allowlist (including buyer for refunds), task root and deadline. Evaluators cannot be buyer or recipients. The buyer funds once and proposes one exact-conservation allocation. Two distinct evaluator accounts must approve the same plan hash. Recipients pull their credits. Transfers are marked pending before scheduling; failed transfer callbacks restore credit; successful callbacks increment paid balance. The accounting phase closes only after every funded yoctoNEAR has been paid.
 
@@ -12,8 +12,10 @@ Storage and gas must be funded separately before buyer funding. Keep contract ac
 # No network needed for accounting-model tests:
 rustc --edition 2021 --test src/ledger.rs -o /tmp/flashfirm-ledger-tests
 /tmp/flashfirm-ledger-tests
-# Full NEAR Wasm build (downloads near-sdk and transitive dependencies):
-cargo build --target wasm32-unknown-unknown --release
+# From the repository root (Rust wasm target + recent Binaryen required):
+npm run build:contract
+npm ci
+npm run test:sandbox
 ```
 
-Remaining validation: NEAR sandbox tests of account authorization, asynchronous failed transfer callbacks, storage reserve sufficiency, deployment initialization and real testnet settlement. Pure model tests do not prove the wrapper is safe.
+The build lowers compiler-generated instructions to WebAssembly MVP before sandbox execution; raw output from newer Rust toolchains was rejected by the sandbox. `artifacts/contract-build.json` pins the tested Wasm hash. Sandbox tests cover initialization authority, buyer funding, immutable exact allocations, wrong/duplicate approvals, private callbacks, successful payouts and expired unapproved-task refunds. See `evidence/sandbox.json` for the precise recorded coverage. Remaining: independent security review, production reserve policy, testnet wallet/deployment/payment proof, and binding off-chain appeal rules to contract execution. The current contract does not enforce the JavaScript appeal protocol.

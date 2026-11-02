@@ -39,4 +39,4 @@ npm run verify -- .runtime/live-review.json
 
 Open `/live.html` on the local server to inspect the recorded live result. Viewing or refreshing it does not call a model. A report that is CHALLENGED must remain challenged; receipt integrity can still pass because it checks faithful records, not approval of their conclusions.
 
-GitHub Pages remains a fixture-only static preview. Real outputs have not been pushed or published. Live NEAR settlement, TEE and cross-chain transfers are not implemented by this adapter.
+GitHub Pages now includes recorded real outputs from the approved public OpenZeppelin case, alongside the clearly labeled fixture. `scripts/export-public-evidence.mjs` validates signatures, checks the public-source allowlist and scans for credentials before export. It never copies the private runtime directory. Live NEAR testnet settlement, TEE and cross-chain transfers are not implemented by this adapter.
