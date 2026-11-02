@@ -1,6 +1,6 @@
 {
   "version": "flashfirm-integration-upgrade/1",
-  "checkedAt": "2026-11-02T14:38:45.744Z",
+  "checkedAt": "2026-11-02T18:54:31.906Z",
   "ai": {
     "jobId": "58e5b285-a017-44b2-a42d-7b0e49ef42f2",
     "state": "SUCCEEDED",
@@ -46,8 +46,34 @@
         }
       }
     ],
-    "failedTransferRecovery": "SANDBOX_ONLY",
-    "independentOperators": false
+    "failedTransferRecovery": "TESTNET_VERIFIED",
+    "independentOperators": false,
+    "recovery": {
+      "status": "VERIFIED",
+      "network": "testnet",
+      "contractId": "recovery-v1.flashfirm-dev-0xcaptain888.testnet",
+      "recipient": "recovery-payee.flashfirm-dev-0xcaptain888.testnet",
+      "amountYocto": "1000000000000000000000",
+      "transactions": {
+        "create": "9vfaYhd4Xwd5Jy7e7RUVkvicKT4u7tEDUPi9QSUYwpCc",
+        "deploy": "29yqZdJxNLtjNMgrUon876M4ChQoePNBi9UXeSezjgtj",
+        "fund": "DnMSFmFRELgUF3Ayfy5rbFajHQWZE5T3vmNsqoVgUqw7",
+        "propose": "G7pKD1N1rbjCrdRgtdjGeehYvAsyV9cSZiZtX5uoh6D9",
+        "approveA": "F4A1ZLw83MUPQAcTeGK6WRK7XhrsqRHLaPLLaVLbhM6Z",
+        "approveB": "BksJGFhsY8UR8dXRNaKCRL2ahwGFFy3dJVtfNFbtfKwe",
+        "failedClaim": "7VjV7optwH8Q21KNNjA8cbQ64f9bBPV2BXtQaW5cYp6R",
+        "createRecipient": "5A3YG8zFmLPSSbi9QD52XvagAW9zhMu7y19XjpAnxYdP",
+        "retry": "Ep7sNnYjKnPuKVn4DFNiz6nkMFrx8iX8JK5f2kowYoNu"
+      },
+      "restoredCreditBlock": 275938854,
+      "finalBlock": 275938887,
+      "phase": "Closed",
+      "failedTransferRecovery": true,
+      "accountDeletion": false,
+      "independentOperators": false,
+      "fundingSource": "User-funded developer testnet account",
+      "verifiedAt": "2026-11-02T18:54:03.202Z"
+    }
   },
   "reviewerBinding": {
     "implemented": true,

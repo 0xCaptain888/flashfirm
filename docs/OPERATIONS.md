@@ -79,7 +79,7 @@ The sandbox uses disposable local-chain accounts, never a user's wallet. `eviden
 
 ## External blockers
 
-1. Real testnet failed-transfer callback recovery remains untested. Deployment, buyer-signed happy-path payout, disputed refund and expired-proposal refund have real testnet evidence. Failed-transfer recovery has sandbox evidence only. Do not reuse the closed buyer treasury or replay an ambiguous deployment.
+1. Deployment, buyer-signed payout, disputed refund, expired-proposal refund, and failed-transfer callback restoration followed by successful retry now have real testnet evidence. The isolated recovery treasury is Closed; do not reuse it, the closed buyer treasury, or replay an ambiguous deployment. Real independent operator participation remains absent.
 2. Independently operated worker/reviewer identities, signed offers and actual appeal operators.
 3. TEE hardware/provider and a real positive attestation, workload measurement allowlist, protected execution and secret release. The experimental Nitro verifier has negative tests; this is not evidence of a running enclave.
 4. NEAR Intents credentials/route configuration, permitted destination addresses and end-to-end payout testing.

@@ -1,5 +1,7 @@
 # FlashFirm
 
+**2026-11-03 (Asia/Shanghai): real testnet failed-transfer recovery verified.** A 0.001 NEAR claim failed because its named recipient did not exist; the callback restored the entire credit. After creating that recipient, retry succeeded and the isolated treasury closed with zero remaining credit/pending balance. No account was deleted. [All transaction evidence](evidence/testnet-recovery.json). Reviewers remain development identities under one operator.
+
 **Verification lifecycle upgrade:** reviewer revocation and fresh account-key rechecks; persistent single-use TEE challenges; immutable destination requests with global transaction replay protection; backup restore invalidation; public-backend HTTPS smoke check and testnet recovery preflight. These do not claim independent operators, a running enclave, a public backend or a completed cross-chain transfer. [Integration API and deployment guide](docs/EXTERNAL-INTEGRATIONS.md).
 
 **2026-11-02 integration upgrade:** real testnet challenge/arbitration refund and expiry refund completed; a four-call paid background job completed with a valid signed receipt and a `CHALLENGED` quality result. Cumulative conservative model reservation: **CNY 15.91 / 20**, 10 / 12 calls. [Upgrade evidence](evidence/integration-upgrade.json) · [Refund transactions](evidence/testnet-exceptions.json) · [Deployment and integration boundaries](docs/PRODUCTION-READINESS.md).

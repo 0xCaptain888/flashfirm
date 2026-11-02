@@ -10,6 +10,15 @@ const report={version:'flashfirm-integration-upgrade/1',checkedAt:new Date().toI
 const container = await read('evidence/managed-container.json');
 report.backend.containerBuilt = container.status === 'CI_BUILD_AND_SMOKE_TEST_PASSED';
 report.backend.containerVerification = container;
+try {
+ const recovery=await read('.runtime/testnet-recovery/evidence-public.json');
+ if(recovery.status!=='VERIFIED'||recovery.network!=='testnet'||recovery.phase!=='Closed'||recovery.failedTransferRecovery!==true||recovery.accountDeletion!==false)throw Error('Invalid recovery evidence');
+ const restored=await read('.runtime/testnet-recovery/restored-credit.json');
+ if(restored.status.paid_yocto!=='0'||JSON.stringify(restored.status.credits_yocto)!==JSON.stringify(['0',recovery.amountYocto])||restored.status.pending_yocto.some(v=>v!=='0'))throw Error('Invalid restored credit');
+ report.testnet.failedTransferRecovery='TESTNET_VERIFIED';
+ report.testnet.recovery=recovery;
+ await writeFile(new URL('evidence/testnet-recovery.json',root),JSON.stringify(recovery,null,2));
+} catch(error) {if(error.code!=='ENOENT')throw error;}
 await writeFile(new URL('evidence/queued-live-receipt.json',root),JSON.stringify(job.receipt,null,2));
 await writeFile(new URL('evidence/testnet-exceptions.json',root),JSON.stringify(exceptions,null,2));
 await writeFile(new URL('evidence/integration-upgrade.json',root),JSON.stringify(report,null,2));
