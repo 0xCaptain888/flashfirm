@@ -4,5 +4,7 @@ node_modules/
 .DS_Store
 target/
 dist/
+web/treasury.bundle.js
+web/treasury.bundle.js.LEGAL.txt
 .env.*
 !.env.example

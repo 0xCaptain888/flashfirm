@@ -9,6 +9,7 @@ jobs:
         with:
           node-version: '24'
       - run: npm test
+      - run: npm ci
       - run: node scripts/check-public.mjs
       - run: npm run build:pages
   near-sandbox:

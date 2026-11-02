@@ -1,0 +1,23 @@
+name: Read-only NEAR network check
+on:
+  workflow_dispatch:
+    inputs:
+      account_id:
+        description: Public NEAR account ID (never a key)
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Query public account on both networks
+        env:
+          NEAR_ACCOUNT_ID: ${{ inputs.account_id }}
+        run: node scripts/check-near-network.mjs "$NEAR_ACCOUNT_ID"

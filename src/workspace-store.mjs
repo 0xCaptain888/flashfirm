@@ -30,6 +30,9 @@ export class WorkspaceStore {
     if (!this.db.prepare('PRAGMA table_info(jobs)').all().some(c => c.name === 'paid_started')) {
       this.db.exec('ALTER TABLE jobs ADD COLUMN paid_started INTEGER NOT NULL DEFAULT 0');
     }
+    if (!this.db.prepare('PRAGMA table_info(jobs)').all().some(c => c.name === 'kind')) {
+      this.db.exec("ALTER TABLE jobs ADD COLUMN kind TEXT NOT NULL DEFAULT 'LEGACY_JOB'");
+    }
   }
   transaction(fn) {
     this.db.exec('BEGIN IMMEDIATE');
@@ -150,11 +153,15 @@ export class WorkspaceStore {
       if(old){if(old.input_hash!==inputHash)throw Error('Idempotency key conflict');return this.publicJob(old);}
       if(this.db.prepare('SELECT count(*) AS n FROM jobs WHERE firm=?').get(firm).n>=100)throw Error('Job limit reached');
       const id=randomUUID();
-      this.db.prepare('INSERT INTO jobs(id,firm,request_key,input_hash,input,state,created) VALUES(?,?,?,?,?,?,?)').run(id,firm,key,inputHash,this.encrypt(firm,id,input),'QUEUED',this.now());
-      this.event(firm,'JOB_QUEUED',{id}); return this.job(owner,firm,id);
+      this.db.prepare('INSERT INTO jobs(id,firm,request_key,input_hash,input,state,created,kind) VALUES(?,?,?,?,?,?,?,?)').run(id,firm,key,inputHash,this.encrypt(firm,id,input),'QUEUED',this.now(),input.kind);
+      this.event(firm,'JOB_QUEUED',{id,kind:input.kind}); return this.job(owner,firm,id);
     });
   }
-  publicJob(j) { return {id:j.id,firm:j.firm,state:j.state,attempts:j.attempts,result:decode(j.result),created:j.created}; }
+  publicJob(j) { return {id:j.id,firm:j.firm,kind:j.kind,state:j.state,attempts:j.attempts,result:decode(j.result),created:j.created}; }
+  jobs(owner,firm) {
+    this.access(owner,firm);
+    return this.db.prepare('SELECT id,firm,kind,state,attempts,created,request_key AS requestKey FROM jobs WHERE firm=? ORDER BY created DESC,id DESC LIMIT 100').all(firm);
+  }
   job(owner,firm,id) { this.access(owner,firm); const j=this.db.prepare('SELECT * FROM jobs WHERE id=? AND firm=?').get(id,firm); if(!j)throw Error('Job not found');return this.publicJob(j); }
   claim() {
     return this.transaction(()=>{

@@ -8,20 +8,27 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "start": "node server.mjs",
+    "start": "node scripts/build-wallet.mjs && node server.mjs",
     "dev": "node --watch server.mjs",
     "test": "node --test",
     "test:http": "node scripts/check-http.mjs",
     "test:sandbox": "node scripts/check-sandbox.mjs",
     "build:contract": "node scripts/build-contract.mjs",
+    "build:wallet": "node scripts/build-wallet.mjs",
     "operator:token": "node scripts/operator-token.mjs",
     "build:pages": "node scripts/build-pages.mjs",
     "model:probe": "node scripts/probe-models.mjs",
     "live:run": "node scripts/run-live.mjs",
     "verify": "node scripts/verify.mjs"
   },
-  "overrides": { "tar": "7.5.22" },
+  "overrides": {
+    "tar": "7.5.22"
+  },
   "devDependencies": {
-    "near-workspaces": "5.0.0"
+    "@near-wallet-selector/core": "10.1.4",
+    "@near-wallet-selector/my-near-wallet": "10.1.4",
+    "esbuild": "0.28.2",
+    "near-workspaces": "5.0.0",
+    "util": "0.12.5"
   }
 }

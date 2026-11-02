@@ -2,15 +2,16 @@
 
 Temporary agent teams. Reproducible contribution allocation. Proof before payout.
 
-[Public demo](https://0xCaptain888.github.io/flashfirm/) · [Recorded real AI analysis](https://0xCaptain888.github.io/flashfirm/live.html) · [Operations and SDK](docs/OPERATIONS.md)
+[Public demo](https://0xCaptain888.github.io/flashfirm/) · [Recorded real AI analysis](https://0xCaptain888.github.io/flashfirm/live.html) · [Testnet wallet console](https://0xCaptain888.github.io/flashfirm/treasury.html) · [Delivery status](docs/DELIVERY-STATUS.md)
 
 Development status: real model output + local durable backend + sandbox-tested NEAR treasury. **Not a production service; testnet settlement, independent operators, TEE and Intents are not live.**
 
 ## Run locally
 
-Requires Node.js >=22.13 (24 recommended). The local application and JavaScript tests need no package installation or API key. Sandbox tests require `npm ci`.
+Requires Node.js >=22.13 (24 recommended). Run `npm ci` to install the pinned wallet build tools and sandbox dependencies. JavaScript protocol tests still use Node built-ins; viewing evidence requires no API key.
 
 ```sh
+npm ci
 npm start
 # http://127.0.0.1:43180
 npm test
@@ -29,8 +30,10 @@ npm run operator:token
 - Workspace closure cancels unfinished work and removes active documents; it does not certify backup erasure or blockchain refunds.
 - Signed capability/price offers, complete-team selection under budget, pinned review keys, challenge/appeal verification, and signed-rubric counterfactual coverage scoring. These modules are not yet a live multi-operator marketplace. Treasury v0.2 separately enforces native NEAR account review and arbitration; mapping off-chain keys to those accounts remains external.
 - Integration client in `src/client.mjs` and API instructions in [Operations](docs/OPERATIONS.md).
-- 42 JavaScript tests, 11 pure Rust accounting tests, 5 appeal timing tests, HTTP integration checks and actual local NEAR sandbox execution, including failed-transfer recovery and all three arbitration outcomes. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
+- 49 JavaScript tests, 11 pure Rust accounting tests, 5 appeal timing tests, HTTP integration checks and actual local NEAR sandbox execution, including failed-transfer recovery and all three arbitration outcomes. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
 - Testnet configuration validation and read-only deployed-bytecode/participant verification: [testnet instructions](docs/TESTNET.md). No deployment or payment is implied by an offline configuration check.
+- Browser testnet wallet console using pinned official Wallet Selector components: connect/disconnect, verify deployed bytecode and roles, preview exact actions, request wallet signing, and verify final execution receipts. No function-call access key is requested. Real wallet login/signing remains untested without a configured account.
+- Workspace UI shows durable job history, downloadable model receipts, budget status, safe idempotent recovery from uncertain submissions, and closed-workspace activity. Viewing it incurs no model calls.
 
 ### Live-model development milestone
 
@@ -66,7 +69,7 @@ The sample console's last state is `PLANNED`. Private workspace closure is local
 
 ## GitHub Pages deployment
 
-`npm run build:pages` creates `dist/`: an explicitly labeled read-only sample, recorded real AI report, signed receipts and sandbox evidence. Asset URLs are relative. `.github/workflows/pages.yml` builds and deploys with GitHub Actions. The workflow requires no model credential. Pages does not host the authenticated Node backend and viewing the site invokes no paid models. Only approved public-source artifacts under `evidence/` are copied; `.runtime/` is never published.
+`npm run build:pages` creates `dist/`: an explicitly labeled read-only sample, recorded real AI report, signed receipts, sandbox evidence and the testnet wallet console. Asset URLs are relative. The console has no preconfigured treasury and only asks for signing after an explicit preview and user action. `.github/workflows/pages.yml` builds and deploys with GitHub Actions. The workflow requires no model credential. Pages does not host the authenticated Node backend and viewing the site invokes no paid models. Only approved public-source evidence is copied; `.runtime/` is never published.
 
 The user-selected gateway is `https://api.apikey.fan/v1`. Authenticated discovery and real JSON completions have passed using `deepseek-flash`. The private local policy records the approved CNY 20 development cap. `.env.example` documents settings, while the CLI and authenticated public-review job runner read ignored `.runtime` JSON configuration and share the cumulative reservation ledger. The queued runner requires room for all four calls; the existing six-of-eight call count blocks a fresh complete run. Viewing the report never incurs model calls. Do not upload the runtime directory or credentials to GitHub.
 

@@ -16,6 +16,8 @@ export class FlashFirmClient {
   verifyReceipt(firmId,receipt,idempotencyKey){return this.request(`/${encodeURIComponent(firmId)}/jobs`,'POST',{kind:'VERIFY_RECEIPT',receipt},idempotencyKey);}
   runPublicReview(firmId,idempotencyKey){return this.request(`/${encodeURIComponent(firmId)}/jobs`,'POST',{kind:'LIVE_PUBLIC_REVIEW',preset:'openzeppelin-pinned',approvedCapFen:2000},idempotencyKey);}
   job(firmId,jobId){return this.request(`/${encodeURIComponent(firmId)}/jobs/${encodeURIComponent(jobId)}`);}
+  jobs(firmId){return this.request(`/${encodeURIComponent(firmId)}/jobs`);}
+  modelStatus(){return this.request('/model-status');}
   events(firmId){return this.request(`/${encodeURIComponent(firmId)}/events`);}
   storeDocument(firmId,value){return this.request(`/${encodeURIComponent(firmId)}/documents`,'POST',value);}
   dissolve(firmId){return this.request(`/${encodeURIComponent(firmId)}/dissolve`,'POST',{});}

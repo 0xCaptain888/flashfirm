@@ -8,7 +8,7 @@ import { verifyLiveReceipt } from './src/live.mjs';
 import { openStore } from './src/local-store.mjs';
 import { commitPolicy, assessReview, resolveAppeal, selectSignedOffers } from './src/governance.mjs';
 import { scoreContributions } from './src/contribution.mjs';
-import { executeLiveJob } from './src/live-job.mjs';
+import { executeLiveJob, modelAvailability } from './src/live-job.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const runtime = path.join(root, '.runtime');
@@ -43,7 +43,7 @@ const port = Number(process.env.PORT || 43180);
 const server = http.createServer(async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://rpc.testnet.near.org; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
   try {
     const host = req.headers.host;
     if (![`127.0.0.1:${port}`, `localhost:${port}`].includes(host)) return send(res, 403, { error: 'Local host required' });
@@ -56,6 +56,7 @@ const server = http.createServer(async (req, res) => {
       const now=Date.now(),window=limiter.get(owner);
       if(!window||window.until<=now)limiter.set(owner,{until:now+60000,count:1});
       else if(++window.count>120){res.setHeader('Retry-After','60');return send(res,429,{error:'Request limit reached'});}
+      if(req.method==='GET'&&url.pathname==='/api/workspaces/model-status')return send(res,200,await modelAvailability(runtime));
       if(req.method==='POST'&&url.pathname==='/api/workspaces/evaluate'){
         const input=await body(req);let result;
         switch(input.operation){
@@ -87,6 +88,7 @@ const server = http.createServer(async (req, res) => {
         if(req.method==='POST'&&action==='documents'&&!item)return send(res,201,{id:store.put(owner,id,await body(req))});
         if(req.method==='GET'&&action==='documents'&&item)return send(res,200,store.get(owner,id,item));
         if(req.method==='POST'&&action==='jobs'&&!item)return send(res,202,store.enqueue(owner,id,req.headers['idempotency-key'],await body(req)));
+        if(req.method==='GET'&&action==='jobs'&&!item)return send(res,200,store.jobs(owner,id));
         if(req.method==='GET'&&action==='jobs'&&item)return send(res,200,store.job(owner,id,item));
         if(req.method==='POST'&&action==='dissolve'&&!item)return send(res,200,store.dissolve(owner,id));
       }
@@ -126,6 +128,10 @@ const server = http.createServer(async (req, res) => {
     const staticFiles = { '/': ['index.html','text/html'], '/live.html':['live.html','text/html'], '/live.js':['live.js','text/javascript'], '/app.js': ['app.js','text/javascript'], '/style.css': ['style.css','text/css'], '/favicon.svg': ['favicon.svg','image/svg+xml'] };
     staticFiles['/workspace.html']=['workspace.html','text/html'];
     staticFiles['/workspace.js']=['workspace.js','text/javascript'];
+    staticFiles['/operations.css']=['operations.css','text/css'];
+    staticFiles['/treasury.html']=['treasury.html','text/html'];
+    staticFiles['/treasury.bundle.js']=['treasury.bundle.js','text/javascript'];
+    staticFiles['/treasury.bundle.js.LEGAL.txt']=['treasury.bundle.js.LEGAL.txt','text/plain'];
     if (req.method === 'GET' && staticFiles[url.pathname]) {
       const [file, type] = staticFiles[url.pathname]; res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' }); return res.end(await readFile(path.join(root, 'web', file)));
     }

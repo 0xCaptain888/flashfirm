@@ -14,6 +14,19 @@ export async function preflightLiveJob(runtime) {
   return { callsRequired: 4, maxReservationFen: 1028, remainingCalls: 8 - ledger.calls.length, remainingFen: 2000 - ledger.reservedFen };
 }
 
+export async function modelAvailability(runtime) {
+  let budget = null;
+  try {
+    const ledger = JSON.parse(await readFile(path.join(runtime, 'provider-budget.json'), 'utf8'));
+    if (!Number.isSafeInteger(ledger.reservedFen) || ledger.reservedFen < 0 || !Array.isArray(ledger.calls)) throw Error('INVALID_BUDGET_LEDGER');
+    budget = { capFen: 2000, reservedFen: ledger.reservedFen, calls: ledger.calls.length, maxCalls: 8, actualInvoiceCost: null };
+    await preflightLiveJob(runtime);
+    return { enabled: true, budget, requiredCalls: 4, preset: 'openzeppelin-pinned' };
+  } catch (error) {
+    return { enabled: false, budget, requiredCalls: 4, reason: /^[A-Z0-9_]+$/.test(error.message) ? error.message : 'MODEL_CONFIG_UNAVAILABLE' };
+  }
+}
+
 export async function executeLiveJob(store, job, runtime, dependencies = {}) {
   if (job.input.kind !== 'LIVE_PUBLIC_REVIEW' || job.input.preset !== 'openzeppelin-pinned' || job.input.approvedCapFen !== 2000) throw Error('INVALID_PUBLIC_REVIEW_JOB');
   await (dependencies.preflight ?? preflightLiveJob)(runtime);

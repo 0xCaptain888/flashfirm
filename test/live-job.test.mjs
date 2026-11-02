@@ -5,7 +5,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { WorkspaceStore } from '../src/workspace-store.mjs';
-import { executeLiveJob, preflightLiveJob } from '../src/live-job.mjs';
+import { executeLiveJob, preflightLiveJob, modelAvailability } from '../src/live-job.mjs';
 
 const input = { kind: 'LIVE_PUBLIC_REVIEW', preset: 'openzeppelin-pinned', approvedCapFen: 2000 };
 function setup() {
@@ -66,4 +66,24 @@ test('complete-run preflight refuses insufficient calls and missing cumulative l
   await assert.rejects(preflightLiveJob(dir), /INSUFFICIENT_BUDGET/);
   await writeFile(path.join(dir, 'provider-budget.json'), JSON.stringify({ reservedFen: 0, calls: [] }));
   assert.equal((await preflightLiveJob(dir)).callsRequired, 4);
+});
+test('model availability reports a safe blocked state without revealing provider data', async () => {
+  const dir=await mkdtemp(path.join(os.tmpdir(),'flashfirm-availability-'));
+  assert.deepEqual(await modelAvailability(dir),{enabled:false,budget:null,requiredCalls:4,reason:'MODEL_CONFIG_UNAVAILABLE'});
+  await writeFile(path.join(dir,'provider-policy.json'),JSON.stringify({enabled:true,capFen:2000,model:'deepseek-flash',baseUrl:'https://api.apikey.fan/v1',conservativeCnyPerMillion:100}));
+  await writeFile(path.join(dir,'provider-budget.json'),JSON.stringify({reservedFen:992,calls:Array(6).fill({purpose:'private-purpose',usage:{private:'hidden'}})}));
+  const status=await modelAvailability(dir);
+  assert.equal(status.enabled,false);assert.equal(status.reason,'INSUFFICIENT_BUDGET_FOR_COMPLETE_RUN');assert.equal(status.budget.calls,6);
+  assert(!JSON.stringify(status).includes('private-purpose'));assert.equal(status.budget.actualInvoiceCost,null);
+});
+test('job history is owner-scoped and preserves type and idempotency without exposing input', () => {
+  const {store,firm,queued}=setup();
+  try {
+    assert.throws(()=>store.jobs('other',firm.id));
+    const rows=store.jobs('operator',firm.id);
+    assert.equal(rows[0].id,queued.id);assert.equal(rows[0].kind,'LIVE_PUBLIC_REVIEW');assert.equal(rows[0].requestKey,'once');
+    assert(!('input' in rows[0]));assert(!('result' in rows[0]));
+    store.dissolve('operator',firm.id);
+    assert.equal(store.jobs('operator',firm.id)[0].state,'CANCELLED');
+  } finally {store.close();}
 });

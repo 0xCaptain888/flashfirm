@@ -1,5 +1,11 @@
 # Development checkpoint — 2026-11-02
 
+## Current checkpoint: testnet wallet console and task UI
+
+Added official Wallet Selector integration without delegated function-call access, strict testnet transaction composition, final outcome verification, and a Pages-compatible wallet console. A deployed tested treasury configuration is required; none is preconfigured. The page loads in the browser and blocks preview without a connected account. Real account authorization/signing is not claimed. Official testnet and mainnet RPC account lookup both timed out from this environment.
+
+Workspace UI now exposes model budget status, durable job lists, result downloads and idempotency recovery across tab refresh. Added safe budget metadata and owner-scoped list APIs. 49 JavaScript tests pass. Model usage remains six total calls with CNY 9.92 conservatively reserved; no new paid call in this checkpoint. See `docs/DELIVERY-STATUS.md` for remaining work across all nine requested capabilities.
+
 ## Current checkpoint: on-chain arbitration and bounded AI queue
 
 This section supersedes historical entries below. Treasury v0.2 compiled successfully and the actual local NEAR sandbox passed normal payout, failed-transfer recovery, ordinary expiry refund, and challenged-plan uphold/reject/timeout paths. Quorum starts an appeal window rather than immediately enabling payment. Native NEAR account arbitration does not automatically verify the application's off-chain signed envelopes.

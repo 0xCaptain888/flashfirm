@@ -1,6 +1,6 @@
 # Workspace operations and integration
 
-Requires Node >=22.13 (Node 24 recommended). The production runtime uses built-in modules only. `near-workspaces` is a development-only sandbox dependency. The server intentionally binds to loopback; public multi-user hosting is not enabled.
+Requires Node >=22.13 (Node 24 recommended). The Node backend uses built-in modules only. The browser wallet uses pinned Wallet Selector dependencies bundled by esbuild; `near-workspaces` is a sandbox dependency. Run `npm ci` first; `npm start` builds the wallet assets before starting the server. The server intentionally binds to loopback; public multi-user hosting is not enabled.
 
 ## Local operator
 
@@ -40,6 +40,8 @@ const status = await client.job(firm.id, job.id);
 
 Requests time out after 15 seconds. The SDK never automatically repeats a write. Preserve the same idempotency key when retrying a verification submission. `SUCCEEDED` means the verifier completed; inspect `result.valid` to determine whether the receipt passed.
 
+`client.jobs(firm.id)` returns the owner-scoped job list, including request keys, without large input/result payloads. `client.job` retrieves one result. `client.modelStatus()` returns only budget counters and a safe blocked reason; no provider secret or prompt history is returned. The workspace UI reloads job history, polls at a bounded interval, and clears private displayed data on lock/expiry. An uncertain submission retains only its idempotency key, workspace ID and SHA256 input fingerprint in session storage, so refreshing the tab does not cause an automatic second submission. Inspect existing jobs before intentionally starting another paid run.
+
 ## Bounded public-source AI jobs
 
 `client.runPublicReview(firm.id, 'public-review-v1')` explicitly requests the approved pinned OpenZeppelin review. The API input is `{kind:"LIVE_PUBLIC_REVIEW",preset:"openzeppelin-pinned",approvedCapFen:2000}`. It accepts no customer documents, arbitrary prompt or provider override. Only an authenticated local operator may queue it.
@@ -68,7 +70,7 @@ The review protocol rejects cross-task/result replay, duplicate signers and over
 npm test
 npm run test:http                 # local server must be running
 node scripts/check-workspace-http.mjs
-npm ci                          # sandbox dependencies only
+npm ci                          # pinned wallet build and sandbox dependencies
 npm run build:contract           # Rust wasm target and recent Binaryen required
 npm run test:sandbox
 ```
@@ -83,4 +85,4 @@ The sandbox uses disposable local-chain accounts, never a user's wallet. `eviden
 4. NEAR Intents credentials/route configuration, permitted destination addresses and end-to-end payout testing.
 5. Public backend hosting, domain/TLS, production auth, backup retention, monitoring/alert delivery and deployment secrets. GitHub Pages serves public static evidence only.
 
-These are not marked complete. Mainnet money and confidential customer data must remain out of this development build. Development-only sandbox dependencies currently report low-severity upstream advisories; production dependencies audit clean. The patched `tar` override removes the known high/critical archive advisories from this test toolchain.
+These are not marked complete. Mainnet money and confidential customer data must remain out of this development build. The full dependency audit reports 15 low-severity advisories and no moderate/high/critical advisories at this checkpoint. Although npm labels wallet libraries as development dependencies because they are bundled at build time, their code runs in the browser; a clean `--omit=dev` audit is not a claim that the shipped frontend has no advisories. The patched `tar` override removes the known high/critical archive advisories from the sandbox toolchain.
