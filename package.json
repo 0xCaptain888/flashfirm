@@ -1,0 +1,6 @@
+{
+  "name": "flashfirm", "version": "0.1.0", "private": true, "type": "module",
+  "description": "Evidence-first temporary agent teams with reproducible contribution allocation",
+  "engines": {"node": ">=22"},
+  "scripts": {"start": "node server.mjs", "dev": "node --watch server.mjs", "test": "node --test", "test:http": "node scripts/check-http.mjs", "verify": "node scripts/verify.mjs"}
+}
