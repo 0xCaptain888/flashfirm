@@ -1,5 +1,7 @@
 # Live model integration checkpoint
 
+Update 2026-11-02: the user approved 12 cumulative calls with the same CNY 20 cap. The current policy limits each response to 1,000 tokens. A real queued four-call task completed once; cumulative calls are 10 and conservative reservations CNY 15.91. Its signed report is CHALLENGED due to an exact-source quotation mismatch. Historical checkpoints below describe the earlier run; see `evidence/integration-upgrade.json` for the new result.
+
 The user authorized a cumulative **CNY 20** model development budget. Gateway access was explicitly supplied by the user. The credential is stored only in `.runtime/provider-secret.json` (0600, parent 0700, ignored by Git). No credential is required by GitHub Actions or Pages.
 
 ## Verified discovery
@@ -12,7 +14,7 @@ The user authorized a cumulative **CNY 20** model development budget. Gateway ac
 
 ## Cost controls
 
-The provider only calls the fixed HTTPS gateway and fixed model. Redirects are rejected. It limits serialized input to 20,000 bytes, output to 1,600 tokens, total calls to 8, and conservative cumulative reservations to 2,000 fen. A reservation uses input bytes plus 4,096 overhead plus maximum output, priced at **CNY 100 per million** for both directions, without cache discounts. This deliberately exceeds the inspected public rates.
+The provider only calls the fixed HTTPS gateway and fixed model. Redirects are rejected. Serialized input is capped at 20,000 bytes. The original default policy permits 1,600 output tokens and 8 cumulative calls; the explicitly approved current policy permits 1,000 output tokens and 12 calls, with the same 2,000-fen cumulative reservation cap. A reservation uses input bytes plus 4,096 overhead plus maximum output, priced at **CNY 100 per million** for both directions, without cache discounts. Preflight requires enough remaining reservation and calls for the entire four-call task.
 
 The local reservation is an estimate, **not a provider-side hard billing limit** and not a claim about actual charges. Errors retain their reservation, network calls are not retried automatically, and a filesystem lock prevents concurrent spend races. Stop using this policy if provider pricing changes. A gateway-side account limit would provide an additional independent bound.
 

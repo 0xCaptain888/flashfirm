@@ -9,16 +9,20 @@ import { openStore } from './src/local-store.mjs';
 import { commitPolicy, assessReview, resolveAppeal, selectSignedOffers } from './src/governance.mjs';
 import { scoreContributions } from './src/contribution.mjs';
 import { executeLiveJob, modelAvailability } from './src/live-job.mjs';
+import { serverPolicy } from './src/server-policy.mjs';
+import { verifyReviewerBinding } from './src/reviewer-binding.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const runtime = path.join(root, '.runtime');
+const policy = serverPolicy();
+const runtime = process.env.FLASHFIRM_RUNTIME || path.join(root, '.runtime');
 await mkdir(runtime, { recursive: true, mode: 0o700 });
 await chmod(runtime, 0o700);
 const store=await openStore(runtime);
 const limiter=new Map();
 let workerBusy=false;
+let workerLastTick=Date.now(), shuttingDown=false;
 const worker=setInterval(async ()=>{
-  if(workerBusy)return;workerBusy=true;
+  if(workerBusy||shuttingDown)return;workerBusy=true;workerLastTick=Date.now();
   try {
     const job=store.claim();if(!job)return;
     try {
@@ -39,16 +43,21 @@ let mutation = Promise.resolve();
 const exclusive = fn => { const next = mutation.then(fn); mutation = next.catch(() => {}); return next; };
 const send = (res, code, body) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(body)); };
 const body = async req => { let value = ''; for await (const chunk of req) { value += chunk; if (Buffer.byteLength(value) > 500000) throw Error('Request too large'); } return JSON.parse(value || '{}'); };
-const port = Number(process.env.PORT || 43180);
+const port = policy.port;
 const server = http.createServer(async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');
     res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://rpc.testnet.near.org; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
   try {
     const host = req.headers.host;
-    if (![`127.0.0.1:${port}`, `localhost:${port}`].includes(host)) return send(res, 403, { error: 'Local host required' });
-    if (req.headers.origin && ![`http://127.0.0.1:${port}`, `http://localhost:${port}`].includes(req.headers.origin)) return send(res, 403, { error: 'Origin denied' });
+    if (!policy.hosts.includes(host)) return send(res, 403, { error: 'Host denied' });
+    if (req.headers.origin && !policy.origins.includes(req.headers.origin)) return send(res, 403, { error: 'Origin denied' });
     const url = new URL(req.url, `http://${host}`);
+    if(req.method==='GET'&&url.pathname==='/healthz') {
+      const healthy=!shuttingDown&&(workerBusy||Date.now()-workerLastTick<10000);
+      try { store.db.prepare('SELECT 1').get(); } catch { return send(res,503,{status:'UNAVAILABLE'}); }
+      return send(res,healthy?200:503,{status:healthy?'READY':'DRAINING',workerBusy});
+    }
     if(url.pathname.startsWith('/api/workspaces')) {
       const token=req.headers.authorization?.replace(/^Bearer /,'');
       const owner=store.authenticate(token);
@@ -65,6 +74,7 @@ const server = http.createServer(async (req, res) => {
           case 'APPEAL':result=resolveAppeal(input.commitment,input.resultRoot,input.decisions,input.appeal,input.resolution,Date.now());break;
           case 'SELECT_TEAM':result=selectSignedOffers({...input.tender,now:Date.now()});break;
           case 'SCORE':result=scoreContributions(input.scoring);break;
+          case 'VERIFY_REVIEWER_BINDING':result=await verifyReviewerBinding(input.binding,input.expected);break;
           default:throw Error('Unknown evaluation operation');
         }
         return send(res,200,{result,settlementExecuted:false,scope:'Stateless validation of supplied commitments; no external identity certification or transaction authorization'});
@@ -106,7 +116,9 @@ const server = http.createServer(async (req, res) => {
       return send(res,200,{receipt,verification,budget:recordedBudget??{capCny:20,reservedCny:(budget?.reservedFen??0)/100,calls:budget?.calls?.length??0,actualInvoiceCost:null}});
     }
     if (req.method === 'GET' && url.pathname === '/api/status') return send(res, 200, { version: '0.1.0', mode: 'LOCAL_FIXTURE', agents, rubric, capabilities: { signatures: true, persistentTasks: true, liveAgents: false, recordedLiveReview: !!(await readJson('live-review.json')), nearSettlement: false, tee: false, independentQuorum: false } });
+    if (policy.public && url.pathname.startsWith('/api/tasks')) return send(res,403,{error:'Use authenticated workspaces; local fixture storage is not public'});
     if (req.method === 'GET' && url.pathname === '/api/tasks') return send(res, 200, [...tasks.values()].reverse());
+    // The public service must not expose unauthenticated mutable demo storage.
     if (req.method === 'POST' && url.pathname === '/api/tasks') {
       const input = await body(req);
       return await exclusive(async () => { if (tasks.size >= 200) return send(res, 409, { error: 'Local task limit reached (200)' }); const t = createTask(input); tasks.set(t.id, t); await save('tasks.json', [...tasks.values()]); send(res, 201, t); });
@@ -136,6 +148,12 @@ const server = http.createServer(async (req, res) => {
       const [file, type] = staticFiles[url.pathname]; res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' }); return res.end(await readFile(path.join(root, 'web', file)));
     }
     send(res, 404, { error: 'Not found' });
-  } catch (error) { send(res, 400, { error: error.message }); }
+  } catch (error) { send(res, 400, { error: policy.public ? 'Request rejected; check input and authorization' : error.message }); }
 });
-server.listen(port, '127.0.0.1', () => console.log(`FlashFirm local console: http://127.0.0.1:${port}`));
+server.requestTimeout=30000;server.headersTimeout=15000;
+server.listen(port, policy.host, () => console.log(`FlashFirm ${policy.public?'managed':'local'} service on port ${port}`));
+for(const signal of ['SIGTERM','SIGINT'])process.once(signal,()=>{
+  shuttingDown=true;clearInterval(worker);server.close();
+  const drain=setInterval(()=>{if(!workerBusy){clearInterval(drain);store.close();process.exit(0);}},250);
+  setTimeout(()=>process.exit(1),110000).unref();
+});

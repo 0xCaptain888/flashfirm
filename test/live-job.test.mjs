@@ -87,3 +87,11 @@ test('job history is owner-scoped and preserves type and idempotency without exp
     assert.equal(store.jobs('operator',firm.id)[0].state,'CANCELLED');
   } finally {store.close();}
 });
+test('authorized 12-call policy fits a bounded complete run without resetting cumulative spend',async()=>{
+  const dir=await mkdtemp(path.join(os.tmpdir(),'flashfirm-renewed-'));
+  await writeFile(path.join(dir,'provider-policy.json'),JSON.stringify({enabled:true,capFen:2000,model:'deepseek-flash',baseUrl:'https://api.apikey.fan/v1',conservativeCnyPerMillion:100,maxCalls:12,maxTokens:1000}));
+  await writeFile(path.join(dir,'provider-budget.json'),JSON.stringify({reservedFen:992,calls:Array(6).fill({})}));
+  const result=await preflightLiveJob(dir);assert.equal(result.maxReservationFen,1004);assert.equal(result.remainingFen,1008);
+  await writeFile(path.join(dir,'provider-budget.json'),JSON.stringify({reservedFen:1591,calls:Array(10).fill({})}));
+  await assert.rejects(preflightLiveJob(dir),/INSUFFICIENT_BUDGET/);
+});

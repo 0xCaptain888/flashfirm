@@ -1,5 +1,7 @@
 # FlashFirm
 
+**2026-11-02 integration upgrade:** real testnet challenge/arbitration refund and expiry refund completed; a four-call paid background job completed with a valid signed receipt and a `CHALLENGED` quality result. Cumulative conservative model reservation: **CNY 15.91 / 20**, 10 / 12 calls. [Upgrade evidence](evidence/integration-upgrade.json) · [Refund transactions](evidence/testnet-exceptions.json) · [Deployment and integration boundaries](docs/PRODUCTION-READINESS.md).
+
 Testnet settlement verified on 2026-11-02: buyer wallet funding → signed allocation → two development approvals → 60-second appeal window → fixed-recipient payout. **0.001 testnet NEAR paid; treasury Closed.** [Settlement evidence](evidence/testnet-settlement.json) · [Deployment evidence](evidence/testnet-deployment.json) · [Public configuration](evidence/testnet-config.json). Account deployment and role gas used faucet funds; the buyer explicitly signed task funding and allocation in Meteor. The rejected Full Access Key setup remains disabled.
 
 Temporary agent teams. Reproducible contribution allocation. Proof before payout.
@@ -32,11 +34,11 @@ npm run operator:token
 
 - SQLite transactions, ownership isolation, expiring/revocable operator tokens, request limits and durable activity history.
 - AES-256-GCM encrypted private documents and queued inputs; local key storage, not TEE.
-- Background receipt verification with idempotency keys, restart recovery, worker leases and stale-completion rejection. A bounded public-source AI job runner adds budget preflight, heartbeats and no automatic retry of possibly charged work; its orchestration is mock-tested, not yet exercised as a paid queued run.
+- Background receipt verification with idempotency keys, restart recovery, worker leases and stale-completion rejection. The bounded public-source AI job runner completed a real four-call queued run once, with budget preflight, heartbeats and no automatic retry of possibly charged work. Its signed result remains CHALLENGED because one exact quotation failed verification.
 - Workspace closure cancels unfinished work and removes active documents; it does not certify backup erasure or blockchain refunds.
 - Signed capability/price offers, complete-team selection under budget, pinned review keys, challenge/appeal verification, and signed-rubric counterfactual coverage scoring. These modules are not yet a live multi-operator marketplace. Treasury v0.2 separately enforces native NEAR account review and arbitration; mapping off-chain keys to those accounts remains external.
 - Integration client in `src/client.mjs` and API instructions in [Operations](docs/OPERATIONS.md).
-- 58 JavaScript tests, 11 pure Rust accounting tests, 5 appeal timing tests, HTTP integration checks and actual local NEAR sandbox execution, including failed-transfer recovery and all three arbitration outcomes. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
+- JavaScript protocol/integration tests, 11 pure Rust accounting tests, 5 appeal timing tests and actual local NEAR sandbox execution, including failed-transfer recovery and all three arbitration outcomes. New tests cover managed HTTP controls, encrypted backup/restore, reviewer account binding, Intents delivery checks and TEE claim rejection. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
 - Testnet configuration validation and read-only deployed-bytecode/participant verification: [testnet instructions](docs/TESTNET.md). No deployment or payment is implied by an offline configuration check.
 - Browser testnet wallet console: connect/disconnect, verify deployed bytecode and roles, preview exact actions, request wallet signing, and verify final execution receipts. No function-call access key is requested. Meteor funding/allocation signing and the fixed-recipient testnet payout have final execution evidence.
 - Workspace UI shows durable job history, downloadable model receipts, budget status, safe idempotent recovery from uncertain submissions, and closed-workspace activity. Viewing it incurs no model calls.
@@ -45,7 +47,7 @@ npm run operator:token
 
 The local `/live.html` page now shows a **recorded real DeepSeek analysis**, separate from the fixture console. Three specialist calls reviewed pinned OpenZeppelin source files, and a further model review assessed their conclusions. The first snippet-limited critique was challenged; a complete-excerpt follow-up passed and preserves the earlier critique in its history. One follow-up attempt returned 429. There were five successful calls and one failed call in total.
 
-Exact source quotation checks and the live receipt verifier pass. This is not a security audit or independent operator quorum. The conservative development cost ledger reserves CNY 9.92 against the user-approved CNY 20 cap; actual provider charges have not been queried. Details and remaining trust limits: [docs/MODEL-INTEGRATION.md](docs/MODEL-INTEGRATION.md).
+The original report's exact quotation checks and receipt verifier pass. A later four-call queued run produced a valid signed receipt but one quotation failed the exact-source gate, so its quality state is CHALLENGED even though model critique said PASS. The original report remains separately preserved. Cumulative reservations are now CNY 15.91 against the approved CNY 20 cap; actual provider charges have not been queried. This is not a security audit or independent operator quorum.
 
 ### Fixture console
 
@@ -57,7 +59,7 @@ Exact source quotation checks and the live receipt verifier pass. This is not a 
 - Deterministic leave-one-out **fixture rubric coverage** scoring, not exact Shapley values or a claim of objective fairness.
 - Integer largest-remainder allocation, 2% fee, zero payout for failed work, full refund for an empty eligible set.
 - Standalone Node verifier recomputing signatures, graph, sources, coverage and payouts.
-- Compiled NEAR treasury v0.2 with fixed recipients, two-of-three approval, an appeal waiting period, challenge freeze, pinned arbiter, bounded arbitration timeout, pull claims and callback recovery. Sandbox execution validates authorization, quorum, payout and refund. The identical bytecode completed one real testnet payout; challenge/refund scenarios remain sandbox-tested only.
+- Compiled NEAR treasury v0.2 with fixed recipients, two-of-three approval, appeal timing, challenge freeze, pinned arbiter, timeout, pull claims and callback recovery. The same bytecode completed a real testnet payout and two real testnet refund scenarios. Failed-transfer restoration and the remaining arbitration variants still have sandbox-only evidence.
 
 ## Honest boundaries
 

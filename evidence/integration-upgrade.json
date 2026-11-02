@@ -1,0 +1,73 @@
+{
+  "version": "flashfirm-integration-upgrade/1",
+  "checkedAt": "2026-11-02T14:31:13.855Z",
+  "ai": {
+    "jobId": "58e5b285-a017-44b2-a42d-7b0e49ef42f2",
+    "state": "SUCCEEDED",
+    "attempts": 1,
+    "receiptValid": true,
+    "qualityState": "CHALLENGED",
+    "settlementExecuted": false,
+    "cumulativeCalls": 10,
+    "conservativeReservedCny": 15.91,
+    "capCny": 20,
+    "actualInvoiceCost": null,
+    "issues": [
+      {
+        "worker": "sentinel-live",
+        "issue": "claim-0:QUOTE_NOT_IN_PINNED_SOURCE"
+      }
+    ]
+  },
+  "testnet": {
+    "scenarios": [
+      {
+        "scenario": "dispute",
+        "contractId": "exception-dispute.flashfirm-dev-0xcaptain888.testnet",
+        "phase": "Closed",
+        "amountYocto": "1000000000000000000000",
+        "transactions": {
+          "fund": "HosKhg3PmVZTj5XwqRD23DmAT2ySLnVFXEzmW278xQ9R",
+          "propose": "9MQ3gj5YQSoPCiyCG5MVoBfYRbMV5pgxyg6D4pZNgEPf",
+          "challenge": "DJWJccD5xUYGKTDHTyoXeXAm6Sazh2AoyordEoZgo2qs",
+          "resolve": "HENeJnCVcowpTyW5MdfwKK1vmjNSDf1PuxRGWPphDBZk",
+          "claim": "6pPQr3XDyb1bhHVVgkmASiPvqSnYe9yFnxwqWHP4WxYM"
+        }
+      },
+      {
+        "scenario": "expiry2",
+        "contractId": "exception-expiry2.flashfirm-dev-0xcaptain888.testnet",
+        "phase": "Closed",
+        "amountYocto": "1000000000000000000000",
+        "transactions": {
+          "fund": "8t8VBT4B1DMHLKDpGvezy36yGPQnS3qrFCyhP4N5exPF",
+          "refund": "F8m6bx8tcLhL8NVCiww5Q8RdcewaB8e7kgGrB7k7pqxg",
+          "claim": "5YQuBCt7TX3YSUfu7hXvkKod6bKth9Gq9UxcP9mXNV9q"
+        }
+      }
+    ],
+    "failedTransferRecovery": "SANDBOX_ONLY",
+    "independentOperators": false
+  },
+  "reviewerBinding": {
+    "implemented": true,
+    "independentOperatorsOnboarded": 0
+  },
+  "tee": {
+    "verifierImplemented": true,
+    "hardwareVerified": false,
+    "workloadDeployed": false
+  },
+  "intents": {
+    "previewAdapter": true,
+    "liveQuoteVerified": false,
+    "paymentVerified": false,
+    "blocker": "Official endpoint returned HTTP 521"
+  },
+  "backend": {
+    "managedModeHttpTested": true,
+    "encryptedBackupRestoreTested": true,
+    "containerBuilt": false,
+    "publicDeployment": false
+  }
+}

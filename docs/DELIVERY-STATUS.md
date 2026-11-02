@@ -4,18 +4,20 @@ This checklist separates implementation, actual integration evidence and remaini
 
 | Requested capability | Implemented / verified | Still required |
 | --- | --- | --- |
-| Real AI collaboration | Three real specialist outputs, pinned public source retrieval, same-provider critique, signed report; persistent bounded job runner and UI | New queued paid-run validation within authorized budget; broader project presets and tools |
+| Real AI collaboration | Real four-call queued run completed once, signed receipt verified; three specialists plus same-provider critique; exact citation gate retained CHALLENGED despite model PASS | Broader project presets/tools; revised delivery after the rejected quotation; no automatic paid retry |
 | Automatic team formation | Capability/price matching, signed offers, budget-constrained selection | Real independent supplier offers and onboarding |
 | Source verification | Pinned OpenZeppelin retrieval, exact quotation checks, critique history | General discovery, semantic entailment evaluation and larger real-data benchmark |
 | Contribution scoring | Fixed rubric, signed coverage, leave-one-out values, duplicate artifact exclusion | Real counterfactual re-execution study and independent anti-Sybil identity assurance |
-| Independent review | Pinned identities, durable signed decisions/appeals; native NEAR quorum, challenge and arbiter gate | Independent operators and verified mapping between off-chain keys and NEAR accounts |
-| NEAR settlement | Tested Wasm; real Meteor buyer funding/allocation; two test-role approvals; appeal wait; final 0.001 testnet NEAR payout and successful callback; treasury Closed | Independent reviewers; real testnet challenge/refund/failure-recovery cases (currently sandbox only). Browser RPC availability remains environment-dependent. |
-| Privacy | Encrypted local documents/jobs, owner isolation and expiry/revocation | TEE deployment, vendor-root attestation verifier and measurement allowlist; encryption is not TEE |
-| Cross-chain collection | No live implementation claimed | NEAR Intents adapter, chosen supported route, allowed destination, recovery and delivery proof |
-| Lifecycle and operations | SQLite jobs/history, crash fencing, spending guards, local dissolution, Pages publication | Production identity/auth, public backend deployment, backups, monitoring and alert delivery |
+| Independent review | Pinned decisions/appeals and native NEAR quorum; new dual-signature report-key/account binding with fresh final-block access-key check | Real independent operators, live onboarding, identity/conflict checks and consumed-nonce registry |
+| NEAR settlement | Original buyer payout plus real developer-funded challenge/arbitration refund and expiry refund; both new treasuries Closed with final successful claim callbacks | Failed-transfer restoration remains sandbox-only; one earlier expiry deployment was interrupted by RPC 429 and retained without replay; independent reviewers still absent |
+| Privacy | Encrypted local jobs; experimental Nitro COSE/ES384, pinned AWS root, certificate chain, nonce/task/key and PCR verification code; negative/claim tests | Actual enclave image and workload, reviewed PCR allowlist, hardware attestation success test, private ingress and secret release; not live TEE |
+| Cross-chain collection | Official 1Click dry-quote/status adapter, route/address limits, fail-closed recovery and ERC-20 final receipt verifier with tests | Official endpoint returned HTTP 521; no live quote or payment; chosen route, unique task-payment binding, independent delivery verification and explicit mainnet permission |
+| Lifecycle and operations | Durable jobs, managed HTTPS-origin mode, authenticated owner APIs, health endpoint, graceful draining, encrypted backup/restore tests, Docker/Compose preparation | No cloud account; Docker unavailable locally, container not built/deployed; organization auth, external uptime alerts, scheduled off-host backups |
 
 There is no mainnet authorization in this workflow. A `.near` account ID supplied by the user does not authorize switching a `.testnet` deployment plan to mainnet. Credentials, seeds and private runtime state are never copied to Pages.
 
-The current six-of-eight model call ledger blocks a new four-call review. Conservative reservations remain CNY 9.92 against a CNY 20 cap, not a verified bill. Renewing the allowance requires explicit approval; deleting a ledger is not a budget reset mechanism.
+The user explicitly increased the cumulative call cap to 12 while retaining the CNY 20 cap. Four new calls completed, bringing totals to 10 calls and CNY 15.91 in conservative reservations (not an invoice). Output limits were reduced to 1,000 tokens to fit a worst-case four-call preflight into the existing budget. A further four-call run is blocked by remaining budget/call limits; the ledger was never reset.
+
+Upgrade evidence is in `evidence/integration-upgrade.json`, with the new signed report in `evidence/queued-live-receipt.json` and testnet refund hashes in `evidence/testnet-exceptions.json`. See `PRODUCTION-READINESS.md` for implementation boundaries and deployment prerequisites.
 
 Authenticated workspace browser testing remains incomplete because automated approval review rejected using the privileged local operator token in the browser. Unauthenticated wallet-page loading and guards were checked. The test suite covers server storage, budget behavior and transaction composition without using that browser token.

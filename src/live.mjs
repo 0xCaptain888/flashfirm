@@ -2,6 +2,7 @@ import { readFile, writeFile, rename, mkdir, rmdir } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { hash, identity, seal, validSeal } from './protocol.mjs';
+import { providerLimits } from './provider-limits.mjs';
 
 export const project = {
   name: 'OpenZeppelin Contracts · scoped source review',
@@ -99,7 +100,7 @@ export class BudgetedProvider {
     const policy = JSON.parse(await readFile(path.join(this.runtime, 'provider-policy.json'), 'utf8'));
     if (policy.enabled !== true || policy.capFen !== 2000 || policy.model !== 'deepseek-flash' || policy.baseUrl !== 'https://api.apikey.fan/v1' || policy.conservativeCnyPerMillion !== 100) throw Error('UNAPPROVED_PROVIDER_POLICY');
     const { apiKey } = JSON.parse(await readFile(path.join(this.runtime, 'provider-secret.json'), 'utf8'));
-    const maxTokens = 1600;
+    const { maxTokens, maxCalls } = providerLimits(policy);
     const inputBytes = Buffer.byteLength(JSON.stringify(messages));
     if (inputBytes > 20000) throw Error('PROMPT_OVER_TEST_LIMIT');
     const reserveFen = Math.ceil((inputBytes + 4096 + maxTokens) * policy.conservativeCnyPerMillion * 100 / 1_000_000);
@@ -111,7 +112,7 @@ export class BudgetedProvider {
     try {
       try { ledger = JSON.parse(await readFile(ledgerFile, 'utf8')); } catch(e) { if(e.code!=='ENOENT') throw e; ledger = { capFen:2000, reservedFen:0, calls:[] }; }
       if (!Number.isSafeInteger(ledger.reservedFen) || ledger.reservedFen < 0 || !Array.isArray(ledger.calls)) throw Error('INVALID_BUDGET_LEDGER');
-      if (ledger.reservedFen + reserveFen > 2000 || ledger.calls.length >= 8) throw Error('APPROVED_BUDGET_EXHAUSTED');
+      if (ledger.reservedFen + reserveFen > 2000 || ledger.calls.length >= maxCalls) throw Error('APPROVED_BUDGET_EXHAUSTED');
       entry = { id:randomUUID(), at:new Date().toISOString(), purpose, reserveFen, status:'RESERVED', maxTokens, inputBytes, model:policy.model };
       ledger.reservedFen += reserveFen; ledger.calls.push(entry); await persist();
       const response = await this.fetcher(`${policy.baseUrl}/chat/completions`, { method:'POST', redirect:'error', signal:AbortSignal.timeout(90000), headers:{'Content-Type':'application/json',Authorization:`Bearer ${apiKey}`}, body:JSON.stringify({model:policy.model,messages,max_tokens:maxTokens,stream:false,temperature:0,thinking:{type:'disabled'},response_format:{type:'json_object'}}) });

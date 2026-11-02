@@ -1,8 +1,9 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { BudgetedProvider, collectSources, runLiveReview, verifyLiveReceipt } from './live.mjs';
+import { providerLimits } from './provider-limits.mjs';
 
-// Four calls, each bounded at 20,000 input bytes + 4,096 overhead + 1,600 output tokens.
+// Four calls, each bounded at 20,000 input bytes + 4,096 overhead + policy output tokens.
 // A conservative preflight, not a new budget and not a provider billing estimate.
 export async function preflightLiveJob(runtime) {
   const policy = JSON.parse(await readFile(path.join(runtime, 'provider-policy.json'), 'utf8'));
@@ -10,8 +11,9 @@ export async function preflightLiveJob(runtime) {
   // Require an existing ledger. A missing/corrupt ledger must not reset cumulative spend.
   const ledger = JSON.parse(await readFile(path.join(runtime, 'provider-budget.json'), 'utf8'));
   if (!Number.isSafeInteger(ledger.reservedFen) || ledger.reservedFen < 0 || !Array.isArray(ledger.calls)) throw Error('INVALID_BUDGET_LEDGER');
-  if (ledger.calls.length + 4 > 8 || ledger.reservedFen + 1028 > 2000) throw Error('INSUFFICIENT_BUDGET_FOR_COMPLETE_RUN');
-  return { callsRequired: 4, maxReservationFen: 1028, remainingCalls: 8 - ledger.calls.length, remainingFen: 2000 - ledger.reservedFen };
+  const { maxCalls, perCallReservationFen } = providerLimits(policy);
+  if (ledger.calls.length + 4 > maxCalls || ledger.reservedFen + perCallReservationFen * 4 > 2000) throw Error('INSUFFICIENT_BUDGET_FOR_COMPLETE_RUN');
+  return { callsRequired: 4, maxReservationFen: perCallReservationFen * 4, remainingCalls: maxCalls - ledger.calls.length, remainingFen: 2000 - ledger.reservedFen };
 }
 
 export async function modelAvailability(runtime) {
@@ -19,7 +21,8 @@ export async function modelAvailability(runtime) {
   try {
     const ledger = JSON.parse(await readFile(path.join(runtime, 'provider-budget.json'), 'utf8'));
     if (!Number.isSafeInteger(ledger.reservedFen) || ledger.reservedFen < 0 || !Array.isArray(ledger.calls)) throw Error('INVALID_BUDGET_LEDGER');
-    budget = { capFen: 2000, reservedFen: ledger.reservedFen, calls: ledger.calls.length, maxCalls: 8, actualInvoiceCost: null };
+    const policy = JSON.parse(await readFile(path.join(runtime, 'provider-policy.json'), 'utf8'));
+    budget = { capFen: 2000, reservedFen: ledger.reservedFen, calls: ledger.calls.length, maxCalls: providerLimits(policy).maxCalls, actualInvoiceCost: null };
     await preflightLiveJob(runtime);
     return { enabled: true, budget, requiredCalls: 4, preset: 'openzeppelin-pinned' };
   } catch (error) {

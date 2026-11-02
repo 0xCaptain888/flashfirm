@@ -1,0 +1,9 @@
+.git
+.runtime
+.env*
+node_modules
+dist
+target
+contracts/treasury/target
+*.mp4
+*.png

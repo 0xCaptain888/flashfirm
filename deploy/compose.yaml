@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ..
+    restart: unless-stopped
+    environment:
+      FLASHFIRM_PUBLIC_ORIGIN: ${FLASHFIRM_PUBLIC_ORIGIN:?Set exact HTTPS origin}
+    ports:
+      - "127.0.0.1:43180:43180"
+    volumes:
+      - flashfirm-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    stop_grace_period: 120s
+volumes:
+  flashfirm-data:

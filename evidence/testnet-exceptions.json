@@ -1,0 +1,40 @@
+{
+  "status": "VERIFIED",
+  "scenarios": [
+    {
+      "scenario": "dispute",
+      "contractId": "exception-dispute.flashfirm-dev-0xcaptain888.testnet",
+      "network": "testnet",
+      "independentOperators": false,
+      "userWalletFundsUsed": false,
+      "amountYocto": "1000000000000000000000",
+      "transactions": {
+        "fund": "HosKhg3PmVZTj5XwqRD23DmAT2ySLnVFXEzmW278xQ9R",
+        "propose": "9MQ3gj5YQSoPCiyCG5MVoBfYRbMV5pgxyg6D4pZNgEPf",
+        "challenge": "DJWJccD5xUYGKTDHTyoXeXAm6Sazh2AoyordEoZgo2qs",
+        "resolve": "HENeJnCVcowpTyW5MdfwKK1vmjNSDf1PuxRGWPphDBZk",
+        "claim": "6pPQr3XDyb1bhHVVgkmASiPvqSnYe9yFnxwqWHP4WxYM"
+      },
+      "phase": "Closed",
+      "blockHeight": 275911014,
+      "verifiedAt": "2026-11-02T14:26:11.619Z"
+    },
+    {
+      "scenario": "expiry2",
+      "contractId": "exception-expiry2.flashfirm-dev-0xcaptain888.testnet",
+      "network": "testnet",
+      "independentOperators": false,
+      "userWalletFundsUsed": false,
+      "amountYocto": "1000000000000000000000",
+      "transactions": {
+        "fund": "8t8VBT4B1DMHLKDpGvezy36yGPQnS3qrFCyhP4N5exPF",
+        "refund": "F8m6bx8tcLhL8NVCiww5Q8RdcewaB8e7kgGrB7k7pqxg",
+        "claim": "5YQuBCt7TX3YSUfu7hXvkKod6bKth9Gq9UxcP9mXNV9q"
+      },
+      "phase": "Closed",
+      "blockHeight": 275911424,
+      "verifiedAt": "2026-11-02T14:29:47.269Z"
+    }
+  ],
+  "failedTransferRecovery": "SANDBOX_ONLY"
+}

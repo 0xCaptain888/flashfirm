@@ -1,6 +1,24 @@
 name: Protocol checks
 on: [push, pull_request]
 jobs:
+  managed-container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t flashfirm-smoke .
+      - name: Start isolated managed service
+        run: docker run -d --name flashfirm-smoke --read-only --tmpfs /tmp --mount type=volume,target=/data -p 127.0.0.1:43183:43180 -e FLASHFIRM_PUBLIC_ORIGIN=https://service.example flashfirm-smoke
+      - name: Verify health and access boundary
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent -H 'Host: service.example' http://127.0.0.1:43183/healthz; then break; fi
+            sleep 2
+          done
+          curl --fail --silent -H 'Host: service.example' http://127.0.0.1:43183/healthz
+          test "$(curl --silent -o /dev/null -w '%{http_code}' -H 'Host: service.example' http://127.0.0.1:43183/api/workspaces)" = 401
+          test "$(curl --silent -o /dev/null -w '%{http_code}' -H 'Host: evil.example' http://127.0.0.1:43183/healthz)" = 403
+      - if: always()
+        run: docker rm -f -v flashfirm-smoke || true
   test:
     runs-on: ubuntu-latest
     steps:
