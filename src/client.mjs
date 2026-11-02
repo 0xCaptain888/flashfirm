@@ -18,6 +18,14 @@ export class FlashFirmClient {
   job(firmId,jobId){return this.request(`/${encodeURIComponent(firmId)}/jobs/${encodeURIComponent(jobId)}`);}
   jobs(firmId){return this.request(`/${encodeURIComponent(firmId)}/jobs`);}
   modelStatus(){return this.request('/model-status');}
+  reviewerChallenge({accountId,reviewerKey,policyHash}){return this.request('/reviewer-challenge','POST',{accountId,reviewerKey,policyHash});}
+  bindReviewer(envelope){return this.request('/reviewer-bindings','POST',envelope);}
+  reviewerBindings(){return this.request('/reviewer-bindings');}
+  pinReview(firmId,policy,resultRoot){return this.request(`/${encodeURIComponent(firmId)}/review`,'POST',{policy,resultRoot});}
+  review(firmId){return this.request(`/${encodeURIComponent(firmId)}/review`);}
+  submitDecision(firmId,envelope){return this.request(`/${encodeURIComponent(firmId)}/decision`,'POST',envelope);}
+  submitAppeal(firmId,envelope){return this.request(`/${encodeURIComponent(firmId)}/appeal`,'POST',envelope);}
+  resolveAppeal(firmId,envelope){return this.request(`/${encodeURIComponent(firmId)}/resolution`,'POST',envelope);}
   events(firmId){return this.request(`/${encodeURIComponent(firmId)}/events`);}
   storeDocument(firmId,value){return this.request(`/${encodeURIComponent(firmId)}/documents`,'POST',value);}
   dissolve(firmId){return this.request(`/${encodeURIComponent(firmId)}/dissolve`,'POST',{});}

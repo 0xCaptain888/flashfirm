@@ -1,6 +1,6 @@
 # Workspace operations and integration
 
-Requires Node >=22.13 (Node 24 recommended). The Node backend uses built-in modules only. The browser wallet uses pinned Wallet Selector dependencies bundled by esbuild; `near-workspaces` is a sandbox dependency. Run `npm ci` first; `npm start` builds the wallet assets before starting the server. The server intentionally binds to loopback; public multi-user hosting is not enabled.
+Requires Node >=22.13 (Node 24 recommended). The Node backend uses built-in modules only. The browser wallet uses pinned Wallet Selector dependencies bundled by esbuild; `near-workspaces` is a sandbox dependency. Run `npm ci` first; `npm start` builds the wallet assets before starting the server. The server defaults to loopback. Managed public binding requires an explicit HTTPS public origin and absolute persistent runtime directory; the container has passed CI, but no public backend deployment has been completed.
 
 ## Local operator
 
@@ -46,7 +46,7 @@ Requests time out after 15 seconds. The SDK never automatically repeats a write.
 
 `client.runPublicReview(firm.id, 'public-review-v1')` explicitly requests the approved pinned OpenZeppelin review. The API input is `{kind:"LIVE_PUBLIC_REVIEW",preset:"openzeppelin-pinned",approvedCapFen:2000}`. It accepts no customer documents, arbitrary prompt or provider override. Only an authenticated local operator may queue it.
 
-The runner requires the existing shared policy/budget ledger and room for four calls and up to 1,028 fen of conservative reservations. Per-call limits remain authoritative even if another process spends between preflight and execution. The present six-of-eight call usage blocks a new full run; increasing limits requires user authorization, not deleting/resetting the ledger. No new paid run was made to test this runner. Dependency-injected tests exercise its orchestration without contacting a provider.
+The runner requires the existing shared policy/budget ledger and room for four calls and its computed conservative reservations (1,004 fen with the currently authorized 1,000-token policy). Per-call limits remain authoritative even if another process spends between preflight and execution. As recorded on November 2, 2026, ten of twelve authorized calls have been consumed, with 1,591 fen reserved against the cumulative 2,000-fen cap. Reservations are conservative estimates, not authoritative provider bills. A new four-call run is blocked; do not reset the ledger to bypass the limits. The real queued run completed all four calls and passed receipt integrity verification, but its quality result was CHALLENGED because a claim's quotation was absent from its pinned source. It caused no settlement. See `evidence/queued-live-receipt.json`.
 
 Five-second heartbeats renew the 30-second lease. Before dispatching the first paid call, the queue records a persistent paid-start marker. If the lease expires thereafter, the job fails for manual inspection and is never automatically replayed. Failed/ambiguous provider reservations stay consumed. Reusing the same idempotency key returns the original job, including a failed one. Partial sources/outputs remain under `.runtime/model-jobs/<job-id>`; provider credentials and the budget ledger stay at the shared runtime root. A new key is a new job, not recovery of old spending.
 
@@ -62,7 +62,7 @@ Signed offers are selected by capability-mask dynamic programming under an integ
 
 Contribution values use leave-one-worker-out coverage of a fixed 100-point rubric, with two of three disjoint reviewer signatures required per criterion. Artifact hashes are bound to task/result/rubric. Duplicate artifacts receive zero allocation; this is conservative and can also penalize legitimate overlapping work. No paid real-world counterfactual model evaluation has been completed.
 
-The review protocol rejects cross-task/result replay, duplicate signers and overlapping buyer/worker/reviewer/appeal keys. Challenges stop approval; timely signed appeals require the precommitted appeal key. Signatures prove possession of keys, not independence, expertise or correctness. Durable local policy registration is implemented; trusted identity onboarding and automatic transaction enforcement remain pending.
+The review protocol rejects cross-task/result replay, duplicate signers and overlapping buyer/worker/reviewer/appeal keys. Challenges stop approval; timely signed appeals require the precommitted appeal key. Signatures prove possession of keys, not independence, expertise or correctness. Durable local policy registration and a one-use, owner-scoped reviewer account-binding registry are implemented. See [reviewer onboarding](REVIEWER-ONBOARDING.md) for the SDK and offline signing workflow. Actual independent operators and automatic transaction enforcement remain pending.
 
 ## Verification
 
@@ -79,10 +79,10 @@ The sandbox uses disposable local-chain accounts, never a user's wallet. `eviden
 
 ## External blockers
 
-1. NEAR testnet account, wallet interaction and funded deployment; an account ID can be shared, a private key need not be sent in chat.
+1. Real testnet failed-transfer callback recovery remains untested. Deployment, buyer-signed happy-path payout, disputed refund and expired-proposal refund have real testnet evidence. Failed-transfer recovery has sandbox evidence only. Do not reuse the closed buyer treasury or replay an ambiguous deployment.
 2. Independently operated worker/reviewer identities, signed offers and actual appeal operators.
-3. TEE provider, measurement allowlist and vendor-root remote-attestation verification.
+3. TEE hardware/provider and a real positive attestation, workload measurement allowlist, protected execution and secret release. The experimental Nitro verifier has negative tests; this is not evidence of a running enclave.
 4. NEAR Intents credentials/route configuration, permitted destination addresses and end-to-end payout testing.
-5. Public backend hosting, domain/TLS, production auth, backup retention, monitoring/alert delivery and deployment secrets. GitHub Pages serves public static evidence only.
+5. Public backend hosting, domain/TLS, production auth, off-host backup retention, monitoring/alert delivery and deployment secrets. The non-root container and encrypted backup/restore are implemented and tested; they are not a live hosting deployment. GitHub Pages serves public static evidence only.
 
 These are not marked complete. Mainnet money and confidential customer data must remain out of this development build. The full dependency audit reports 15 low-severity advisories and no moderate/high/critical advisories at this checkpoint. Although npm labels wallet libraries as development dependencies because they are bundled at build time, their code runs in the browser; a clean `--omit=dev` audit is not a claim that the shipped frontend has no advisories. The patched `tar` override removes the known high/critical archive advisories from the sandbox toolchain.
