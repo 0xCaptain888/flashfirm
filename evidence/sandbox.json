@@ -1,15 +1,28 @@
 {
   "status": "PASS",
   "network": "LOCAL_SANDBOX",
-  "wasmSha256": "2147e4577299113f0f892cfeb11f40806bad61bd1155004c1e28b05347d3d24e",
+  "wasmSha256": "369c28bab8da8c4ee32222f179c746072e307a4a12c56bcc730b3911553491dd",
   "checks": [
     "Buyer-only one-time funding",
     "Exact allocation, pinned reviewers and 2-of-3 quorum enforced",
     "Real sandbox transfer callback closes accounting; duplicate claim rejected",
     "Missing sandbox recipient causes real transfer failure; callback restores credit and sponsored retry succeeds",
-    "Unapproved expired task returns full funding through buyer claim"
+    "Unapproved expired task returns full funding through buyer claim",
+    "On-chain appeal uphold: payment gate, pinned arbiter, exact claim/refund and closure verified",
+    "On-chain appeal reject: payment gate, pinned arbiter, exact claim/refund and closure verified",
+    "On-chain appeal timeout: payment gate, pinned arbiter, exact claim/refund and closure verified"
   ],
   "closedStatus": {
+    "version": "flashfirm-treasury/0.2",
+    "arbiter": "arbiter.test.near",
+    "policy_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "appeal_window_ns": "60000000000",
+    "arbitration_deadline_ns": "1793616720560000000",
+    "release_at_ns": "1793613086149566000",
+    "challenge_root": null,
+    "resolution_root": null,
+    "resolution_upheld": false,
+    "release_allowed": false,
     "buyer": "buyer.test.near",
     "evaluators": [
       "review-a.test.near",
@@ -21,9 +34,9 @@
       "worker.test.near"
     ],
     "task_root": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "plan_hash": "5b3c4c42de28b6e509e5b5d4102e1f8d5eff1363a2ea2a71540868086f0a3968",
+    "plan_hash": "a7b65fe55c48d57246edf32990cd0d3d45cf8e0b733d07fe146e7dd3744faba9",
     "evidence_root": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-    "deadline_ns": "1793615532826000000",
+    "deadline_ns": "1793616600560000000",
     "phase": "Closed",
     "funded_yocto": "10000",
     "credits_yocto": [
@@ -44,5 +57,5 @@
   "testnetDeployed": false,
   "failedTransferCallbackTested": true,
   "faultInjection": "Deleted and recreated a disposable local sandbox recipient; no user account involved",
-  "at": "2026-11-02T09:33:21.545Z"
+  "at": "2026-11-02T09:52:38.742Z"
 }

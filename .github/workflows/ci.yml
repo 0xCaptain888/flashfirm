@@ -23,3 +23,5 @@ jobs:
       - run: npm run test:sandbox
       - run: rustc --edition 2021 --test contracts/treasury/src/ledger.rs -o /tmp/flashfirm-ledger-tests
       - run: /tmp/flashfirm-ledger-tests
+      - run: rustc --edition 2021 --test contracts/treasury/src/review.rs -o /tmp/flashfirm-review-tests
+      - run: /tmp/flashfirm-review-tests

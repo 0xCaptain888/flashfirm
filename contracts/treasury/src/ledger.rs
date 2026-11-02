@@ -98,6 +98,12 @@ impl Ledger {
         self.pending[recipient] = amount;
         Ok(amount)
     }
+    pub fn reject_plan(&mut self, buyer_index: usize) -> Result<(), &'static str> {
+        if !matches!(self.phase, Phase::Reviewing | Phase::Approved) || self.paid != 0 || self.pending.iter().any(|n| *n != 0) || buyer_index >= self.credits.len() { return Err("Cannot reject paid or inactive plan"); }
+        self.credits.fill(0); self.credits[buyer_index] = self.funded;
+        self.phase = Phase::RefundAvailable;
+        Ok(())
+    }
     pub fn resolve(&mut self, recipient: usize, success: bool) -> Result<(), &'static str> {
         if recipient >= self.pending.len() || self.pending[recipient] == 0 {
             return Err("No pending transfer");
@@ -197,6 +203,28 @@ mod tests {
     fn cannot_refund_approved_obligations() {
         let mut l = approved();
         assert!(l.refund(0, 101).is_err());
+        conserved(&l);
+    }
+    #[test]
+    fn rejected_unpaid_plan_becomes_exact_buyer_refund() {
+        let mut l = approved();
+        l.reject_plan(0).unwrap();
+        conserved(&l);
+        assert_eq!(l.credits, vec![1000, 0, 0, 0]);
+        assert!(l.claim(1).is_err());
+        assert_eq!(l.claim(0).unwrap(), 1000);
+        l.resolve(0, true).unwrap();
+        conserved(&l);
+        assert_eq!(l.phase, Phase::Closed);
+    }
+    #[test]
+    fn rejection_cannot_confiscate_pending_or_paid_transfers() {
+        let mut l = approved();
+        l.claim(1).unwrap();
+        assert!(l.reject_plan(0).is_err());
+        conserved(&l);
+        l.resolve(1, true).unwrap();
+        assert!(l.reject_plan(0).is_err());
         conserved(&l);
     }
     #[test]

@@ -12,7 +12,7 @@ for(const file of files){
 const build=JSON.parse(await readFile('artifacts/contract-build.json','utf8'));
 const sandbox=JSON.parse(await readFile('evidence/sandbox.json','utf8'));
 const sha=createHash('sha256').update(await readFile('artifacts/flashfirm_treasury.wasm')).digest('hex');
-const source=createHash('sha256');for(const name of ['Cargo.toml','Cargo.lock','src/lib.rs','src/ledger.rs'])source.update(name+'\0').update(await readFile('contracts/treasury/'+name));
+const source=createHash('sha256');for(const name of ['Cargo.toml','Cargo.lock','src/lib.rs','src/ledger.rs','src/review.rs'])source.update(name+'\0').update(await readFile('contracts/treasury/'+name));
 if(source.digest('hex')!==build.sourceSha256)throw Error('Contract source changed without rebuilding the tested artifact');
 if(sha!==build.sha256||sha!==sandbox.wasmSha256||sandbox.status!=='PASS')throw Error('Contract artifact/evidence mismatch');
 console.log(JSON.stringify({status:'PASS',trackedFiles:files.length,credentialMatches:0,contractEvidenceMatches:true}));

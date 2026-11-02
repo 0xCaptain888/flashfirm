@@ -8,6 +8,7 @@ import { verifyLiveReceipt } from './src/live.mjs';
 import { openStore } from './src/local-store.mjs';
 import { commitPolicy, assessReview, resolveAppeal, selectSignedOffers } from './src/governance.mjs';
 import { scoreContributions } from './src/contribution.mjs';
+import { executeLiveJob } from './src/live-job.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const runtime = path.join(root, '.runtime');
@@ -16,15 +17,15 @@ await chmod(runtime, 0o700);
 const store=await openStore(runtime);
 const limiter=new Map();
 let workerBusy=false;
-const worker=setInterval(()=>{
+const worker=setInterval(async ()=>{
   if(workerBusy)return;workerBusy=true;
   try {
     const job=store.claim();if(!job)return;
     try {
       const receipt=job.input.receipt;
-      const result=receipt?.payload?.version==='flashfirm-live/0.1'?verifyLiveReceipt(receipt):verifyReceipt(receipt);
+      const result=job.input.kind==='LIVE_PUBLIC_REVIEW' ? await executeLiveJob(store,job,runtime) : receipt?.payload?.version==='flashfirm-live/0.1'?verifyLiveReceipt(receipt):verifyReceipt(receipt);
       store.finish(job.id,job.lease,result);
-    }catch{store.finish(job.id,job.lease,{error:'Receipt verification failed'},true);}
+    }catch(error){store.finish(job.id,job.lease,{error:/^[A-Z0-9_]+$/.test(error.message)?error.message:'Job failed; inspect local configuration and retained partial work'},true);}
   }catch(error){console.error('Background verifier failed:',error.code??'INTERNAL_ERROR');}
   finally{workerBusy=false;}
 },500);

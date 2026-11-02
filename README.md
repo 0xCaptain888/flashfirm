@@ -25,11 +25,12 @@ npm run operator:token
 
 - SQLite transactions, ownership isolation, expiring/revocable operator tokens, request limits and durable activity history.
 - AES-256-GCM encrypted private documents and queued inputs; local key storage, not TEE.
-- Background receipt verification with idempotency keys, restart recovery, worker leases and stale-completion rejection.
+- Background receipt verification with idempotency keys, restart recovery, worker leases and stale-completion rejection. A bounded public-source AI job runner adds budget preflight, heartbeats and no automatic retry of possibly charged work; its orchestration is mock-tested, not yet exercised as a paid queued run.
 - Workspace closure cancels unfinished work and removes active documents; it does not certify backup erasure or blockchain refunds.
-- Signed capability/price offers, complete-team selection under budget, pinned review keys, challenge/appeal verification, and signed-rubric counterfactual coverage scoring. These validation modules are not yet a live multi-operator marketplace or on-chain appeal mechanism.
+- Signed capability/price offers, complete-team selection under budget, pinned review keys, challenge/appeal verification, and signed-rubric counterfactual coverage scoring. These modules are not yet a live multi-operator marketplace. Treasury v0.2 separately enforces native NEAR account review and arbitration; mapping off-chain keys to those accounts remains external.
 - Integration client in `src/client.mjs` and API instructions in [Operations](docs/OPERATIONS.md).
-- 35 JavaScript tests, 9 pure Rust accounting tests, HTTP integration checks and actual local NEAR sandbox execution, including failed-transfer recovery. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
+- 42 JavaScript tests, 11 pure Rust accounting tests, 5 appeal timing tests, HTTP integration checks and actual local NEAR sandbox execution, including failed-transfer recovery and all three arbitration outcomes. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
+- Testnet configuration validation and read-only deployed-bytecode/participant verification: [testnet instructions](docs/TESTNET.md). No deployment or payment is implied by an offline configuration check.
 
 ### Live-model development milestone
 
@@ -47,7 +48,7 @@ Exact source quotation checks and the live receipt verifier pass. This is not a 
 - Deterministic leave-one-out **fixture rubric coverage** scoring, not exact Shapley values or a claim of objective fairness.
 - Integer largest-remainder allocation, 2% fee, zero payout for failed work, full refund for an empty eligible set.
 - Standalone Node verifier recomputing signatures, graph, sources, coverage and payouts.
-- Compiled NEAR treasury with fixed recipients, two-of-three approval, pull claims, callback recovery and expired-task refunds. Actual sandbox execution validates authorization, quorum, payout and refund. No testnet deployment is claimed.
+- Compiled NEAR treasury v0.2 with fixed recipients, two-of-three approval, an appeal waiting period, challenge freeze, pinned arbiter, bounded arbitration timeout, pull claims and callback recovery. Actual sandbox execution validates authorization, quorum, payout and refund. No testnet deployment is claimed.
 
 ## Honest boundaries
 
@@ -58,7 +59,7 @@ The sample console's last state is `PLANNED`. Private workspace closure is local
 ## Next integration milestones
 
 1. NEAR testnet treasury: buyer deposit, trusted evaluator quorum, unique settlement nonce, replay protection, budget enforcement, refund and revocation.
-2. Generalize the recorded real specialist flow into authorized persistent model jobs; pin task rubric before funding.
+2. Exercise the bounded persistent model runner with an explicitly renewed call allowance; then generalize beyond the approved public-source preset and pin task rubric before funding.
 3. Onboard independent evaluators and bind durable review/appeal commitments to settlement.
 4. Confidential execution with independently checked attestation; keep synthetic inputs until then.
 5. Live settlement verification and, afterward, Intents payout delivery.
@@ -67,7 +68,7 @@ The sample console's last state is `PLANNED`. Private workspace closure is local
 
 `npm run build:pages` creates `dist/`: an explicitly labeled read-only sample, recorded real AI report, signed receipts and sandbox evidence. Asset URLs are relative. `.github/workflows/pages.yml` builds and deploys with GitHub Actions. The workflow requires no model credential. Pages does not host the authenticated Node backend and viewing the site invokes no paid models. Only approved public-source artifacts under `evidence/` are copied; `.runtime/` is never published.
 
-The user-selected gateway is `https://api.apikey.fan/v1`. Authenticated discovery and real JSON completions have passed using `deepseek-flash`. The private local policy records the approved CNY 20 development cap. `.env.example` documents settings, while current CLI execution reads ignored `.runtime` JSON configuration. Paid model calls are available only through the CLI; viewing the report never incurs model calls. Do not upload the runtime directory or credentials to GitHub.
+The user-selected gateway is `https://api.apikey.fan/v1`. Authenticated discovery and real JSON completions have passed using `deepseek-flash`. The private local policy records the approved CNY 20 development cap. `.env.example` documents settings, while the CLI and authenticated public-review job runner read ignored `.runtime` JSON configuration and share the cumulative reservation ledger. The queued runner requires room for all four calls; the existing six-of-eight call count blocks a fresh complete run. Viewing the report never incurs model calls. Do not upload the runtime directory or credentials to GitHub.
 
 ## Local API
 

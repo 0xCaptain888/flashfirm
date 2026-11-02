@@ -7,11 +7,11 @@ const worker=await Worker.init(),checks=[];
 const gas=100000000000000n;
 try{
  const root=worker.rootAccount;
- const accounts=[];for(const n of ['buyer','worker','review-a','review-b','review-c','outsider'])accounts.push(await root.createSubAccount(n));
- const [buyer,recipient,a,b,c,outsider]=accounts;
+ const accounts=[];for(const n of ['buyer','worker','review-a','review-b','review-c','outsider','arbiter'])accounts.push(await root.createSubAccount(n));
+ const [buyer,recipient,a,b,c,outsider,arbiter]=accounts;
  const contract=await root.devDeploy(wasm);
  const deadline=String((BigInt(Date.now())+3600000n)*1000000n);
- const args={buyer:buyer.accountId,evaluators:[a,b,c].map(x=>x.accountId),recipients:[buyer,recipient].map(x=>x.accountId),task_root:'a'.repeat(64),deadline_ns:deadline};
+ const args={buyer:buyer.accountId,evaluators:[a,b,c].map(x=>x.accountId),recipients:[buyer,recipient].map(x=>x.accountId),task_root:'a'.repeat(64),deadline_ns:deadline,arbiter:arbiter.accountId,policy_hash:'f'.repeat(64),appeal_window_ns:'60000000000',arbitration_window_ns:'60000000000'};
  await assert.rejects(buyer.call(contract,'new',args));
  await contract.call(contract,'new',args);
  await assert.rejects(outsider.call(contract,'fund',{},{attachedDeposit:10000n}));
@@ -27,6 +27,9 @@ try{
  await assert.rejects(recipient.call(contract,'claim',{}, {gas}));
  await b.call(contract,'approve',{plan_hash:plan});checks.push('Exact allocation, pinned reviewers and 2-of-3 quorum enforced');
  await assert.rejects(outsider.call(contract,'on_claim',{recipient_index:1}));
+ await assert.rejects(recipient.call(contract,'claim',{}, {gas}));
+ await worker.provider.fastForward(200);
+ await assert.rejects(buyer.call(contract,'challenge',{plan_hash:plan,reason_root:'c'.repeat(64)}));
  assert.equal(await recipient.call(contract,'claim',{}, {gas}),true);
  const status=await contract.view('get_status',{});
  assert.equal(status.phase,'Closed');assert.equal(status.paid_yocto,'10000');assert.deepEqual(status.pending_yocto,['0','0']);
@@ -36,6 +39,7 @@ try{
  await buyer.call(recovery,'fund',{},{attachedDeposit:oneNear});
  const recoveryPlan=await buyer.call(recovery,'propose',{amounts_yocto:['0',String(oneNear)],evidence_root:'e'.repeat(64)});
  await a.call(recovery,'approve',{plan_hash:recoveryPlan});await b.call(recovery,'approve',{plan_hash:recoveryPlan});
+ await worker.provider.fastForward(200);
  // Delete only a disposable sandbox account to force a genuine receipt failure.
  await temporary.delete(root.accountId);
  assert.equal(await outsider.call(recovery,'claim_for',{recipient:temporary.accountId}, {gas}),false);
@@ -54,6 +58,32 @@ try{
  assert.equal(await buyer.call(refundable,'claim',{}, {gas}),true);
  assert.equal((await refundable.view('get_status',{})).phase,'Closed');
  checks.push('Unapproved expired task returns full funding through buyer claim');
+ // Direct on-chain dispute enforcement; no trusted HTTP coordinator bypass.
+ for(const outcome of ['uphold','reject','timeout']){
+   const disputed=await root.devDeploy(wasm),head=await worker.provider.block({finality:'final'});
+   await disputed.call(disputed,'new',{...args,deadline_ns:String(BigInt(head.header.timestamp_nanosec)+120000000000n)});
+   await buyer.call(disputed,'fund',{},{attachedDeposit:10000n});
+   const planHash=await buyer.call(disputed,'propose',{amounts_yocto:['0','10000'],evidence_root:'b'.repeat(64)});
+   await a.call(disputed,'approve',{plan_hash:planHash});await b.call(disputed,'approve',{plan_hash:planHash});
+   await assert.rejects(outsider.call(disputed,'challenge',{plan_hash:planHash,reason_root:'c'.repeat(64)}));
+   await recipient.call(disputed,'challenge',{plan_hash:planHash,reason_root:'c'.repeat(64)});
+   await assert.rejects(recipient.call(disputed,'claim',{}, {gas}));
+   const resolution={plan_hash:planHash,challenge_root:'c'.repeat(64),uphold:outcome==='uphold',resolution_root:'d'.repeat(64)};
+   await assert.rejects(buyer.call(disputed,'resolve_challenge',resolution));
+   if(outcome==='timeout'){
+     await assert.rejects(buyer.call(disputed,'make_refund_available',{}));
+     await worker.provider.fastForward(600);
+     await buyer.call(disputed,'make_refund_available',{});
+     assert.equal(await buyer.call(disputed,'claim',{}, {gas}),true);
+   }else{
+     await arbiter.call(disputed,'resolve_challenge',resolution);
+     await assert.rejects(arbiter.call(disputed,'resolve_challenge',resolution));
+     if(outcome==='uphold'){await worker.provider.fastForward(200);assert.equal(await recipient.call(disputed,'claim',{}, {gas}),true);}
+     else {await assert.rejects(recipient.call(disputed,'claim',{}, {gas}));assert.equal(await buyer.call(disputed,'claim',{}, {gas}),true);}
+   }
+   assert.equal((await disputed.view('get_status',{})).phase,'Closed');
+   checks.push(`On-chain appeal ${outcome}: payment gate, pinned arbiter, exact claim/refund and closure verified`);
+ }
  const record={status:'PASS',network:'LOCAL_SANDBOX',wasmSha256:createHash('sha256').update(wasm).digest('hex'),checks,closedStatus:status,testnetDeployed:false,failedTransferCallbackTested:true,faultInjection:'Deleted and recreated a disposable local sandbox recipient; no user account involved',at:new Date().toISOString()};
  await mkdir(new URL('../.runtime/',import.meta.url),{recursive:true});await writeFile(new URL('../.runtime/sandbox-evidence.json',import.meta.url),JSON.stringify(record,null,2));console.log(JSON.stringify(record,null,2));
 }finally{await worker.tearDown();}

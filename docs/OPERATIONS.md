@@ -21,7 +21,7 @@ Read `.runtime/operator-token.txt` locally and paste into the workspace. Do not 
 - `.runtime/vault.key` is a local 0600 key; directory permissions are 0700. Losing it loses access to encrypted data. A host administrator can read it: **this is not TEE**.
 - Verification jobs are idempotent per workspace/request key. Reusing a key with different input is rejected.
 - A 30-second lease, three-attempt ceiling and fenced completion allow crash recovery without stale workers overwriting new results.
-- Only receipt-verification jobs are enabled. Background model calls, arbitrary shell commands and payouts are not enabled.
+- Jobs support receipt verification and the explicitly selected `LIVE_PUBLIC_REVIEW` preset described below. Arbitrary prompts, shell commands and payouts are not enabled.
 - Workspace closure cancels queued/running work and removes active document records. Audit metadata stays. SQLite pages, WAL files and backups are not certified erased; no on-chain refund/key revocation is implied.
 - Model budget reservations are separate and survive workspace closure.
 
@@ -40,11 +40,21 @@ const status = await client.job(firm.id, job.id);
 
 Requests time out after 15 seconds. The SDK never automatically repeats a write. Preserve the same idempotency key when retrying a verification submission. `SUCCEEDED` means the verifier completed; inspect `result.valid` to determine whether the receipt passed.
 
+## Bounded public-source AI jobs
+
+`client.runPublicReview(firm.id, 'public-review-v1')` explicitly requests the approved pinned OpenZeppelin review. The API input is `{kind:"LIVE_PUBLIC_REVIEW",preset:"openzeppelin-pinned",approvedCapFen:2000}`. It accepts no customer documents, arbitrary prompt or provider override. Only an authenticated local operator may queue it.
+
+The runner requires the existing shared policy/budget ledger and room for four calls and up to 1,028 fen of conservative reservations. Per-call limits remain authoritative even if another process spends between preflight and execution. The present six-of-eight call usage blocks a new full run; increasing limits requires user authorization, not deleting/resetting the ledger. No new paid run was made to test this runner. Dependency-injected tests exercise its orchestration without contacting a provider.
+
+Five-second heartbeats renew the 30-second lease. Before dispatching the first paid call, the queue records a persistent paid-start marker. If the lease expires thereafter, the job fails for manual inspection and is never automatically replayed. Failed/ambiguous provider reservations stay consumed. Reusing the same idempotency key returns the original job, including a failed one. Partial sources/outputs remain under `.runtime/model-jobs/<job-id>`; provider credentials and the budget ledger stay at the shared runtime root. A new key is a new job, not recovery of old spending.
+
+Dissolution prevents subsequent provider calls and refuses stale completion. It cannot retract a request already delivered to the provider; that call may finish and still incur cost. The closed workspace's audit and partial public-source output may remain locally. A successful model job records the signed report, never an on-chain payment, and does not replace the published demonstration evidence automatically.
+
 ## Signed offers, review and scoring
 
 Authenticated `POST /api/workspaces/evaluate` supports `COMMIT_POLICY`, `SELECT_TEAM`, `REVIEW`, `APPEAL`, and `SCORE`; see `src/governance.mjs`, `src/contribution.mjs` and their tests for the versioned envelope schemas.
 
-The evaluate endpoint is a **stateless verifier of caller-supplied commitments**, not an external identity registry or settlement permission. For persistence, `POST /api/workspaces/:id/review` pins `{policy,resultRoot}` immutably; `/decision`, `/appeal` and `/resolution` accept the corresponding signed envelopes. `GET /review` returns the decision trail. Changed policies, overwritten decisions, late submitted appeals and new decisions after an appeal are rejected. Review identities, reasons and signatures are retained as audit metadata, so do not include confidential source material in reasons. The current treasury contract does not yet enforce the JavaScript appeal policy: do not wire `RELEASE_ELIGIBLE` directly to funds.
+The evaluate endpoint is a **stateless verifier of caller-supplied commitments**, not an external identity registry or settlement permission. For persistence, `POST /api/workspaces/:id/review` pins `{policy,resultRoot}` immutably; `/decision`, `/appeal` and `/resolution` accept the corresponding signed envelopes. `GET /review` returns the decision trail. Changed policies, overwritten decisions, late submitted appeals and new decisions after an appeal are rejected. Review identities, reasons and signatures are retained as audit metadata, so do not include confidential source material in reasons. Treasury v0.2 enforces its own native NEAR account quorum, appeal window, challenge freeze and pinned arbitration. It does not verify these JavaScript envelopes: do not wire `RELEASE_ELIGIBLE` directly to funds without an authenticated identity mapping and the actual on-chain approvals.
 
 Signed offers are selected by capability-mask dynamic programming under an integer budget. Registered capabilities are upper bounds. Multiple identities controlled by one entity are not independent suppliers.
 

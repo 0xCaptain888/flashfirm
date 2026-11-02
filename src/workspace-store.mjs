@@ -27,6 +27,9 @@ export class WorkspaceStore {
       CREATE TABLE IF NOT EXISTS events (seq INTEGER PRIMARY KEY AUTOINCREMENT, firm TEXT NOT NULL REFERENCES firms(id), kind TEXT NOT NULL, data TEXT NOT NULL, created INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS review_policies (firm TEXT PRIMARY KEY REFERENCES firms(id), commitment TEXT NOT NULL, result_root TEXT NOT NULL, decisions TEXT NOT NULL DEFAULT '[]', appeal TEXT, resolution TEXT);
       PRAGMA user_version=1;`);
+    if (!this.db.prepare('PRAGMA table_info(jobs)').all().some(c => c.name === 'paid_started')) {
+      this.db.exec('ALTER TABLE jobs ADD COLUMN paid_started INTEGER NOT NULL DEFAULT 0');
+    }
   }
   transaction(fn) {
     this.db.exec('BEGIN IMMEDIATE');
@@ -138,7 +141,9 @@ export class WorkspaceStore {
   }
   enqueue(owner,firm,key,input) {
     required(key,100);
-    if(input?.kind!=='VERIFY_RECEIPT'||!input.receipt||Buffer.byteLength(encode(input))>400000)throw Error('Only bounded receipt verification jobs are enabled');
+    const verification = input?.kind === 'VERIFY_RECEIPT' && input.receipt;
+    const live = input?.kind === 'LIVE_PUBLIC_REVIEW' && input.preset === 'openzeppelin-pinned' && input.approvedCapFen === 2000 && Object.keys(input).length === 3;
+    if ((!verification && !live) || Buffer.byteLength(encode(input))>400000) throw Error('Unsupported job or invalid public-review authorization');
     return this.transaction(()=>{
       this.access(owner,firm,true); const inputHash=digest(encode(input));
       const old=this.db.prepare('SELECT * FROM jobs WHERE firm=? AND request_key=?').get(firm,key);
@@ -154,6 +159,8 @@ export class WorkspaceStore {
   claim() {
     return this.transaction(()=>{
       const now=this.now();
+      // Never replay a possibly charged request after a worker crash or lost lease.
+      this.db.prepare("UPDATE jobs SET state='FAILED',lease=NULL,result=? WHERE state='RUNNING' AND expires<=? AND paid_started=1").run(encode({error:'Paid run interrupted; reservations retained; inspect partial output before any manual retry'}),now);
       this.db.prepare("UPDATE jobs SET state='FAILED',result=? WHERE state='RUNNING' AND expires<=? AND attempts>=3").run(encode({error:'Worker lease exhausted'}),now);
       const j=this.db.prepare("SELECT jobs.* FROM jobs JOIN firms ON firms.id=jobs.firm WHERE firms.state='ACTIVE' AND (jobs.state='QUEUED' OR (jobs.state='RUNNING' AND jobs.expires<=?)) AND jobs.attempts<3 ORDER BY jobs.created LIMIT 1").get(now);
       if(!j)return null;
@@ -162,7 +169,16 @@ export class WorkspaceStore {
       try{const b=decode(j.input), d=createDecipheriv('aes-256-gcm',this.key,Buffer.from(b.iv,'base64'));d.setAAD(Buffer.from(`${j.firm}:${j.id}`));d.setAuthTag(Buffer.from(b.tag,'base64'));
       input=JSON.parse(Buffer.concat([d.update(Buffer.from(b.ciphertext,'base64')),d.final()]).toString());}
       catch{this.db.prepare("UPDATE jobs SET state='FAILED',input='{}',lease=NULL,result=? WHERE id=?").run(encode({error:'Encrypted job integrity failure'}),j.id);this.event(j.firm,'JOB_FAILED',{id:j.id,reason:'INPUT_INTEGRITY'});return null;}
-      this.event(j.firm,'JOB_STARTED',{id:j.id,attempt:j.attempts+1}); return {id:j.id,lease,input};
+      this.event(j.firm,'JOB_STARTED',{id:j.id,attempt:j.attempts+1}); return {id:j.id,firm:j.firm,lease,input};
+    });
+  }
+  renew(id,lease) {
+    return this.db.prepare("UPDATE jobs SET expires=? WHERE id=? AND state='RUNNING' AND lease=? AND expires>?").run(this.now()+30000,id,lease,this.now()).changes === 1;
+  }
+  markPaidStarted(id,lease) {
+    return this.transaction(() => {
+      const changed = this.db.prepare("UPDATE jobs SET paid_started=1 WHERE id=? AND state='RUNNING' AND lease=? AND expires>?").run(id,lease,this.now()).changes;
+      if (changed !== 1) throw Error('JOB_NO_LONGER_ACTIVE');
     });
   }
   finish(id,lease,result,failed=false) {

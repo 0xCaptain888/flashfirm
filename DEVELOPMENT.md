@@ -1,5 +1,13 @@
 # Development checkpoint — 2026-11-02
 
+## Current checkpoint: on-chain arbitration and bounded AI queue
+
+This section supersedes historical entries below. Treasury v0.2 compiled successfully and the actual local NEAR sandbox passed normal payout, failed-transfer recovery, ordinary expiry refund, and challenged-plan uphold/reject/timeout paths. Quorum starts an appeal window rather than immediately enabling payment. Native NEAR account arbitration does not automatically verify the application's off-chain signed envelopes.
+
+Current automated coverage: 42 JavaScript tests, 11 pure Rust accounting tests and 5 pure review timing tests. Testnet configuration preparation and same-block code/participant verification are implemented; no testnet account or payment has been recorded. A bounded persistent public-source model runner is implemented and tested using injected mock provider responses. It shares the existing cumulative budget, renews leases and refuses automatic replay after a potentially charged call. The six-of-eight call ledger blocks a new four-call run. No new paid calls occurred in this checkpoint.
+
+Remaining implementation/integration includes authenticated mapping of off-chain keys to NEAR accounts, wallet/deployment UI, independent operators, TEE attestation, Intents routing/delivery, production authentication/hosting and real queued-run validation. None are claimed complete. GitHub Pages is a static public demonstration, not the private backend.
+
 ## Subsequent real model milestone
 
 - User confirmed CNY 20 cumulative model development budget.
