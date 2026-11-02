@@ -33,7 +33,9 @@
     "@near-wallet-selector/my-near-wallet": "10.1.4",
     "buffer": "6.0.3",
     "esbuild": "0.28.2",
+    "meteor-crypto": "npm:@near-js/crypto@2.2.5",
     "meteor-transactions": "npm:@near-js/transactions@2.2.5",
+    "near-api-js": "5.1.1",
     "near-workspaces": "5.0.0",
     "util": "0.12.5"
   }

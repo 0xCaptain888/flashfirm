@@ -7,7 +7,11 @@ export async function nearRpc(method, params, fetcher = fetch) {
   while (true) { const { done, value } = await reader.read(); if (done) break; size += value.length; if (size > 2_000_000) { await reader.cancel(); throw Error('RPC response too large'); } chunks.push(value); }
   const bytes = new Uint8Array(size); let offset = 0; for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
   const body = JSON.parse(new TextDecoder().decode(bytes));
-  if (body.error || !body.result) throw Error('Testnet RPC rejected request; check account and network');
+  if (body.error || !body.result) {
+    const error = Error('Testnet RPC rejected request; check account and network');
+    error.rpcCause = body.error?.cause?.name || body.error?.data?.name;
+    throw error;
+  }
   return body.result;
 }
 export async function inspectTreasury(plan, codeHash, rpc = nearRpc) {

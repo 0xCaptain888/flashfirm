@@ -7,6 +7,7 @@ try{const config=JSON.parse(await readFile('.runtime/provider-secret.json','utf8
 for(const file of files){
  if(file.startsWith('.runtime/')||file==='.env'||/\.sqlite(?:-wal|-shm)?$|vault\.key|operator-token\.txt/.test(file))throw Error('Private file staged');
  const bytes=await readFile(file);const text=bytes.toString('utf8');
+ if (/ed25519:[1-9A-HJ-NP-Za-km-z]{80,}/.test(text)) throw Error(`NEAR private-key-like content found in ${file}`);
  if(secrets.some(secret=>text.includes(secret))||/-----BEGIN (?:RSA |EC |ENCRYPTED )?PRIVATE KEY-----|\bghp_[A-Za-z0-9]{30,}|\bsk-[A-Za-z0-9]{35,}/.test(text))throw Error(`Credential-like content found in ${file}`);
 }
 const build=JSON.parse(await readFile('artifacts/contract-build.json','utf8'));

@@ -1,5 +1,23 @@
 # Testnet handoff
 
+## Wallet-funded deployment setup
+
+The Meteor connection for `0xcaptain888.testnet` was observed successfully in Chrome on 2026-11-02. This is wallet connectivity evidence, not deployment/payment evidence.
+
+Run `node scripts/prepare-wallet-deployment.mjs YOUR_ACCOUNT.testnet` once. This creates a protected ignored `.runtime/testnet-deployment/` directory. **Never upload `keys.json`.** The generated `setup-public.json` contains public keys and the exact six child account names; `config-public.json` contains the pinned treasury configuration. Existing keys are never replaced silently.
+
+In the wallet console, upload only `setup-public.json` under step 0 and preview. Six transactions create NEW direct children of the connected buyer: treasury receives 2.5 testnet NEAR; three reviewers, arbiter and worker receive 0.1 each. Total is **3 testnet NEAR plus gas**. Each new child receives its own full-access development key held by the local operator. No key is added to the parent wallet. This enables development automation only; all reviewers are controlled by one operator. Account creation is not atomic across six transactions. Any cancellation, timeout or partial completion must be inspected before retrying; the browser records an attempt marker and does not replay it automatically.
+
+After wallet authorization and creation:
+
+```sh
+node scripts/deploy-wallet-treasury.mjs verify-accounts
+node scripts/deploy-wallet-treasury.mjs deploy
+node scripts/deploy-wallet-treasury.mjs verify
+```
+
+The deployer verifies all six exact public keys, the tested Wasm digest, an empty code slot and storage reserve before submitting a self-signed deploy+initialize batch. An exclusive attempt journal blocks uncertain replay. A contract that already has code is never overwritten. Verification re-reads bytecode and pinned configuration at a final testnet block. Private keys are never printed, uploaded or needed by the browser. Scripts require direct access to the official testnet RPC; local RPC connectivity remains an environment dependency. These new deployment commands have unit/build validation, but no actual testnet setup/deployment has yet been authorized or executed.
+
 Meteor support (2026-11-02): the wallet menu now defaults to Meteor Connect SDK 3.24.1, with MyNearWallet as an alternative. Open in the Chrome profile containing the Meteor extension. The SDK offers extension transport when detected; otherwise it offers Meteor Web. The target is always testnet. No `addFunctionCallKey` is requested; signing sets `useFunctionCallKey: false`. Mobile bridge and account transfers are disabled. Browser initialization, connection-choice popup and cancellation are checked; actual extension authorization and signing remain user-dependent. Dependencies pin patched nanoid/decode-uri-component; installation audit reports 16 low advisories and no moderate/high/critical advisories.
 
 The treasury is compiled and sandbox-tested, but no testnet deployment is recorded. The preparation and verification tools do not sign, fund, deploy or call paid models.

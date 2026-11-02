@@ -8,6 +8,8 @@ Development status: real model output + local durable backend + sandbox-tested N
 
 Wallet console: choose **Meteor Wallet** or **MyNearWallet**. For the Meteor extension, open the demo in the browser where it is installed. The connection targets NEAR testnet; no delegated key is requested and Meteor transactions explicitly disable function-call-key execution. Extension authorization and real signing still require user testing.
 
+Meteor testnet connection has now been verified in Chrome. The console also previews a six-account development setup (3 testnet NEAR plus gas), with keys retained locally and a guarded deploy/initialize CLI. See [testnet handoff](docs/TESTNET.md). Account setup, contract deployment and payment remain pending; the same-operator development reviewers are not independent reviewers.
+
 ## Run locally
 
 Requires Node.js >=22.13 (24 recommended). Run `npm ci` to install the pinned wallet build tools and sandbox dependencies. JavaScript protocol tests still use Node built-ins; viewing evidence requires no API key.
