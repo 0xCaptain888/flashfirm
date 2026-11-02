@@ -1,5 +1,12 @@
 # Development checkpoint — 2026-11-02
 
+## GitHub deployment preparation
+
+- Added a GitHub Actions Pages workflow and static preview builder. Build and standalone receipt verification passed locally.
+- Public preview is a build-time fixture, not the live Node application. No model secrets are included in the artifact; no paid calls occur during the build.
+- Configured the non-secret gateway template for api.apikey.fan. Unauthenticated model discovery returned 401 API_KEY_REQUIRED; exact model support and credentials remain unverified.
+- Still no remote repository or public Pages deployment has been created by this preparation step.
+
 ## Implemented and verified
 
 - 13 JavaScript protocol tests pass, including 3,000 randomized allocation cases.

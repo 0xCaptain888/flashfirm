@@ -39,7 +39,13 @@ The last state is `PLANNED`, not `SETTLED` or `DISSOLVED`. No wallet is connecte
 4. Confidential execution with independently checked attestation; keep synthetic inputs until then.
 5. Live settlement verification and, afterward, Intents payout delivery.
 
-## API
+## GitHub Pages deployment
+
+`npm run build:pages` creates `dist/`: an explicitly labeled, read-only build-time sample with a signed receipt. Asset URLs are relative so repository Pages paths work. `.github/workflows/pages.yml` builds and deploys it after GitHub Pages is enabled with GitHub Actions as the source. The workflow does not require any model credential. This is not the interactive Node backend and does not invoke paid models.
+
+The user-selected gateway is `https://api.apikey.fan/v1`. An unauthenticated `/models` probe returned HTTP 401 with `API_KEY_REQUIRED`; this confirms endpoint reachability only. The supplied model identifier, credential validity, protocol compatibility and pricing remain unverified. `.env.example` is a configuration template, not an implemented live model adapter. Keep paid calls disabled pending an explicit usage cap.
+
+## Local API
 
 | Method | Path | Purpose |
 | --- | --- | --- |
