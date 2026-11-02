@@ -1,0 +1,1 @@
+{"name":"flashfirm-cloudflare","private":true,"type":"module","scripts":{"dev":"wrangler dev --port 43184","check":"wrangler deploy --dry-run","deploy":"wrangler deploy"},"devDependencies":{"wrangler":"4.156.2"}}

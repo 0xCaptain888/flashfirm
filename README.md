@@ -1,5 +1,7 @@
 # FlashFirm
 
+**Free backend preparation:** a separate Cloudflare Workers + D1 + Workflows implementation now passes local emulator tests for persistent workspace writes, encrypted inputs, signed-receipt verification and duplicate prevention. Paid model calls remain disabled. Public deployment awaits account authorization. [Setup and feature boundaries](docs/CLOUDFLARE-FREE.md).
+
 **2026-11-03 (Asia/Shanghai): real testnet failed-transfer recovery verified.** A 0.001 NEAR claim failed because its named recipient did not exist; the callback restored the entire credit. After creating that recipient, retry succeeded and the isolated treasury closed with zero remaining credit/pending balance. No account was deleted. [All transaction evidence](evidence/testnet-recovery.json). Reviewers remain development identities under one operator.
 
 **Verification lifecycle upgrade:** reviewer revocation and fresh account-key rechecks; persistent single-use TEE challenges; immutable destination requests with global transaction replay protection; backup restore invalidation; public-backend HTTPS smoke check and testnet recovery preflight. These do not claim independent operators, a running enclave, a public backend or a completed cross-chain transfer. [Integration API and deployment guide](docs/EXTERNAL-INTEGRATIONS.md).

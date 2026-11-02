@@ -1,6 +1,29 @@
 name: Protocol checks
 on: [push, pull_request]
 jobs:
+  cloudflare-local:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --prefix cloudflare
+      - run: node scripts/build-cloud-assets.mjs
+      - run: npm --prefix cloudflare run check
+      - run: node cloudflare/node_modules/wrangler/bin/wrangler.js d1 migrations apply flashfirm-free --local --config cloudflare/wrangler.jsonc
+      - run: node scripts/prepare-cloud-local.mjs
+      - run: node cloudflare/node_modules/wrangler/bin/wrangler.js d1 execute flashfirm-free --local --config cloudflare/wrangler.jsonc --file .runtime/cloudflare/local-test-token.sql
+      - name: Verify local Workers, D1 and Workflows together
+        run: |
+          npm --prefix cloudflare run dev > /tmp/flashfirm-cloud-local.log 2>&1 &
+          cloud_pid=$!
+          trap 'kill "$cloud_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:43184/healthz; then break; fi
+            sleep 1
+          done
+          node scripts/check-cloud-local.mjs
   managed-container:
     runs-on: ubuntu-latest
     steps:

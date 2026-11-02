@@ -8,3 +8,6 @@ web/treasury.bundle.js
 web/treasury.bundle.js.LEGAL.txt
 .env.*
 !.env.example
+.wrangler/
+.dev.vars
+.dev.vars.*
