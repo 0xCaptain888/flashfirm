@@ -1,5 +1,18 @@
 # Independent testnet deployment
 
+Completed on 2026-11-02: developer `flashfirm-dev-0xcaptain888.testnet` received 10 testnet NEAR from the official faucet. Six roles received 3 testnet NEAR total; gas was paid from developer funds. `treasury.flashfirm-dev-0xcaptain888.testnet` was deployed and initialized in transaction `jQwtNfa6PRiYh6RB2GZC2J9NpHFDQ8RJDj8vjNit87C`. Final bytecode/configuration verification passed at block 275896150. Task funding and payment are still zero. No Meteor funds were used.
+
+The implementation uses the official CLI's documented faucet request (`newAccountId`, `newAccountPublicKey`) through `scripts/independent-testnet-account.mjs`, and the installed NEAR SDK for deployment. The CLI binary was downloaded but not needed. Keys are in ignored `.runtime/independent-testnet/` (directory 0700, files 0600), not in the OS keychain. Public evidence is in `evidence/testnet-deployment.json` and `evidence/testnet-config.json`.
+
+Recheck without sending transactions:
+
+```sh
+node scripts/independent-testnet-account.mjs verify
+node scripts/deploy-independent-treasury.mjs verify
+```
+
+Do not rerun preparation, reset attempt journals, or overwrite keys. Provisioning verifies existing accounts and recovers final receipts without resending completed creations. Read-only RPC calls back off on HTTP 429. The SDK may refresh a nonce after a rejected nonce; ambiguous application-level submissions are fenced by attempt journals.
+
 Meteor rejected the historical six-child Full Access Key request. Do not retry it, route it through another wallet, or use account recovery to evade the restriction. The old plan remains archived and does not establish a deployed treasury.
 
 The independent route uses a new developer-owned testnet account created by the official NEAR CLI faucet service. It does not import the buyer's key or spend from `0xcaptain888.testnet`. The buyer can later approve ordinary contract calls in Meteor.

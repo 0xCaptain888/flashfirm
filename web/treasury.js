@@ -5,7 +5,16 @@ import { actionCreators } from 'meteor-transactions';
 import { meteorAdapter } from '../src/meteor-wallet.mjs';
 import { setupTransactions } from '../src/testnet-setup.mjs';
 import { prepareTestnet, treasuryAction, checkTransaction } from '../src/treasury-policy.mjs';
-import { inspectTreasury, nearRpc } from '../src/near-rpc.mjs';
+import { inspectTreasury, nearRpc as requestRpc, FASTNEAR_TESTNET_RPC, TESTNET_RPC } from '../src/near-rpc.mjs';
+import projectConfig from '../evidence/testnet-config.json';
+// Read-only RPC calls only. Browser CORS support can differ from Node access.
+async function nearRpc(method, params) {
+  try { return await requestRpc(method, params, fetch, TESTNET_RPC); }
+  catch (error) {
+    if (!(error instanceof TypeError) && error.name !== 'TimeoutError' && !/^Testnet RPC HTTP (429|5\d\d)$/.test(error.message)) throw error;
+    return requestRpc(method, params, fetch, FASTNEAR_TESTNET_RPC);
+  }
+}
 
 const $ = id => document.getElementById(id), message = text => $('treasury-message').textContent = text;
 const pendingKey = 'flashfirm:testnet:pending:v1';
@@ -13,7 +22,7 @@ let wallet, selector, meteor, plan, preview, actor = '', pending = null, busy = 
 let setupPlan;
 try { pending = JSON.parse(sessionStorage.getItem(pendingKey) || 'null'); } catch { sessionStorage.removeItem(pendingKey); }
 function invalidate() { preview = null; $('preview').hidden = true; }
-function controls() { $('connect').disabled = busy || !wallet; $('wallet-provider').disabled = busy; $('disconnect').disabled = busy || !wallet; for (const id of ['setup-file', 'setup-preview', 'inspect', 'prepare', 'sign', 'verify-transaction', 'operation', 'treasury-config', 'action-input']) $(id).disabled = busy; $('setup-sign').disabled = true; $('setup-sign').textContent = 'Unavailable: Meteor blocks Full Access Keys'; }
+function controls() { $('connect').disabled = busy || !wallet; $('wallet-provider').disabled = busy; $('disconnect').disabled = busy || !wallet; for (const id of ['setup-file', 'setup-preview', 'load-project', 'inspect', 'prepare', 'sign', 'verify-transaction', 'operation', 'treasury-config', 'action-input']) $(id).disabled = busy; $('setup-sign').disabled = true; $('setup-sign').textContent = 'Unavailable: Meteor blocks Full Access Keys'; }
 $('setup-file').onchange = () => { setupPlan = null; $('setup-confirm').hidden = true; };
 $('setup-json').oninput = () => { setupPlan = null; $('setup-confirm').hidden = true; };
 $('setup-preview').onclick = () => action(async () => {
@@ -41,7 +50,7 @@ async function action(fn) { if (busy) return; busy = true; controls(); try { awa
 async function account() { const accounts = await wallet.getAccounts(); actor = accounts[0]?.accountId || ''; $('wallet-account').textContent = actor || 'Disconnected'; return actor; }
 async function inspect() {
   if (!plan) throw Error('Load a public testnet configuration first');
-  const snapshot = await inspectTreasury(plan, __TREASURY_CODE_HASH__);
+  const snapshot = await inspectTreasury(plan, __TREASURY_CODE_HASH__, nearRpc);
   $('treasury-status').hidden = false;
   $('treasury-status').textContent = `${plan.contractId} · ${snapshot.status.phase} · final block ${snapshot.blockHeight} · ${snapshot.status.funded_yocto} yoctoNEAR funded · ${snapshot.status.paid_yocto} paid. ${snapshot.status.challenge_root ? 'Challenge recorded.' : 'No challenge.'}`;
   return snapshot;
@@ -54,6 +63,12 @@ $('connect').onclick = () => action(async () => {
 });
 $('disconnect').onclick = () => action(async () => { invalidate(); await wallet.signOut(); await account(); message('Disconnected locally. Existing on-chain permissions, if any, must be reviewed in the wallet.'); });
 $('treasury-config').onchange = () => { invalidate(); plan = null; $('treasury-status').hidden = true; };
+$('load-project').onclick = () => action(async () => {
+  invalidate(); $('treasury-status').hidden = true;
+  plan = prepareTestnet(projectConfig, 0n);
+  await inspect();
+  message('Project treasury verified against a final testnet block. Loading does not sign or transfer funds.');
+});
 $('inspect').onclick = () => action(async () => {
   invalidate(); plan = null;
   const file = $('treasury-config').files[0];

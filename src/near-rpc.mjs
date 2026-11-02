@@ -1,7 +1,9 @@
 import { pinnedMismatches } from './treasury-policy.mjs';
 export const TESTNET_RPC = 'https://rpc.testnet.near.org';
-export async function nearRpc(method, params, fetcher = fetch) {
-  const response = await fetcher(TESTNET_RPC, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(20000), headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) });
+export const FASTNEAR_TESTNET_RPC = 'https://archival-rpc.testnet.fastnear.com/';
+export async function nearRpc(method, params, fetcher = fetch, endpoint = TESTNET_RPC) {
+  if (![TESTNET_RPC, FASTNEAR_TESTNET_RPC].includes(endpoint)) throw Error('Unsupported testnet RPC');
+  const response = await fetcher(endpoint, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(20000), headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) });
   if (!response.ok) throw Error(`Testnet RPC HTTP ${response.status}`);
   const reader = response.body.getReader(), chunks = []; let size = 0;
   while (true) { const { done, value } = await reader.read(); if (done) break; size += value.length; if (size > 2_000_000) { await reader.cancel(); throw Error('RPC response too large'); } chunks.push(value); }

@@ -1,8 +1,8 @@
 # Testnet handoff
 
-**2026-11-02 correction: the wallet-funded Full Access Key setup described below is blocked by Meteor policy and has been disabled in both the UI and adapter. These setup instructions are historical, not a working deployment recommendation. Do not retry the batch, reset its attempt marker or use another transport to bypass the block. Inspect all six account IDs before deciding how to proceed. A separate, user-controlled deployment path remains unimplemented.**
+**2026-11-02 update: independent faucet-funded deployment succeeded. Use [the current deployment procedure](INDEPENDENT-TESTNET-DEPLOYMENT.md) and [public evidence](../evidence/testnet-deployment.json). In the wallet console choose “Load and verify project treasury”; no configuration upload is needed. Task payment remains pending. The wallet-funded Full Access Key setup below is archived and disabled. Do not retry it or reset its attempt marker.**
 
-## Wallet-funded deployment setup
+## Archived wallet-funded deployment setup (not executable guidance)
 
 The Meteor connection for `0xcaptain888.testnet` was observed successfully in Chrome on 2026-11-02. This is wallet connectivity evidence, not deployment/payment evidence.
 
@@ -22,17 +22,17 @@ The deployer verifies all six exact public keys, the tested Wasm digest, an empt
 
 Meteor support (2026-11-02): the wallet menu now defaults to Meteor Connect SDK 3.24.1, with MyNearWallet as an alternative. Open in the Chrome profile containing the Meteor extension. The SDK offers extension transport when detected; otherwise it offers Meteor Web. The target is always testnet. No `addFunctionCallKey` is requested; signing sets `useFunctionCallKey: false`. Mobile bridge and account transfers are disabled. Browser initialization, connection-choice popup and cancellation are checked; actual extension authorization and signing remain user-dependent. Dependencies pin patched nanoid/decode-uri-component; installation audit reports 16 low advisories and no moderate/high/critical advisories.
 
-The treasury is compiled and sandbox-tested, but no testnet deployment is recorded. The preparation and verification tools do not sign, fund, deploy or call paid models.
+The archived setup did not deploy. The separate independent developer route subsequently deployed the same sandbox-tested bytecode; see the evidence above.
 
 ## Browser wallet workflow
 
 After `npm ci && npm start`, open `/treasury.html`. The same page is shipped with Pages. It uses official `@near-wallet-selector/core` and `@near-wallet-selector/my-near-wallet` 10.1.4, with explicit testnet configuration. Connect with My NEAR Wallet. No `contractId`/`createAccessKeyFor` is passed at login, and a detected delegated function-call key blocks signing until disconnected. The browser wallet account is not a private workspace login.
 
-Upload the public configuration described below, then verify. The console checks the chain ID, final block freshness, tested bytecode hash, participants, task/policy commitments and timing at the same block. Pick an operation, enter the required public parameters and preview it. Signing rechecks the latest state and wallet account. Deposits are limited to 0.01 testnet NEAR in this UI, plus wallet gas. The contract has no equivalent deposit cap; this is a client-side development guard.
+Choose **Load and verify project treasury**, or upload a separate public configuration. The console checks chain ID, final block freshness, tested bytecode hash, participants, task/policy commitments and timing at the same block. Pick an operation, enter public parameters and preview it. Signing rechecks the latest state and wallet account. Deposits are limited to 0.01 testnet NEAR in this UI, plus wallet gas. The contract has no equivalent deposit cap; this is a client-side development guard.
 
 The wallet requests explicit signing; the application never runs a signature on page load. On return, use **Verify final execution**. It checks the exact signer, receiver, method, arguments, gas, deposit, finality and execution receipts. A `claim_for` must return a successful transfer callback. Failures or RPC timeouts never count as payment success. The exact pending intent is retained in this tab's session storage so a hash from wallet history can be checked after interruption. The tool does not automatically resend a transaction. It trusts the configured RPC, not a light-client proof.
 
-The page and unconnected guards have been browser-checked; wallet authorization, real testnet signing and RPC integration remain unverified. The current local environment timed out reaching both official NEAR RPC endpoints. Do not interpret unit fixtures or local sandbox results as a live testnet transaction.
+Meteor connection and browser live treasury verification have passed. Buyer transaction signing and payout remain unverified. Node deployment uses the official CLI's FastNEAR testnet endpoint; the browser tries the standard testnet endpoint first with transport-only fallback. Read-only RPC verification is not a light-client proof.
 
 For connectivity diagnosis, run `node scripts/check-near-network.mjs PUBLIC_ACCOUNT_ID`, or dispatch **Read-only NEAR network check** from GitHub Actions with that public ID. It checks official endpoint chain identities and account existence on testnet/mainnet. It never prints balances, handles a key or creates a transaction. A mainnet account result does not authorize mainnet deployment.
 

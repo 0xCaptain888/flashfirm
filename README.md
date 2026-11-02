@@ -1,6 +1,6 @@
 # FlashFirm
 
-Wallet setup update: Meteor blocks Full Access Key creation by ordinary dApps. The six-account creation flow is disabled; deployment is still pending. Existing setup descriptions are historical and must not be retried. Meteor connection and ordinary contract-call support remain available.
+Testnet deployment verified on 2026-11-02: `treasury.flashfirm-dev-0xcaptain888.testnet`. [Deployment evidence](evidence/testnet-deployment.json) · [Public configuration](evidence/testnet-config.json). The independent developer account used faucet funds; no Meteor funds were used. Treasury is Empty: buyer funding and payment remain untested. The rejected Meteor Full Access Key setup remains disabled.
 
 Temporary agent teams. Reproducible contribution allocation. Proof before payout.
 
@@ -10,7 +10,7 @@ Development status: real model output + local durable backend + sandbox-tested N
 
 Wallet console: choose **Meteor Wallet** or **MyNearWallet**. For the Meteor extension, open the demo in the browser where it is installed. The connection targets NEAR testnet; no delegated key is requested and Meteor transactions explicitly disable function-call-key execution. Extension authorization and real signing still require user testing.
 
-Meteor testnet connection has now been verified in Chrome. The console also previews a six-account development setup (3 testnet NEAR plus gas), with keys retained locally and a guarded deploy/initialize CLI. See [testnet handoff](docs/TESTNET.md). Account setup, contract deployment and payment remain pending; the same-operator development reviewers are not independent reviewers.
+Meteor testnet connection has been verified in Chrome. The console includes a read-only **Load and verify project treasury** action. Six development roles were created under the independent faucet-funded account and the tested contract was atomically deployed and initialized. See [deployment procedure](docs/INDEPENDENT-TESTNET-DEPLOYMENT.md). The same-operator reviewers are not independent reviewers; deployment is not payment evidence.
 
 ## Run locally
 
@@ -36,9 +36,9 @@ npm run operator:token
 - Workspace closure cancels unfinished work and removes active documents; it does not certify backup erasure or blockchain refunds.
 - Signed capability/price offers, complete-team selection under budget, pinned review keys, challenge/appeal verification, and signed-rubric counterfactual coverage scoring. These modules are not yet a live multi-operator marketplace. Treasury v0.2 separately enforces native NEAR account review and arbitration; mapping off-chain keys to those accounts remains external.
 - Integration client in `src/client.mjs` and API instructions in [Operations](docs/OPERATIONS.md).
-- 49 JavaScript tests, 11 pure Rust accounting tests, 5 appeal timing tests, HTTP integration checks and actual local NEAR sandbox execution, including failed-transfer recovery and all three arbitration outcomes. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
+- 58 JavaScript tests, 11 pure Rust accounting tests, 5 appeal timing tests, HTTP integration checks and actual local NEAR sandbox execution, including failed-transfer recovery and all three arbitration outcomes. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
 - Testnet configuration validation and read-only deployed-bytecode/participant verification: [testnet instructions](docs/TESTNET.md). No deployment or payment is implied by an offline configuration check.
-- Browser testnet wallet console using pinned official Wallet Selector components: connect/disconnect, verify deployed bytecode and roles, preview exact actions, request wallet signing, and verify final execution receipts. No function-call access key is requested. Real wallet login/signing remains untested without a configured account.
+- Browser testnet wallet console: connect/disconnect, verify deployed bytecode and roles, preview exact actions, request wallet signing, and verify final execution receipts. No function-call access key is requested. Meteor connection is verified; treasury payment signing still requires user testing.
 - Workspace UI shows durable job history, downloadable model receipts, budget status, safe idempotent recovery from uncertain submissions, and closed-workspace activity. Viewing it incurs no model calls.
 
 ### Live-model development milestone
@@ -57,13 +57,13 @@ Exact source quotation checks and the live receipt verifier pass. This is not a 
 - Deterministic leave-one-out **fixture rubric coverage** scoring, not exact Shapley values or a claim of objective fairness.
 - Integer largest-remainder allocation, 2% fee, zero payout for failed work, full refund for an empty eligible set.
 - Standalone Node verifier recomputing signatures, graph, sources, coverage and payouts.
-- Compiled NEAR treasury v0.2 with fixed recipients, two-of-three approval, an appeal waiting period, challenge freeze, pinned arbiter, bounded arbitration timeout, pull claims and callback recovery. Actual sandbox execution validates authorization, quorum, payout and refund. No testnet deployment is claimed.
+- Compiled NEAR treasury v0.2 with fixed recipients, two-of-three approval, an appeal waiting period, challenge freeze, pinned arbiter, bounded arbitration timeout, pull claims and callback recovery. Sandbox execution validates authorization, quorum, payout and refund. The identical bytecode is now deployed on testnet; testnet task payment is not yet proven.
 
 ## Honest boundaries
 
 The main console is a **local fixture implementation**, not a production autonomous company or payment service. Its documents are synthetic and outputs deterministic. The separate live report uses real public source retrieval and model calls as described above. All fixture worker keys are owned by one coordinator; the live report is signed by one coordinator. Embedded keys establish consistency, not independent identity. The verifier is a separate entry point using the same reference implementation; it is not an independent security audit.
 
-The sample console's last state is `PLANNED`. Private workspace closure is local data/work management, not on-chain dissolution. No user wallet is connected and no mainnet/testnet funds have moved; the treasury has only run on a disposable local sandbox. No TEE or independent operator quorum is configured. The evidence checker receives no performance payout in the initial fixture model. Availability pay, sealed bids, live model-based counterfactual scoring, trusted identity onboarding and provider economics remain unfinished.
+The sample console's last state is `PLANNED`. Private workspace closure is local data/work management, not on-chain dissolution. Faucet-funded testnet account creation and deployment are recorded separately from this sample. No mainnet funds or Meteor wallet funds were used, and task payment remains unverified. No TEE or independent operator quorum is configured. The evidence checker receives no performance payout in the initial fixture model. Availability pay, sealed bids, live model-based counterfactual scoring, trusted identity onboarding and provider economics remain unfinished.
 
 ## Next integration milestones
 
@@ -75,7 +75,7 @@ The sample console's last state is `PLANNED`. Private workspace closure is local
 
 ## GitHub Pages deployment
 
-`npm run build:pages` creates `dist/`: an explicitly labeled read-only sample, recorded real AI report, signed receipts, sandbox evidence and the testnet wallet console. Asset URLs are relative. The console has no preconfigured treasury and only asks for signing after an explicit preview and user action. `.github/workflows/pages.yml` builds and deploys with GitHub Actions. The workflow requires no model credential. Pages does not host the authenticated Node backend and viewing the site invokes no paid models. Only approved public-source evidence is copied; `.runtime/` is never published.
+`npm run build:pages` creates `dist/`: an explicitly labeled read-only sample, recorded real AI report, signed receipts, sandbox/deployment evidence and the testnet wallet console. Asset URLs are relative. The console bundles public treasury configuration and only asks for signing after an explicit preview and user action. `.github/workflows/pages.yml` builds and deploys with GitHub Actions. The workflow requires no model credential. Pages does not host the authenticated Node backend and viewing the site invokes no paid models. Only public evidence is copied; `.runtime/` is never published.
 
 The user-selected gateway is `https://api.apikey.fan/v1`. Authenticated discovery and real JSON completions have passed using `deepseek-flash`. The private local policy records the approved CNY 20 development cap. `.env.example` documents settings, while the CLI and authenticated public-review job runner read ignored `.runtime` JSON configuration and share the cumulative reservation ledger. The queued runner requires room for all four calls; the existing six-of-eight call count blocks a fresh complete run. Viewing the report never incurs model calls. Do not upload the runtime directory or credentials to GitHub.
 

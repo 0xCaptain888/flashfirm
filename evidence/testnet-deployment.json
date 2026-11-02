@@ -1,0 +1,20 @@
+{
+  "status": "TESTNET_DEPLOYMENT_VERIFIED",
+  "network": "testnet",
+  "contractId": "treasury.flashfirm-dev-0xcaptain888.testnet",
+  "developerAccount": "flashfirm-dev-0xcaptain888.testnet",
+  "buyer": "0xcaptain888.testnet",
+  "faucetTransaction": "BYrGTVpSBLfzquM5RHkAPSLa81RDextcnkHk8xpEh6jr",
+  "deploymentTransaction": "jQwtNfa6PRiYh6RB2GZC2J9NpHFDQ8RJDj8vjNit87C",
+  "blockHash": "DNb1h13as477EzEMv5K4MkAW2M2t8LXdfseFLGU9bLwj",
+  "blockHeight": 275896150,
+  "wasmSha256": "369c28bab8da8c4ee32222f179c746072e307a4a12c56bcc730b3911553491dd",
+  "phase": "Empty",
+  "fundedYocto": "0",
+  "paidYocto": "0",
+  "independentOperators": false,
+  "paymentVerified": false,
+  "meteorFundsUsed": false,
+  "checkedAt": "2026-11-02T12:04:07.675Z",
+  "verification": "Final RPC snapshot; not a light-client proof"
+}

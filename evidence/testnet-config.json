@@ -1,0 +1,15 @@
+{
+  "network": "testnet",
+  "contractId": "treasury.flashfirm-dev-0xcaptain888.testnet",
+  "init": {
+    "buyer": "0xcaptain888.testnet",
+    "evaluators": ["review-a.flashfirm-dev-0xcaptain888.testnet", "review-b.flashfirm-dev-0xcaptain888.testnet", "review-c.flashfirm-dev-0xcaptain888.testnet"],
+    "recipients": ["0xcaptain888.testnet", "worker.flashfirm-dev-0xcaptain888.testnet"],
+    "arbiter": "arbiter.flashfirm-dev-0xcaptain888.testnet",
+    "task_root": "749fe71e8864d0547c230106e3abd537e626e09cd4dadcb1a1654d7a43b5964b",
+    "policy_hash": "084c22ed754e123ffd0f15d4c0060b9bfdfaef357d1b37f86a5b00320812e6ea",
+    "deadline_ns": "1794225649453000000",
+    "appeal_window_ns": "60000000000",
+    "arbitration_window_ns": "60000000000"
+  }
+}
