@@ -22,11 +22,16 @@
     "verify": "node scripts/verify.mjs"
   },
   "overrides": {
-    "tar": "7.5.22"
+    "tar": "7.5.22",
+    "nanoid": "5.1.16",
+    "decode-uri-component": "0.5.1"
   },
   "devDependencies": {
+    "@meteorwallet/sdk": "3.24.1",
+    "@near-js/transactions": "2.5.1",
     "@near-wallet-selector/core": "10.1.4",
     "@near-wallet-selector/my-near-wallet": "10.1.4",
+    "buffer": "6.0.3",
     "esbuild": "0.28.2",
     "near-workspaces": "5.0.0",
     "util": "0.12.5"

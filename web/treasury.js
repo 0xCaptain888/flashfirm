@@ -1,14 +1,24 @@
 import { setupWalletSelector } from '@near-wallet-selector/core';
 import { setupMyNearWallet } from '@near-wallet-selector/my-near-wallet';
+import { MeteorConnect, webpage_local_storage } from '@meteorwallet/sdk';
+import { actionCreators } from '@near-js/transactions';
+import { meteorAdapter } from '../src/meteor-wallet.mjs';
 import { prepareTestnet, treasuryAction, checkTransaction } from '../src/treasury-policy.mjs';
 import { inspectTreasury, nearRpc } from '../src/near-rpc.mjs';
 
 const $ = id => document.getElementById(id), message = text => $('treasury-message').textContent = text;
 const pendingKey = 'flashfirm:testnet:pending:v1';
-let wallet, plan, preview, actor = '', pending = null, busy = false;
+let wallet, selector, meteor, plan, preview, actor = '', pending = null, busy = false;
 try { pending = JSON.parse(sessionStorage.getItem(pendingKey) || 'null'); } catch { sessionStorage.removeItem(pendingKey); }
 function invalidate() { preview = null; $('preview').hidden = true; }
-function controls() { $('connect').disabled = busy || !wallet; $('disconnect').disabled = busy || !wallet; for (const id of ['inspect', 'prepare', 'sign', 'verify-transaction', 'operation', 'treasury-config', 'action-input']) $(id).disabled = busy; }
+function controls() { $('connect').disabled = busy || !wallet; $('wallet-provider').disabled = busy; $('disconnect').disabled = busy || !wallet; for (const id of ['inspect', 'prepare', 'sign', 'verify-transaction', 'operation', 'treasury-config', 'action-input']) $(id).disabled = busy; }
+async function selectWallet() {
+  invalidate(); actor = ''; $('wallet-account').textContent = 'Disconnected';
+  wallet = $('wallet-provider').value === 'meteor' ? meteor : await selector.wallet('my-near-wallet');
+  sessionStorage.setItem('flashfirm:wallet-provider', $('wallet-provider').value);
+  await account();
+}
+$('wallet-provider').onchange = () => action(async () => { await selectWallet(); message('Wallet selected. Connect on testnet; use the browser where your extension is installed.'); });
 async function action(fn) { if (busy) return; busy = true; controls(); try { await fn(); } catch (e) { message(e.message || 'Operation failed; no automatic retry.'); } finally { busy = false; controls(); } }
 async function account() { const accounts = await wallet.getAccounts(); actor = accounts[0]?.accountId || ''; $('wallet-account').textContent = actor || 'Disconnected'; return actor; }
 async function inspect() {
@@ -22,7 +32,7 @@ $('connect').onclick = () => action(async () => {
   invalidate();
   if (localStorage.getItem('functionCallKey')) throw Error('A delegated key is already present for this site. Disconnect, then reconnect without delegated access.');
   await wallet.signIn({}); // Deliberately no contractId/createAccessKeyFor.
-  await account(); message('Wallet connected. Every transaction requires separate approval.');
+  await account(); message(actor ? 'Wallet connected on testnet. Every transaction requires separate approval.' : 'No account returned. Complete the wallet connection, then try again.');
 });
 $('disconnect').onclick = () => action(async () => { invalidate(); await wallet.signOut(); await account(); message('Disconnected locally. Existing on-chain permissions, if any, must be reviewed in the wallet.'); });
 $('treasury-config').onchange = () => { invalidate(); plan = null; $('treasury-status').hidden = true; };
@@ -79,8 +89,12 @@ $('verify-transaction').onclick = () => action(async () => {
   message('Exact signer, receiver, action, final status and execution receipts checked.');
 });
 try {
-  const selector = await setupWalletSelector({ network: 'testnet', modules: [setupMyNearWallet({ walletUrl: 'https://testnet.mynearwallet.com' })], debug: false });
-  wallet = await selector.wallet('my-near-wallet'); await account();
+  selector = await setupWalletSelector({ network: 'testnet', modules: [setupMyNearWallet({ walletUrl: 'https://testnet.mynearwallet.com' })], debug: false });
+  const client = new MeteorConnect();
+  await client.initialize({ storage: webpage_local_storage, mobileBridge: { enabled: false } });
+  meteor = meteorAdapter(client, actionCreators);
+  $('wallet-provider').value = sessionStorage.getItem('flashfirm:wallet-provider') === 'my-near-wallet' ? 'my-near-wallet' : 'meteor';
+  await selectWallet();
   message(pending ? 'A previous signing intent is retained. Verify its hash before attempting another transaction.' : 'Ready. Connect a testnet wallet and load your public treasury configuration.');
 } catch (e) { message(`Wallet initialization failed: ${e.message}`); }
 controls();

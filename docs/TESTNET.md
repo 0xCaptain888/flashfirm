@@ -1,5 +1,7 @@
 # Testnet handoff
 
+Meteor support (2026-11-02): the wallet menu now defaults to Meteor Connect SDK 3.24.1, with MyNearWallet as an alternative. Open in the Chrome profile containing the Meteor extension. The SDK offers extension transport when detected; otherwise it offers Meteor Web. The target is always testnet. No `addFunctionCallKey` is requested; signing sets `useFunctionCallKey: false`. Mobile bridge and account transfers are disabled. Browser initialization, connection-choice popup and cancellation are checked; actual extension authorization and signing remain user-dependent. Dependencies pin patched nanoid/decode-uri-component; installation audit reports 16 low advisories and no moderate/high/critical advisories.
+
 The treasury is compiled and sandbox-tested, but no testnet deployment is recorded. The preparation and verification tools do not sign, fund, deploy or call paid models.
 
 ## Browser wallet workflow
