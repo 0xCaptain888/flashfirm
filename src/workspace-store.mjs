@@ -158,8 +158,10 @@ export class WorkspaceStore {
       const j=this.db.prepare("SELECT jobs.* FROM jobs JOIN firms ON firms.id=jobs.firm WHERE firms.state='ACTIVE' AND (jobs.state='QUEUED' OR (jobs.state='RUNNING' AND jobs.expires<=?)) AND jobs.attempts<3 ORDER BY jobs.created LIMIT 1").get(now);
       if(!j)return null;
       const lease=randomUUID(); this.db.prepare("UPDATE jobs SET state='RUNNING',lease=?,expires=?,attempts=attempts+1 WHERE id=?").run(lease,now+30000,j.id);
-      const b=decode(j.input), d=createDecipheriv('aes-256-gcm',this.key,Buffer.from(b.iv,'base64'));d.setAAD(Buffer.from(`${j.firm}:${j.id}`));d.setAuthTag(Buffer.from(b.tag,'base64'));
-      const input=JSON.parse(Buffer.concat([d.update(Buffer.from(b.ciphertext,'base64')),d.final()]).toString());
+      let input;
+      try{const b=decode(j.input), d=createDecipheriv('aes-256-gcm',this.key,Buffer.from(b.iv,'base64'));d.setAAD(Buffer.from(`${j.firm}:${j.id}`));d.setAuthTag(Buffer.from(b.tag,'base64'));
+      input=JSON.parse(Buffer.concat([d.update(Buffer.from(b.ciphertext,'base64')),d.final()]).toString());}
+      catch{this.db.prepare("UPDATE jobs SET state='FAILED',input='{}',lease=NULL,result=? WHERE id=?").run(encode({error:'Encrypted job integrity failure'}),j.id);this.event(j.firm,'JOB_FAILED',{id:j.id,reason:'INPUT_INTEGRITY'});return null;}
       this.event(j.firm,'JOB_STARTED',{id:j.id,attempt:j.attempts+1}); return {id:j.id,lease,input};
     });
   }

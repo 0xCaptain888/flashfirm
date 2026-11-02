@@ -29,7 +29,7 @@ npm run operator:token
 - Workspace closure cancels unfinished work and removes active documents; it does not certify backup erasure or blockchain refunds.
 - Signed capability/price offers, complete-team selection under budget, pinned review keys, challenge/appeal verification, and signed-rubric counterfactual coverage scoring. These validation modules are not yet a live multi-operator marketplace or on-chain appeal mechanism.
 - Integration client in `src/client.mjs` and API instructions in [Operations](docs/OPERATIONS.md).
-- 34 JavaScript tests, 9 pure Rust accounting tests, HTTP integration checks and actual local NEAR sandbox execution, including failed-transfer recovery. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
+- 35 JavaScript tests, 9 pure Rust accounting tests, HTTP integration checks and actual local NEAR sandbox execution, including failed-transfer recovery. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
 
 ### Live-model development milestone
 

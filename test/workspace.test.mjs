@@ -71,3 +71,10 @@ test('pinned policy, signed reviews and appeal survive durable storage without r
  assert.equal(s.resolve('alice',f.id,resolution).assessment.state,'REWORK_REQUIRED');assert.equal(s.review('alice',f.id).resolution.signature,resolution.signature);
  }finally{s.close();}
 });
+test('corrupted encrypted job fails once without endless lease retries',()=>{
+ const {s}=setup();try{const f=s.create('alice','Corruption test'),j=s.enqueue('alice',f.id,'bad',{kind:'VERIFY_RECEIPT',receipt:{}});
+ s.db.prepare('UPDATE jobs SET input=? WHERE id=?').run('{}',j.id);
+ assert.equal(s.claim(),null);assert.equal(s.job('alice',f.id,j.id).state,'FAILED');assert.equal(s.claim(),null);
+ assert.equal(s.events('alice',f.id).filter(e=>e.kind==='JOB_FAILED').length,1);
+ }finally{s.close();}
+});
