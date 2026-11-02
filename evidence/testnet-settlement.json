@@ -1,0 +1,27 @@
+{
+  "status": "TESTNET_PAYOUT_VERIFIED",
+  "network": "testnet",
+  "contractId": "treasury.flashfirm-dev-0xcaptain888.testnet",
+  "buyer": "0xcaptain888.testnet",
+  "recipient": "worker.flashfirm-dev-0xcaptain888.testnet",
+  "fundingHash": "G5hbCx8FqcW5Fux7ew1m3sHTbQRF7PpzLRiRF6H4gzc1",
+  "proposalHash": "BTzQkokdgPgJsXdpGUwymzcdscGZh74fdoEUicuMVRtG",
+  "evidenceRoot": "749fe71e8864d0547c230106e3abd537e626e09cd4dadcb1a1654d7a43b5964b",
+  "planHash": "979af32bc7bb14f411749b42ee0bdaeab027a8070fdbe2bf3216f3a2a7e09a74",
+  "approvals": [
+    { "accountId": "review-a.flashfirm-dev-0xcaptain888.testnet", "transactionHash": "4oW4GrdqXWSG6dnMGCSbjujT9PpGNbSn1hwyag2Puw2F" },
+    { "accountId": "review-b.flashfirm-dev-0xcaptain888.testnet", "transactionHash": "AZ3MunLAkCBNJqA8gsnUaAigW33WJzPeRuK4yKosLSF" }
+  ],
+  "payoutHash": "81LMUf63DKXrjZpQcpXdKJy54xwfLq4NVrHxRKZN4Lus",
+  "fundedYocto": "1000000000000000000000",
+  "paidYocto": "1000000000000000000000",
+  "phase": "Closed",
+  "releaseAtNs": "1793622439738843220",
+  "releaseAllowed": false,
+  "blockHash": "AJBYXtrRp9skcYvarX4bKmRF3XLKaCsr6inrjwecY2Sr",
+  "blockHeight": 275898610,
+  "checkedAt": "2026-11-02T12:28:06.257Z",
+  "independentOperators": false,
+  "semanticQualityIndependentlyVerified": false,
+  "paymentVerified": true
+}

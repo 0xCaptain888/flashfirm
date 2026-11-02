@@ -1,5 +1,7 @@
 # Independent testnet deployment
 
+Latest milestone: the buyer subsequently signed funding/allocation in Meteor, two local test reviewers approved, and 0.001 testnet NEAR was paid after the appeal period. Treasury is now Closed. [Settlement evidence](../evidence/testnet-settlement.json) supersedes the initial Empty-state snapshot below. The two reviewers and worker each needed an additional 0.2 testnet NEAR gas reserve from the developer's faucet balance. The first review-a approval was rejected for insufficient balance before execution; its original attempt journal is preserved. No automatic retry of an uncertain submission was used.
+
 Completed on 2026-11-02: developer `flashfirm-dev-0xcaptain888.testnet` received 10 testnet NEAR from the official faucet. Six roles received 3 testnet NEAR total; gas was paid from developer funds. `treasury.flashfirm-dev-0xcaptain888.testnet` was deployed and initialized in transaction `jQwtNfa6PRiYh6RB2GZC2J9NpHFDQ8RJDj8vjNit87C`. Final bytecode/configuration verification passed at block 275896150. Task funding and payment are still zero. No Meteor funds were used.
 
 The implementation uses the official CLI's documented faucet request (`newAccountId`, `newAccountPublicKey`) through `scripts/independent-testnet-account.mjs`, and the installed NEAR SDK for deployment. The CLI binary was downloaded but not needed. Keys are in ignored `.runtime/independent-testnet/` (directory 0700, files 0600), not in the OS keychain. Public evidence is in `evidence/testnet-deployment.json` and `evidence/testnet-config.json`.

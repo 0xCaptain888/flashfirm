@@ -1,5 +1,11 @@
 # Testnet handoff
 
+## Current state: settlement complete
+
+On 2026-11-02, buyer funding and allocation signed in Meteor were verified, two local development evaluators approved, the 60-second appeal window elapsed without a challenge, and the fixed worker received 0.001 testnet NEAR. The transfer callback returned success and the treasury became `Closed`. See [final settlement evidence](../evidence/testnet-settlement.json). The deployment snapshot below is historical. Do not fund or replay this completed treasury. Reviewers are not independent operators.
+
+Read-only reproduction: `node scripts/testnet-settlement.mjs verify`. This checks the actual funding, proposal, approval and payout transactions plus current bytecode, pinned configuration, credits and pending balances. It never signs in verify mode.
+
 **2026-11-02 update: independent faucet-funded deployment succeeded. Use [the current deployment procedure](INDEPENDENT-TESTNET-DEPLOYMENT.md) and [public evidence](../evidence/testnet-deployment.json). In the wallet console choose “Load and verify project treasury”; no configuration upload is needed. Task payment remains pending. The wallet-funded Full Access Key setup below is archived and disabled. Do not retry it or reset its attempt marker.**
 
 ## Archived wallet-funded deployment setup (not executable guidance)

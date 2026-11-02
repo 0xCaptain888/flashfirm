@@ -107,6 +107,6 @@ if (mode === 'provision') {
 }
 if (mode === 'deploy' || mode === 'verify') {
   const state = await inspectTreasury(plan, codeHash, rpc);
-  const evidence = { status: 'TESTNET_DEPLOYMENT_VERIFIED', network: 'testnet', contractId: plan.contractId, buyer: BUYER_ACCOUNT, blockHash: state.blockHash, blockHeight: state.blockHeight, wasmSha256: build.sha256, phase: state.status.phase, fundedYocto: state.status.funded_yocto, paidYocto: state.status.paid_yocto, independentOperators: false, paymentVerified: false, meteorFundsUsed: false, checkedAt: new Date().toISOString() };
+  const evidence = { status: 'TESTNET_DEPLOYMENT_VERIFIED', network: 'testnet', contractId: plan.contractId, buyer: BUYER_ACCOUNT, blockHash: state.blockHash, blockHeight: state.blockHeight, wasmSha256: build.sha256, phase: state.status.phase, fundedYocto: state.status.funded_yocto, paidYocto: state.status.paid_yocto, independentOperators: false, paymentVerified: false, verificationScope: 'Deployment and current state only; use testnet-settlement.mjs verify for transaction and payment proof', deploymentUsedMeteorFunds: false, checkedAt: new Date().toISOString() };
   await save('deployment-public.json', evidence); console.log(JSON.stringify(evidence));
 }
