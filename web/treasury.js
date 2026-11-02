@@ -34,6 +34,10 @@ $('setup-sign').onclick = () => action(async () => {
   const marker = `flashfirm:setup:${prepared.plan.contractId}`;
   if (localStorage.getItem(marker)) throw Error('A setup request was already attempted. Inspect account creation before retrying; no automatic replay.');
   const network = await nearRpc('status', []); if (network.chain_id !== 'testnet') throw Error('Wrong RPC network');
+  const buyerAccount = await nearRpc('query', { request_type: 'view_account', finality: 'final', account_id: actor });
+  const storage = BigInt(buyerAccount.storage_usage) * 10n ** 19n;
+  const locked = BigInt(buyerAccount.locked), liquid = BigInt(buyerAccount.amount) - (storage > locked ? storage - locked : 0n);
+  if (liquid < 305n * 10n ** 22n) throw Error('Setup needs at least 3.05 liquid testnet NEAR: 3 for accounts and a 0.05 gas reserve. Only 3 NEAR is transferred.');
   for (const tx of prepared.transactions) {
     try { await nearRpc('query', { request_type: 'view_account', finality: 'final', account_id: tx.receiverId }); }
     catch (e) { if (e.rpcCause === 'UNKNOWN_ACCOUNT') continue; throw e; }
