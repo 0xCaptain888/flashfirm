@@ -11,6 +11,8 @@ import { scoreContributions } from './src/contribution.mjs';
 import { executeLiveJob, modelAvailability } from './src/live-job.mjs';
 import { serverPolicy } from './src/server-policy.mjs';
 import { verifyReviewerBinding } from './src/reviewer-binding.mjs';
+import { IntegrationLedger } from './src/integration-ledger.mjs';
+import { loadIntegrationConfig } from './src/integration-config.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const policy = serverPolicy();
@@ -18,6 +20,7 @@ const runtime = process.env.FLASHFIRM_RUNTIME || path.join(root, '.runtime');
 await mkdir(runtime, { recursive: true, mode: 0o700 });
 await chmod(runtime, 0o700);
 const store=await openStore(runtime);
+const integrations=new IntegrationLedger(store,await loadIntegrationConfig(process.env.FLASHFIRM_INTEGRATION_CONFIG));
 const limiter=new Map();
 let workerBusy=false;
 let workerLastTick=Date.now(), shuttingDown=false;
@@ -66,7 +69,25 @@ const server = http.createServer(async (req, res) => {
       if(!window||window.until<=now)limiter.set(owner,{until:now+60000,count:1});
       else if(++window.count>120){res.setHeader('Retry-After','60');return send(res,429,{error:'Request limit reached'});}
       if(req.method==='GET'&&url.pathname==='/api/workspaces/model-status')return send(res,200,await modelAvailability(runtime));
+      if(req.method==='GET'&&url.pathname==='/api/workspaces/integration-status')return send(res,200,integrations.status());
+      const integrationPath=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)\/(deliveries|attestations)(?:\/([a-f0-9-]+))?$/);
+      if(integrationPath){
+        const [,firmId,kind,id]=integrationPath;
+        if(kind==='deliveries'){
+          if(req.method==='GET'&&!id)return send(res,200,integrations.deliveries(owner,firmId));
+          if(req.method==='POST'){const input=await body(req);return send(res,id?200:201,id?await integrations.verifyDelivery(owner,firmId,id,input.hash):integrations.createDelivery(owner,firmId,input.routeId));}
+        }
+        if(kind==='attestations'&&req.method==='POST'){
+          const input=await body(req);
+          if(!id)return send(res,201,integrations.challenge(owner,firmId,input));
+          if(typeof input.document!=='string'||input.document.length>43692||! /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(input.document))throw Error('INVALID_DOCUMENT');
+          return send(res,200,await integrations.attest(owner,firmId,id,Buffer.from(input.document,'base64')));
+        }
+        return send(res,404,{error:'Unknown integration operation'});
+      }
       if(req.method==='POST'&&url.pathname==='/api/workspaces/reviewer-challenge')return send(res,201,store.reviewerChallenge(owner,await body(req),policy.public?policy.origins[0]:'https://flashfirm.local'));
+      if(req.method==='POST'&&url.pathname==='/api/workspaces/reviewer-revoke')return send(res,200,store.revokeReviewer(owner,await body(req)));
+      if(req.method==='POST'&&url.pathname==='/api/workspaces/reviewer-recheck')return send(res,200,await store.recheckReviewer(owner,await body(req)));
       if(url.pathname==='/api/workspaces/reviewer-bindings'){
         if(req.method==='GET')return send(res,200,store.reviewerBindings(owner));
         if(req.method==='POST')return send(res,201,await store.bindReviewer(owner,await body(req)));

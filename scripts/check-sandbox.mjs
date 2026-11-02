@@ -34,18 +34,17 @@ try{
  const status=await contract.view('get_status',{});
  assert.equal(status.phase,'Closed');assert.equal(status.paid_yocto,'10000');assert.deepEqual(status.pending_yocto,['0','0']);
  await assert.rejects(recipient.call(contract,'claim',{}, {gas}));checks.push('Real sandbox transfer callback closes accounting; duplicate claim rejected');
- const recovery=await root.devDeploy(wasm),oneNear=10n**24n,temporary=await root.createSubAccount('temporary');
- await recovery.call(recovery,'new',{...args,recipients:[buyer.accountId,temporary.accountId]});
+ const recovery=await root.devDeploy(wasm),oneNear=10n**24n,temporaryId=`temporary.${root.accountId}`;
+ await recovery.call(recovery,'new',{...args,recipients:[buyer.accountId,temporaryId]});
  await buyer.call(recovery,'fund',{},{attachedDeposit:oneNear});
  const recoveryPlan=await buyer.call(recovery,'propose',{amounts_yocto:['0',String(oneNear)],evidence_root:'e'.repeat(64)});
  await a.call(recovery,'approve',{plan_hash:recoveryPlan});await b.call(recovery,'approve',{plan_hash:recoveryPlan});
  await worker.provider.fastForward(200);
- // Delete only a disposable sandbox account to force a genuine receipt failure.
- await temporary.delete(root.accountId);
- assert.equal(await outsider.call(recovery,'claim_for',{recipient:temporary.accountId}, {gas}),false);
+ // A never-created named account forces a genuine receipt failure without deletion.
+ assert.equal(await outsider.call(recovery,'claim_for',{recipient:temporaryId}, {gas}),false);
  const restored=await recovery.view('get_status',{});assert.equal(restored.credits_yocto[1],String(oneNear));assert.equal(restored.pending_yocto[1],'0');assert.equal(restored.paid_yocto,'0');
  await root.createSubAccount('temporary');
- assert.equal(await outsider.call(recovery,'claim_for',{recipient:temporary.accountId}, {gas}),true);
+ assert.equal(await outsider.call(recovery,'claim_for',{recipient:temporaryId}, {gas}),true);
  assert.equal((await recovery.view('get_status',{})).phase,'Closed');
  checks.push('Missing sandbox recipient causes real transfer failure; callback restores credit and sponsored retry succeeds');
  const refundable=await root.devDeploy(wasm);
@@ -84,6 +83,6 @@ try{
    assert.equal((await disputed.view('get_status',{})).phase,'Closed');
    checks.push(`On-chain appeal ${outcome}: payment gate, pinned arbiter, exact claim/refund and closure verified`);
  }
- const record={status:'PASS',network:'LOCAL_SANDBOX',wasmSha256:createHash('sha256').update(wasm).digest('hex'),checks,closedStatus:status,testnetDeployed:false,failedTransferCallbackTested:true,faultInjection:'Deleted and recreated a disposable local sandbox recipient; no user account involved',at:new Date().toISOString()};
+ const record={status:'PASS',network:'LOCAL_SANDBOX',wasmSha256:createHash('sha256').update(wasm).digest('hex'),checks,closedStatus:status,testnetDeployed:false,failedTransferCallbackTested:true,faultInjection:'Initially nonexistent named recipient created only after callback restored credit; no account deletion or user account involved',at:new Date().toISOString()};
  await mkdir(new URL('../.runtime/',import.meta.url),{recursive:true});await writeFile(new URL('../.runtime/sandbox-evidence.json',import.meta.url),JSON.stringify(record,null,2));console.log(JSON.stringify(record,null,2));
 }finally{await worker.tearDown();}

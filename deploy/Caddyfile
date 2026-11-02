@@ -1,0 +1,9 @@
+# Set FLASHFIRM_DOMAIN to the hostname matching FLASHFIRM_PUBLIC_ORIGIN.
+# Run Caddy on the host; the Docker backend is bound only to 127.0.0.1.
+{$FLASHFIRM_DOMAIN} {
+    reverse_proxy 127.0.0.1:43180
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+    }
+}

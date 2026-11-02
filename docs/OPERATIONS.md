@@ -75,7 +75,7 @@ npm run build:contract           # Rust wasm target and recent Binaryen required
 npm run test:sandbox
 ```
 
-The sandbox uses disposable local-chain accounts, never a user's wallet. `evidence/sandbox.json` is recorded local-chain evidence, not testnet confirmation. The failed-transfer test deletes a disposable sandbox recipient, verifies callback credit recovery, recreates the recipient and retries successfully. `claim_for` lets anyone sponsor gas, but sends only the already-approved amount to the fixed recipient.
+The sandbox uses disposable local-chain accounts, never a user's wallet. `evidence/sandbox.json` is recorded local-chain evidence, not testnet confirmation. The revised failed-transfer test starts with a nonexistent named recipient, verifies callback credit recovery, creates the recipient and retries without deleting any account. Earlier recorded evidence used deletion/recreation. `claim_for` lets anyone sponsor gas, but sends only the already-approved amount to the fixed recipient.
 
 ## External blockers
 

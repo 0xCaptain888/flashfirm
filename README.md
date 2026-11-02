@@ -1,5 +1,7 @@
 # FlashFirm
 
+**Verification lifecycle upgrade:** reviewer revocation and fresh account-key rechecks; persistent single-use TEE challenges; immutable destination requests with global transaction replay protection; backup restore invalidation; public-backend HTTPS smoke check and testnet recovery preflight. These do not claim independent operators, a running enclave, a public backend or a completed cross-chain transfer. [Integration API and deployment guide](docs/EXTERNAL-INTEGRATIONS.md).
+
 **2026-11-02 integration upgrade:** real testnet challenge/arbitration refund and expiry refund completed; a four-call paid background job completed with a valid signed receipt and a `CHALLENGED` quality result. Cumulative conservative model reservation: **CNY 15.91 / 20**, 10 / 12 calls. [Upgrade evidence](evidence/integration-upgrade.json) · [Refund transactions](evidence/testnet-exceptions.json) · [Deployment and integration boundaries](docs/PRODUCTION-READINESS.md).
 
 Testnet settlement verified on 2026-11-02: buyer wallet funding → signed allocation → two development approvals → 60-second appeal window → fixed-recipient payout. **0.001 testnet NEAR paid; treasury Closed.** [Settlement evidence](evidence/testnet-settlement.json) · [Deployment evidence](evidence/testnet-deployment.json) · [Public configuration](evidence/testnet-config.json). Account deployment and role gas used faucet funds; the buyer explicitly signed task funding and allocation in Meteor. The rejected Full Access Key setup remains disabled.

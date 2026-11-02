@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, randomUUID, createCipheriv, createDecipheriv } from 'node:crypto';
 import { chmodSync } from 'node:fs';
 import { commitPolicy, assessReview, validateAppeal, resolveAppeal } from './governance.mjs';
-import { verifyReviewerBinding } from './reviewer-binding.mjs';
+import { verifyReviewerBinding, verifyReviewerAccount } from './reviewer-binding.mjs';
 
 const digest = s => createHash('sha256').update(s).digest('hex');
 const encode = v => JSON.stringify(v);
@@ -29,6 +29,7 @@ export class WorkspaceStore {
       CREATE TABLE IF NOT EXISTS review_policies (firm TEXT PRIMARY KEY REFERENCES firms(id), commitment TEXT NOT NULL, result_root TEXT NOT NULL, decisions TEXT NOT NULL DEFAULT '[]', appeal TEXT, resolution TEXT);
       CREATE TABLE IF NOT EXISTS binding_challenges (nonce TEXT PRIMARY KEY, owner TEXT NOT NULL, expected TEXT NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL, used INTEGER NOT NULL DEFAULT 0);
       CREATE TABLE IF NOT EXISTS reviewer_bindings (owner TEXT NOT NULL, account TEXT NOT NULL, policy TEXT NOT NULL, evidence TEXT NOT NULL, PRIMARY KEY(owner,account,policy));
+      CREATE TABLE IF NOT EXISTS reviewer_revocations (owner TEXT NOT NULL, account TEXT NOT NULL, policy TEXT NOT NULL, reason TEXT NOT NULL, revoked INTEGER NOT NULL, PRIMARY KEY(owner,account,policy));
       PRAGMA user_version=1;`);
     if (!this.db.prepare('PRAGMA table_info(jobs)').all().some(c => c.name === 'paid_started')) {
       this.db.exec('ALTER TABLE jobs ADD COLUMN paid_started INTEGER NOT NULL DEFAULT 0');
@@ -78,7 +79,21 @@ export class WorkspaceStore {
       return result;
     });
   }
-  reviewerBindings(owner){return this.db.prepare('SELECT evidence FROM reviewer_bindings WHERE owner=?').all(owner).map(row=>decode(row.evidence));}
+  reviewerBindings(owner){return this.db.prepare('SELECT b.evidence,r.revoked,r.reason FROM reviewer_bindings b LEFT JOIN reviewer_revocations r ON b.owner=r.owner AND b.account=r.account AND b.policy=r.policy WHERE b.owner=?').all(owner).map(row=>({...decode(row.evidence),revokedAt:row.revoked,revocationReason:row.reason}));}
+  revokeReviewer(owner,{accountId,policyHash,reason}) {
+    const note=required(reason,300);
+    if(!this.db.prepare('SELECT 1 FROM reviewer_bindings WHERE owner=? AND account=? AND policy=?').get(owner,accountId,policyHash))throw Error('Reviewer binding not found');
+    this.db.prepare('INSERT OR IGNORE INTO reviewer_revocations VALUES(?,?,?,?,?)').run(owner,accountId,policyHash,note,this.now());
+    return {revoked:true,accountId,policyHash,onChainKeyRemoved:false};
+  }
+  async recheckReviewer(owner,{accountId,policyHash},verifier=verifyReviewerAccount) {
+    const get=()=>this.reviewerBindings(owner).find(r=>r.accountId===accountId&&r.policyHash===policyHash);
+    const binding=get();if(!binding||binding.revokedAt!==null)throw Error('Reviewer missing or revoked');
+    if(!binding.nearPublicKey)throw Error('Legacy binding requires fresh enrollment under a new policy');
+    const result=await verifier(binding,undefined,this.now());
+    if(get()?.revokedAt!==null)throw Error('Reviewer revoked during verification');
+    return {...result,accountId,policyHash,scope:'Point-in-time account key presence only; no report or payment approval'};
+  }
   event(firm, kind, data = {}) { this.db.prepare('INSERT INTO events(firm,kind,data,created) VALUES(?,?,?,?)').run(firm, kind, encode(data), this.now()); }
   access(owner,id,active=false) {
     const firm = this.db.prepare('SELECT * FROM firms WHERE id=? AND owner=?').get(id,owner);

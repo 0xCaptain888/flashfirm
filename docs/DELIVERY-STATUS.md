@@ -2,6 +2,8 @@
 
 This checklist separates implementation, actual integration evidence and remaining work. Passing local tests does not complete an external integration.
 
+Latest implementation additions: reviewer revocation/account-key rechecks; persistent TEE challenge consumption; immutable destination observation requests and global transaction replay prevention; restore invalidation; public HTTPS smoke checker; read-only testnet recovery funding preflight. See [integration guide](EXTERNAL-INTEGRATIONS.md). None of these additions supplies the missing external people, hardware, host or cross-chain transfer.
+
 | Requested capability | Implemented / verified | Still required |
 | --- | --- | --- |
 | Real AI collaboration | Real four-call queued run completed once, signed receipt verified; three specialists plus same-provider critique; exact citation gate retained CHALLENGED despite model PASS | Broader project presets/tools; revised delivery after the rejected quotation; no automatic paid retry |
@@ -11,7 +13,7 @@ This checklist separates implementation, actual integration evidence and remaini
 | Independent review | Pinned decisions/appeals and native NEAR quorum; dual-signature account binding; authenticated onboarding challenge API, owner-scoped persistent registry and atomic single-use nonce checks | Real independent operators, live signed onboarding and identity/conflict checks |
 | NEAR settlement | Original buyer payout plus real developer-funded challenge/arbitration refund and expiry refund; both new treasuries Closed with final successful claim callbacks | Failed-transfer restoration remains sandbox-only; one earlier expiry deployment was interrupted by RPC 429 and retained without replay; independent reviewers still absent |
 | Privacy | Encrypted local jobs; experimental Nitro COSE/ES384, pinned AWS root, certificate chain, nonce/task/key and PCR verification code; negative/claim tests | Actual enclave image and workload, reviewed PCR allowlist, hardware attestation success test, private ingress and secret release; not live TEE |
-| Cross-chain collection | Official 1Click dry-quote/status adapter, route/address limits, fail-closed recovery and ERC-20 final receipt verifier with tests | Official endpoint returned HTTP 521; no live quote or payment; chosen route, unique task-payment binding, independent delivery verification and explicit mainnet permission |
+| Cross-chain collection | Official 1Click dry-quote/status adapter, immutable destination requests, unique chain/transaction consumption, route/address limits and ERC-20 final receipt verification with tests | Official endpoint returned HTTP 521; no live quote/payment; chosen route, bridge-origin linkage, real delivery verification and explicit mainnet permission |
 | Lifecycle and operations | Durable jobs, managed HTTPS-origin mode, authenticated owner APIs, health endpoint, graceful draining, encrypted backup/restore tests; Docker build and managed startup/access smoke test passed in GitHub Actions | No cloud account or public backend deployment; organization auth, external uptime alerts, scheduled off-host backups |
 
 There is no mainnet authorization in this workflow. A `.near` account ID supplied by the user does not authorize switching a `.testnet` deployment plan to mainnet. Credentials, seeds and private runtime state are never copied to Pages.

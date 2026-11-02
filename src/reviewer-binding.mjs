@@ -27,11 +27,17 @@ export async function verifyReviewerBinding(envelope, expected, rpc = nearRpc, n
   if (!validSeal(envelope.reviewerSeal, expected.reviewerKey)) throw Error('INVALID_REVIEWER_SIGNATURE');
   const signature = Buffer.from(envelope.nearSignature ?? '', 'base64');
   if (signature.length !== 64 || !verify(null, Buffer.from(canonical(p)), decodeNearKey(p.nearPublicKey), signature)) throw Error('INVALID_ACCOUNT_SIGNATURE');
+  const control=await verifyReviewerAccount(p,rpc,now);
+  return { verified: true, bindingHash: hash(envelope), accountId: p.accountId, nearPublicKey:p.nearPublicKey, reviewerKey: p.reviewerKey, policyHash: p.policyHash, expiresAt: p.expiresAt, blockHash: control.blockHash, independentOperatorVerified: false };
+}
+export async function verifyReviewerAccount(p,rpc=nearRpc,now=Date.now()) {
+  if(!/^(?:[a-z0-9]+(?:[-_][a-z0-9]+)*\.)+testnet$/.test(p.accountId??'')||p.accountId.length>64)throw Error('INVALID_TESTNET_ACCOUNT');
+  decodeNearKey(p.nearPublicKey);
   if ((await rpc('status', [])).chain_id !== 'testnet') throw Error('WRONG_NETWORK');
   const block = await rpc('block', { finality: 'final' });
   const timestamp = Number(BigInt(block.header.timestamp_nanosec) / 1000000n);
   if (Math.abs(now - timestamp) > 120000) throw Error('STALE_ACCOUNT_PROOF');
   const keys = await rpc('query', { request_type: 'view_access_key_list', block_id: block.header.hash, account_id: p.accountId });
   if (keys.block_hash !== block.header.hash || !keys.keys?.some(key => key.public_key === p.nearPublicKey && key.access_key.permission === 'FullAccess')) throw Error('ACCOUNT_KEY_NOT_AUTHORIZED');
-  return { verified: true, bindingHash: hash(envelope), accountId: p.accountId, reviewerKey: p.reviewerKey, policyHash: p.policyHash, expiresAt: p.expiresAt, blockHash: block.header.hash, independentOperatorVerified: false };
+  return {accountKeyPresent:true,blockHash:block.header.hash,checkedAt:now,independentOperatorVerified:false};
 }

@@ -51,6 +51,6 @@ const registered = await client.reviewerBindings();
 
 The server verifies both signatures and membership of the public account key at one fresh finalized testnet block before consuming the challenge atomically. If submission times out, call `reviewerBindings()` first; do not automatically retry. Compare the account, policy hash and reviewer public key with the intended registration. If absent, inspect the error and expiry before requesting a new challenge.
 
-The registry records point-in-time account control, not perpetual authorization. Key rotation/revocation does not automatically invalidate past evidence. Recheck account control before relying on an old binding for a new action. The registry is not yet an automatic bridge to treasury approvals.
+The registry records point-in-time account control, not perpetual authorization. Key rotation/revocation does not automatically invalidate past evidence. `client.recheckReviewer(accountId, policyHash)` checks current account-key presence. `client.revokeReviewer(accountId, policyHash, reason)` permanently revokes the local binding; it removes no wallet keys and wins over an in-flight recheck. Recheck before relying on an old binding for a new action. The registry is not yet an automatic bridge to treasury approvals.
 
 The SDK also exposes `pinReview`, `review`, `submitDecision`, `submitAppeal`, and `resolveAppeal` for the durable review trail. These accept the existing versioned protocol envelopes; they do not synthesize reviewer signatures or execute payouts.

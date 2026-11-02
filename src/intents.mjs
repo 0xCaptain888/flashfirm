@@ -46,6 +46,7 @@ export async function verifyEvmDelivery(expected, rpc) {
   const finalized = await rpc('eth_getBlockByNumber', ['finalized', false]);
   const block = await rpc('eth_getBlockByNumber', [receipt.blockNumber, false]);
   if (BigInt(finalized.number) < BigInt(receipt.blockNumber) || block.hash !== receipt.blockHash) throw Error('DESTINATION_NOT_FINAL');
+  if (expected.notBeforeSeconds !== undefined && (!Number.isSafeInteger(expected.notBeforeSeconds) || expected.notBeforeSeconds < 0 || !/^0x[0-9a-f]+$/.test(block.timestamp??'') || BigInt(block.timestamp) < BigInt(expected.notBeforeSeconds))) throw Error('DELIVERY_PREDATES_REQUEST');
   const transferTopic = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
   let amount = 0n; const seen = new Set();
   for (const log of receipt.logs) {

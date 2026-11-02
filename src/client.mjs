@@ -18,9 +18,17 @@ export class FlashFirmClient {
   job(firmId,jobId){return this.request(`/${encodeURIComponent(firmId)}/jobs/${encodeURIComponent(jobId)}`);}
   jobs(firmId){return this.request(`/${encodeURIComponent(firmId)}/jobs`);}
   modelStatus(){return this.request('/model-status');}
+  integrationStatus(){return this.request('/integration-status');}
+  createDelivery(firmId,routeId){return this.request(`/${encodeURIComponent(firmId)}/deliveries`,'POST',{routeId});}
+  deliveries(firmId){return this.request(`/${encodeURIComponent(firmId)}/deliveries`);}
+  verifyDelivery(firmId,id,hash){return this.request(`/${encodeURIComponent(firmId)}/deliveries/${encodeURIComponent(id)}`,'POST',{hash});}
+  attestationChallenge(firmId,taskDigest,publicKey){return this.request(`/${encodeURIComponent(firmId)}/attestations`,'POST',{taskDigest,publicKey});}
+  verifyAttestation(firmId,nonce,document){return this.request(`/${encodeURIComponent(firmId)}/attestations/${encodeURIComponent(nonce)}`,'POST',{document});}
   reviewerChallenge({accountId,reviewerKey,policyHash}){return this.request('/reviewer-challenge','POST',{accountId,reviewerKey,policyHash});}
   bindReviewer(envelope){return this.request('/reviewer-bindings','POST',envelope);}
   reviewerBindings(){return this.request('/reviewer-bindings');}
+  revokeReviewer(accountId,policyHash,reason){return this.request('/reviewer-revoke','POST',{accountId,policyHash,reason});}
+  recheckReviewer(accountId,policyHash){return this.request('/reviewer-recheck','POST',{accountId,policyHash});}
   pinReview(firmId,policy,resultRoot){return this.request(`/${encodeURIComponent(firmId)}/review`,'POST',{policy,resultRoot});}
   review(firmId){return this.request(`/${encodeURIComponent(firmId)}/review`);}
   submitDecision(firmId,envelope){return this.request(`/${encodeURIComponent(firmId)}/decision`,'POST',envelope);}

@@ -42,6 +42,11 @@ export async function restoreBackup(backupFile, freshDirectory, key) {
     db.exec('UPDATE tokens SET revoked=1');
     // A historical lease may refer to an already billed call; fail closed.
     db.exec("UPDATE jobs SET state='FAILED',lease=NULL,expires=NULL WHERE state IN ('QUEUED','RUNNING')");
+    // An old snapshot cannot know whether a later deployment consumed these challenges.
+    for(const table of ['binding_challenges','attestation_challenges']) {
+      if(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(table))db.exec(`UPDATE ${table} SET used=1`);
+    }
+    if(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='delivery_requests'").get())db.exec("UPDATE delivery_requests SET state='RECONCILIATION_REQUIRED' WHERE state='PENDING'");
   } finally { db.close(); }
   return { status: 'RESTORE_VERIFIED', sessionsRevoked: true, queuedWorkDisabled: true, paidCallsEnabled: false, note: 'Provider policy and current spending ledger must be reconciled separately before enabling paid work' };
 }
