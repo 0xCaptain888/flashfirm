@@ -92,13 +92,15 @@ const server = http.createServer(async (req, res) => {
       return send(res,404,{error:'Unknown workspace operation'});
     }
     if(req.method==='GET'&&['/api/live-review','/api/live-receipt'].includes(url.pathname)){
-      const receipt=await readJson('live-review.json');
+      let receipt=await readJson('live-review.json');
+      let recordedBudget=null;
+      if(!receipt){try{const exported=JSON.parse(await readFile(path.join(root,'evidence/live-review.json'),'utf8'));receipt=exported.receipt;recordedBudget=exported.budget;}catch(e){if(e.code!=='ENOENT')throw e;}}
       if(!receipt)return send(res,404,{error:'No completed live model review yet'});
       const verification=verifyLiveReceipt(receipt);
       if(!verification.valid)return send(res,409,{error:'Live receipt integrity check failed',verification});
       if(url.pathname==='/api/live-receipt'){res.setHeader('Content-Disposition','attachment; filename="flashfirm-live-receipt.json"');return send(res,200,receipt);}
       const budget=await readJson('provider-budget.json');
-      return send(res,200,{receipt,verification,budget:{capCny:20,reservedCny:(budget?.reservedFen??0)/100,calls:budget?.calls?.length??0,actualInvoiceCost:null}});
+      return send(res,200,{receipt,verification,budget:recordedBudget??{capCny:20,reservedCny:(budget?.reservedFen??0)/100,calls:budget?.calls?.length??0,actualInvoiceCost:null}});
     }
     if (req.method === 'GET' && url.pathname === '/api/status') return send(res, 200, { version: '0.1.0', mode: 'LOCAL_FIXTURE', agents, rubric, capabilities: { signatures: true, persistentTasks: true, liveAgents: false, recordedLiveReview: !!(await readJson('live-review.json')), nearSettlement: false, tee: false, independentQuorum: false } });
     if (req.method === 'GET' && url.pathname === '/api/tasks') return send(res, 200, [...tasks.values()].reverse());
