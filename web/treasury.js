@@ -16,11 +16,13 @@ try { pending = JSON.parse(sessionStorage.getItem(pendingKey) || 'null'); } catc
 function invalidate() { preview = null; $('preview').hidden = true; }
 function controls() { $('connect').disabled = busy || !wallet; $('wallet-provider').disabled = busy; $('disconnect').disabled = busy || !wallet; for (const id of ['setup-file', 'setup-preview', 'setup-sign', 'inspect', 'prepare', 'sign', 'verify-transaction', 'operation', 'treasury-config', 'action-input']) $(id).disabled = busy; }
 $('setup-file').onchange = () => { setupPlan = null; $('setup-confirm').hidden = true; };
+$('setup-json').oninput = () => { setupPlan = null; $('setup-confirm').hidden = true; };
 $('setup-preview').onclick = () => action(async () => {
   setupPlan = null; $('setup-confirm').hidden = true; await account();
   const file = $('setup-file').files[0];
-  if (!file || file.size > 20000) throw Error('Select setup-public.json, never keys.json');
-  const input = JSON.parse(await file.text()), prepared = setupTransactions(input, actor);
+  const text = file ? await file.text() : $('setup-json').value.trim();
+  if (!text || text.length > 20000) throw Error('Select or paste setup-public.json under 20 KB, never keys.json');
+  const input = JSON.parse(text), prepared = setupTransactions(input, actor);
   setupPlan = input;
   $('setup-details').textContent = JSON.stringify({ controller: actor, totalTestnetNear: '3', gasAdditional: true, localDevelopmentKeys: true, independentReviewers: false, transactions: prepared.transactions }, null, 2);
   $('setup-confirm').hidden = false;
