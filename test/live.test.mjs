@@ -1,0 +1,17 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, writeFile, readFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { BudgetedProvider, validateAnalysis, selectCoalition, candidates, readBounded } from '../src/live.mjs';
+const source={id:'s1',excerpt:'Only the owner can call this function and transfer ownership.'};
+const good={summary:'Scoped review',claims:[{statement:'This source restricts the function to the owner.',kind:'observation',sourceId:'s1',quote:source.excerpt}],limitations:['No deployment inspected']};
+test('real quote accepted; invented citation rejected',()=>{assert.equal(validateAnalysis(good,[source]).valid,true);const bad=structuredClone(good);bad.claims[0].sourceId='fabricated';assert.equal(validateAnalysis(bad,[source]).valid,false);});
+test('quote altered by model is rejected',()=>{const bad=structuredClone(good);bad.claims[0].quote='Anyone can transfer ownership without authorization.';assert.equal(validateAnalysis(bad,[source]).valid,false);});
+test('repeated claims cannot pad coverage',()=>{const bad=structuredClone(good);bad.claims.push({...bad.claims[0]});assert.equal(validateAnalysis(bad,[source]).valid,false);});
+test('coalition selects lowest price per role within budget',()=>{const selected=selectCoalition(candidates,['access','resilience','scope'],600);assert.equal(selected.length,3);assert.equal(selected[0].id,'sentinel-live');assert.throws(()=>selectCoalition(candidates,['access','resilience','scope'],599));assert.throws(()=>selectCoalition(candidates,['nonexistent'],999));});
+test('bounded retrieval refuses excessive response',async()=>{await assert.rejects(readBounded(new Response('x'.repeat(200)),100),/TOO_LARGE/);});
+async function setup(){const dir=await mkdtemp(path.join(os.tmpdir(),'flashfirm-budget-'));await writeFile(path.join(dir,'provider-secret.json'),JSON.stringify({apiKey:'unit-test-not-a-secret'}),{mode:0o600});await writeFile(path.join(dir,'provider-policy.json'),JSON.stringify({enabled:true,capFen:2000,model:'deepseek-flash',baseUrl:'https://api.apikey.fan/v1',conservativeCnyPerMillion:100}));return dir;}
+test('budget exhaustion blocks before network call',async()=>{const dir=await setup();await writeFile(path.join(dir,'provider-budget.json'),JSON.stringify({reservedFen:2000,calls:[]}));let called=false;const p=new BudgetedProvider(dir,async()=>{called=true;});await assert.rejects(p.complete([{role:'user',content:'test'}],'test'),/EXHAUSTED/);assert.equal(called,false);});
+test('provider failure retains reservation and never auto retries',async()=>{const dir=await setup();let calls=0;const p=new BudgetedProvider(dir,async()=>{calls++;return new Response('{}',{status:500});});await assert.rejects(p.complete([{role:'user',content:'test'}],'test'),/HTTP_500/);const ledger=JSON.parse(await readFile(path.join(dir,'provider-budget.json'),'utf8'));assert.equal(calls,1);assert(ledger.reservedFen>0);assert.equal(ledger.calls[0].status,'FAILED_RESERVATION_RETAINED');});
+test('successful model response stores usage without secret',async()=>{const dir=await setup();const p=new BudgetedProvider(dir,async()=>new Response(JSON.stringify({id:'response-1',choices:[{finish_reason:'stop',message:{content:'{"answer":"ok"}'}}],usage:{total_tokens:9}})));assert.equal((await p.complete([{role:'user',content:'test'}],'test')).result.answer,'ok');const ledger=await readFile(path.join(dir,'provider-budget.json'),'utf8');assert(!ledger.includes('unit-test-not-a-secret'));});

@@ -15,6 +15,14 @@ npm run verify -- /absolute/path/to/downloaded-receipt.json
 
 ## What works in v0.1.0
 
+### Live-model development milestone
+
+The local `/live.html` page now shows a **recorded real DeepSeek analysis**, separate from the fixture console. Three specialist calls reviewed pinned OpenZeppelin source files, and a further model review assessed their conclusions. The first snippet-limited critique was challenged; a complete-excerpt follow-up passed and preserves the earlier critique in its history. One follow-up attempt returned 429. There were five successful calls and one failed call in total.
+
+Exact source quotation checks and the live receipt verifier pass. This is not a security audit or independent operator quorum. The conservative development cost ledger reserves CNY 9.92 against the user-approved CNY 20 cap; actual provider charges have not been queried. Details and remaining trust limits: [docs/MODEL-INTEGRATION.md](docs/MODEL-INTEGRATION.md).
+
+### Fixture console
+
 - Responsive task console, persistent history, receipt viewer and capability dashboard.
 - Durable local task progression; refresh or restart and resume an unfinished run.
 - Three deterministic specialist workers and a source checker for a synthetic technical due-diligence case.
@@ -27,7 +35,7 @@ npm run verify -- /absolute/path/to/downloaded-receipt.json
 
 ## Honest boundaries
 
-This is a **local fixture implementation**, not a production autonomous company or payment service. Source documents are synthetic and public. Agent outputs are deterministic, not live LLM calls. All worker keys are owned by one coordinator. Embedded keys establish consistency, not independent identity. The verifier is a separate entry point using the same reference protocol implementation; it is not an independent security audit.
+The main console is a **local fixture implementation**, not a production autonomous company or payment service. Its documents are synthetic and outputs deterministic. The separate live report uses real public source retrieval and model calls as described above. All fixture worker keys are owned by one coordinator; the live report is signed by one coordinator. Embedded keys establish consistency, not independent identity. The verifier is a separate entry point using the same reference implementation; it is not an independent security audit.
 
 The last state is `PLANNED`, not `SETTLED` or `DISSOLVED`. No wallet is connected, no real funds are held or transferred, no NEAR contract is deployed, no TEE exists, and no independent evaluator quorum is configured. The evidence checker receives no performance payout in this initial coverage model. Availability pay, sealed bids, live AI scoring, trusted identity registry and provider economics remain unfinished.
 
@@ -43,7 +51,7 @@ The last state is `PLANNED`, not `SETTLED` or `DISSOLVED`. No wallet is connecte
 
 `npm run build:pages` creates `dist/`: an explicitly labeled, read-only build-time sample with a signed receipt. Asset URLs are relative so repository Pages paths work. `.github/workflows/pages.yml` builds and deploys it after GitHub Pages is enabled with GitHub Actions as the source. The workflow does not require any model credential. This is not the interactive Node backend and does not invoke paid models.
 
-The user-selected gateway is `https://api.apikey.fan/v1`. An unauthenticated `/models` probe returned HTTP 401 with `API_KEY_REQUIRED`; this confirms endpoint reachability only. The supplied model identifier, credential validity, protocol compatibility and pricing remain unverified. `.env.example` is a configuration template, not an implemented live model adapter. Keep paid calls disabled pending an explicit usage cap.
+The user-selected gateway is `https://api.apikey.fan/v1`. Authenticated discovery and real JSON completions have passed using `deepseek-flash`. The private local policy records the approved CNY 20 development cap. `.env.example` documents settings, while current CLI execution reads ignored `.runtime` JSON configuration. Paid model calls are available only through the CLI; viewing the report never incurs model calls. Do not upload the runtime directory or credentials to GitHub.
 
 ## Local API
 

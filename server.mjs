@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { Engine, createTask, agents } from './src/engine.mjs';
 import { verifyReceipt, rubric } from './src/protocol.mjs';
+import { verifyLiveReceipt } from './src/live.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const runtime = path.join(root, '.runtime');
@@ -28,7 +29,16 @@ const server = http.createServer(async (req, res) => {
     if (![`127.0.0.1:${port}`, `localhost:${port}`].includes(host)) return send(res, 403, { error: 'Local host required' });
     if (req.headers.origin && ![`http://127.0.0.1:${port}`, `http://localhost:${port}`].includes(req.headers.origin)) return send(res, 403, { error: 'Origin denied' });
     const url = new URL(req.url, `http://${host}`);
-    if (req.method === 'GET' && url.pathname === '/api/status') return send(res, 200, { version: '0.1.0', mode: 'LOCAL_FIXTURE', agents, rubric, capabilities: { signatures: true, persistentTasks: true, liveAgents: false, nearSettlement: false, tee: false, independentQuorum: false } });
+    if(req.method==='GET'&&['/api/live-review','/api/live-receipt'].includes(url.pathname)){
+      const receipt=await readJson('live-review.json');
+      if(!receipt)return send(res,404,{error:'No completed live model review yet'});
+      const verification=verifyLiveReceipt(receipt);
+      if(!verification.valid)return send(res,409,{error:'Live receipt integrity check failed',verification});
+      if(url.pathname==='/api/live-receipt'){res.setHeader('Content-Disposition','attachment; filename="flashfirm-live-receipt.json"');return send(res,200,receipt);}
+      const budget=await readJson('provider-budget.json');
+      return send(res,200,{receipt,verification,budget:{capCny:20,reservedCny:(budget?.reservedFen??0)/100,calls:budget?.calls?.length??0,actualInvoiceCost:null}});
+    }
+    if (req.method === 'GET' && url.pathname === '/api/status') return send(res, 200, { version: '0.1.0', mode: 'LOCAL_FIXTURE', agents, rubric, capabilities: { signatures: true, persistentTasks: true, liveAgents: false, recordedLiveReview: !!(await readJson('live-review.json')), nearSettlement: false, tee: false, independentQuorum: false } });
     if (req.method === 'GET' && url.pathname === '/api/tasks') return send(res, 200, [...tasks.values()].reverse());
     if (req.method === 'POST' && url.pathname === '/api/tasks') {
       const input = await body(req);
@@ -48,7 +58,7 @@ const server = http.createServer(async (req, res) => {
       }
       if (req.method === 'GET' && !match[2]) return send(res, 200, t);
     }
-    const staticFiles = { '/': ['index.html','text/html'], '/app.js': ['app.js','text/javascript'], '/style.css': ['style.css','text/css'], '/favicon.svg': ['favicon.svg','image/svg+xml'] };
+    const staticFiles = { '/': ['index.html','text/html'], '/live.html':['live.html','text/html'], '/live.js':['live.js','text/javascript'], '/app.js': ['app.js','text/javascript'], '/style.css': ['style.css','text/css'], '/favicon.svg': ['favicon.svg','image/svg+xml'] };
     if (req.method === 'GET' && staticFiles[url.pathname]) {
       const [file, type] = staticFiles[url.pathname]; res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' }); return res.end(await readFile(path.join(root, 'web', file)));
     }

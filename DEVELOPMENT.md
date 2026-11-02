@@ -1,5 +1,17 @@
 # Development checkpoint — 2026-11-02
 
+## Subsequent real model milestone
+
+- User confirmed CNY 20 cumulative model development budget.
+- Authenticated gateway discovery succeeded. The API alias is `deepseek-flash`; the gateway's own public metadata maps this to the user's requested V4-1-Flash-1017 version.
+- Real pinned OpenZeppelin source retrieval plus three specialist model calls completed. Exact quotation checks all passed.
+- An initial critique received limited snippets and raised potentially context-induced challenges. The receipt was archived, then full fetched excerpts were supplied for a new critique. One attempt returned 429; a bounded subsequent attempt passed. No analyst work was regenerated.
+- Final task state is REVIEWED, with original critique history preserved. Five successful calls and one 429 failure; conservative reservations total CNY 9.92, actual invoice cost unqueried.
+- Local `/live.html` renders recorded real results without paid browser calls. CLI verifier supports both fixture and live receipt versions.
+- Automatic provider selection currently uses local candidate definitions and cost estimates, not a third-party bidding market. Independent operators, semantic/causal scoring, live NEAR payments and TEE remain pending.
+
+Earlier entries below are retained as chronological checkpoints; this section supersedes their statements about model credential and live-worker availability.
+
 ## GitHub deployment preparation
 
 - Added a GitHub Actions Pages workflow and static preview builder. Build and standalone receipt verification passed locally.
