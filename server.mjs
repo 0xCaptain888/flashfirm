@@ -66,6 +66,11 @@ const server = http.createServer(async (req, res) => {
       if(!window||window.until<=now)limiter.set(owner,{until:now+60000,count:1});
       else if(++window.count>120){res.setHeader('Retry-After','60');return send(res,429,{error:'Request limit reached'});}
       if(req.method==='GET'&&url.pathname==='/api/workspaces/model-status')return send(res,200,await modelAvailability(runtime));
+      if(req.method==='POST'&&url.pathname==='/api/workspaces/reviewer-challenge')return send(res,201,store.reviewerChallenge(owner,await body(req),policy.public?policy.origins[0]:'https://flashfirm.local'));
+      if(url.pathname==='/api/workspaces/reviewer-bindings'){
+        if(req.method==='GET')return send(res,200,store.reviewerBindings(owner));
+        if(req.method==='POST')return send(res,201,await store.bindReviewer(owner,await body(req)));
+      }
       if(req.method==='POST'&&url.pathname==='/api/workspaces/evaluate'){
         const input=await body(req);let result;
         switch(input.operation){

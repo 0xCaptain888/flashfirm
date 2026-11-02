@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, randomUUID, createCipheriv, createDecipheriv } from 'node:crypto';
 import { chmodSync } from 'node:fs';
 import { commitPolicy, assessReview, validateAppeal, resolveAppeal } from './governance.mjs';
+import { verifyReviewerBinding } from './reviewer-binding.mjs';
 
 const digest = s => createHash('sha256').update(s).digest('hex');
 const encode = v => JSON.stringify(v);
@@ -26,6 +27,8 @@ export class WorkspaceStore {
       CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, firm TEXT NOT NULL REFERENCES firms(id), request_key TEXT NOT NULL, input_hash TEXT NOT NULL, input TEXT NOT NULL, state TEXT NOT NULL, lease TEXT, expires INTEGER, attempts INTEGER NOT NULL DEFAULT 0, result TEXT, created INTEGER NOT NULL, UNIQUE(firm,request_key));
       CREATE TABLE IF NOT EXISTS events (seq INTEGER PRIMARY KEY AUTOINCREMENT, firm TEXT NOT NULL REFERENCES firms(id), kind TEXT NOT NULL, data TEXT NOT NULL, created INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS review_policies (firm TEXT PRIMARY KEY REFERENCES firms(id), commitment TEXT NOT NULL, result_root TEXT NOT NULL, decisions TEXT NOT NULL DEFAULT '[]', appeal TEXT, resolution TEXT);
+      CREATE TABLE IF NOT EXISTS binding_challenges (nonce TEXT PRIMARY KEY, owner TEXT NOT NULL, expected TEXT NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL, used INTEGER NOT NULL DEFAULT 0);
+      CREATE TABLE IF NOT EXISTS reviewer_bindings (owner TEXT NOT NULL, account TEXT NOT NULL, policy TEXT NOT NULL, evidence TEXT NOT NULL, PRIMARY KEY(owner,account,policy));
       PRAGMA user_version=1;`);
     if (!this.db.prepare('PRAGMA table_info(jobs)').all().some(c => c.name === 'paid_started')) {
       this.db.exec('ALTER TABLE jobs ADD COLUMN paid_started INTEGER NOT NULL DEFAULT 0');
@@ -50,6 +53,32 @@ export class WorkspaceStore {
     return this.db.prepare('SELECT owner FROM tokens WHERE hash=? AND revoked=0 AND expires>?').get(digest(token),this.now())?.owner ?? null;
   }
   revoke(token) { this.db.prepare('UPDATE tokens SET revoked=1 WHERE hash=?').run(digest(token)); }
+  reviewerChallenge(owner, input, audience) {
+    required(owner);
+    if (!/^(?:[a-z0-9]+(?:[-_][a-z0-9]+)*\.)+testnet$/.test(input.accountId??'') || input.accountId.length>64 || !/^[a-f0-9]{64}$/.test(input.policyHash??'') || typeof input.reviewerKey!=='string' || !input.reviewerKey.includes('PUBLIC KEY') || input.reviewerKey.length>500 || !audience.startsWith('https://')) throw Error('Invalid reviewer registration');
+    return this.transaction(()=>{
+      this.db.prepare('DELETE FROM binding_challenges WHERE expires<=?').run(this.now());
+      if(this.db.prepare('SELECT count(*) AS n FROM binding_challenges WHERE owner=? AND used=0').get(owner).n>=10)throw Error('Too many outstanding reviewer challenges');
+      const nonce=randomBytes(32).toString('hex'),created=this.now(),expires=created+300000;
+      const expected={accountId:input.accountId,reviewerKey:input.reviewerKey,policyHash:input.policyHash,audience,nonce};
+      this.db.prepare('INSERT INTO binding_challenges(nonce,owner,expected,created,expires) VALUES(?,?,?,?,?)').run(nonce,owner,encode(expected),created,expires);
+      return {...expected,version:'flashfirm-reviewer-binding/1',network:'testnet',issuedAt:created,expiresAt:expires};
+    });
+  }
+  async bindReviewer(owner,envelope,verifier=verifyReviewerBinding) {
+    const payload=envelope?.reviewerSeal?.payload;
+    const challenge=this.db.prepare('SELECT * FROM binding_challenges WHERE nonce=? AND owner=? AND used=0 AND expires>?').get(payload?.nonce??'',owner,this.now());
+    if(!challenge||payload.issuedAt!==challenge.created||payload.expiresAt!==challenge.expires)throw Error('Unknown, expired or consumed reviewer challenge');
+    const result=await verifier(envelope,decode(challenge.expected),undefined,this.now());
+    if(result.verified!==true)throw Error('Reviewer verification failed');
+    return this.transaction(()=>{
+      const changed=this.db.prepare('UPDATE binding_challenges SET used=1 WHERE nonce=? AND owner=? AND used=0 AND expires>?').run(payload.nonce,owner,this.now());
+      if(changed.changes!==1)throw Error('Reviewer challenge consumed or expired during verification');
+      this.db.prepare('INSERT INTO reviewer_bindings(owner,account,policy,evidence) VALUES(?,?,?,?)').run(owner,payload.accountId,payload.policyHash,encode(result));
+      return result;
+    });
+  }
+  reviewerBindings(owner){return this.db.prepare('SELECT evidence FROM reviewer_bindings WHERE owner=?').all(owner).map(row=>decode(row.evidence));}
   event(firm, kind, data = {}) { this.db.prepare('INSERT INTO events(firm,kind,data,created) VALUES(?,?,?,?)').run(firm, kind, encode(data), this.now()); }
   access(owner,id,active=false) {
     const firm = this.db.prepare('SELECT * FROM firms WHERE id=? AND owner=?').get(id,owner);
