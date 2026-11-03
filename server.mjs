@@ -30,6 +30,7 @@ const flowAdapter={db:sqliteAdapter(store.db),access:async(o,f,a)=>store.access(
   context:async f=>({record:store.caseRecord(f.owner,f.id),review:store.caseReview(f.owner,f.id)}),
   encrypt:async(f,v)=>store.encrypt(f,'flow',v),decrypt:async(f,b)=>store.decrypt(f,'flow',b),
   security:{authority:process.env.FLASHFIRM_IDENTITY_AUTHORITY_KEY,releaseAuthority:process.env.FLASHFIRM_SECRET_RELEASE_AUTHORITY_KEY,
+    inferenceAuthority:process.env.FLASHFIRM_INFERENCE_VERIFIER_KEY,
     revokedSubjects:JSON.parse(process.env.FLASHFIRM_REVOKED_IDENTITY_SUBJECTS??'[]')},
   verifiers:pinnedTaskVerifiers()};
 const integrations=new IntegrationLedger(store,await loadIntegrationConfig(process.env.FLASHFIRM_INTEGRATION_CONFIG));
@@ -82,7 +83,7 @@ const server = http.createServer(async (req, res) => {
       const now=Date.now(),window=limiter.get(owner);
       if(!window||window.until<=now)limiter.set(owner,{until:now+60000,count:1});
       else if(++window.count>120){res.setHeader('Retry-After','60');return send(res,429,{error:'Request limit reached'});}
-      const flowPath=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)\/flow(?:\/(plan|quality|privacy|manifest|invoice|quote|verify|refund))?$/);
+      const flowPath=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)\/flow(?:\/(plan|quality|privacy|inference|manifest|invoice|quote|verify|refund|native|native-verify))?$/);
       if(flowPath){
         const [,id,op]=flowPath;
         if((op&&req.method!=='POST')||(!op&&req.method!=='GET'))return send(res,405,{error:'Method denied'});

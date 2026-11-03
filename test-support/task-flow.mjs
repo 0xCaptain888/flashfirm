@@ -4,7 +4,7 @@ import {createCase} from '../src/task-case.mjs';
 import {commitPolicy} from '../src/governance.mjs';
 import {citationLocations} from '../src/report-revision.mjs';
 import {qualitySamples} from '../src/task-quality.mjs';
-export function taskFixture(){
+export function taskFixture({settlementPolicy,privacyMode,privateTaskDigest}={}){
  const now=Date.now(),receipt=JSON.parse(readFileSync(new URL('../evidence/revised-live-receipt.json',import.meta.url),'utf8'));
  const record=createCase(receipt),workers=receipt.payload.workers.map(w=>({...identity(),id:w.worker.id})),
  buyer=identity(),reviewers=[identity(),identity(),identity()],authority=identity(),arbiter=identity();
@@ -15,7 +15,8 @@ export function taskFixture(){
   verdict:'APPROVE',reason:'Synthetic testing only; not a real independent reviewer.',issuedAt:now},r)),appeal:null,resolution:null};
  const plan=seal({version:'flashfirm-task-plan/1',taskRoot:record.taskRoot,resultRoot:record.receiptHash,buyerKey:buyer.publicKey,
   reviewPolicyHash:commitment.digest,reviewerKeys:reviewers.map(r=>r.publicKey),createdAt:now,expiresAt:now+3600000,
-  budgetUnits:1000000,allocationAsset:'ARBITRUM_NATIVE_USDC',rubric:[{id:'source-support',weight:100}],
+  budgetUnits:1000000,allocationAsset:'ARBITRUM_NATIVE_USDC',...(settlementPolicy?{settlementPolicy}:{}),
+  ...(privacyMode?{privacyMode,privateTaskDigest}:{}),rubric:[{id:'source-support',weight:100}],
   workers:workers.map((w,i)=>({id:w.id,key:w.publicKey,subject:hash('worker-'+i),artifactHash:hash(receipt.payload.workers[i].analysis),recipient:'0x'+String(i+1).repeat(40)}))},buyer);
  const subjects=[...plan.payload.workers.map(w=>({key:w.key,subject:w.subject,role:'WORKER'})),
   ...reviewers.map((r,i)=>({key:r.publicKey,subject:hash('reviewer-'+i),role:'REVIEWER'})),{key:buyer.publicKey,subject:hash('buyer'),role:'BUYER'}];

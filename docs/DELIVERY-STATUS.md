@@ -1,5 +1,14 @@
 # Delivery status — 2026-11-03
 
+**Settlement v2 / ACI:** [New implementation guide](SETTLEMENT-V2-ACI.md).
+One recorded report plus synthetic review/identity fixtures has completed five
+actual local sandbox transfers: three workers, protocol fee and unused-budget
+refund. The native testnet keeper, replay fences and final evidence API are
+implemented. The Node ACI adapter uses the official SDK, requires independent
+OS/KMS/model appraisal and retains the original shared spend limits. Real
+independent reviewers, same-task mainnet payment and private live inference
+remain external acceptance work; no new money or paid model calls were used.
+
 This checklist separates implementation, actual integration evidence and remaining work. Passing local tests does not complete an external integration.
 
 **Latest upgrade:** [Task-bound evaluation and settlement](TASK-SETTLEMENT.md)
@@ -43,8 +52,8 @@ Latest deployment: [a dedicated Phala container](PHALA-TEE.md) completed a real 
 | Contribution scoring | Separate full/removal evaluator inputs and budgeted model adapter; two pinned signatures; duplicate rejection and conserved allocation | New paid counterfactual study, external identity authority and real independent judgments |
 | Independent review | Pinned decisions/appeals, account binding and external authority certificates with unique subjects and artifact-authorship claims | Recruit actual independent people and enroll their authority; certificates cannot eliminate authority collusion |
 | NEAR settlement | Original buyer payout, challenge/arbitration refund, expiry refund, and real testnet failed-transfer credit restoration followed by successful retry; recovery treasury Closed | One earlier expiry deployment was interrupted by RPC 429 and retained without replay; independent reviewers still absent |
-| Privacy | Historical real public TDX task; new private quotation client verifies fresh hardware, approved measurements and external release policy before encryption, with task-bound result acceptance | Actual private trial and independent policy approval; trusted measured model inference is unimplemented; instance off, retained 20 GB disk billable |
-| Cross-chain collection | Separate real 0.5 NEAR → 1.861840 USDC proof; task-bound invoices/quotes, independent chain checks, exact native refund verifier and global transaction reuse prevention | Real same-task payments and independent real refund; fee/refund allocations are not automatic transfers; original FunctionCall lock preserved |
+| Privacy | Historical real public TDX task; private quotation client; official-SDK ACI connection/receipt adapter, external runtime appraisal gate and all-artifact verifier certificates | Actual private trial, ACI access, independently approved platform/model audit and live inference receipts; instance off, retained 20 GB disk billable |
+| Cross-chain collection | Separate real bridge proof; v2 worker/fee/budget-return invoices, chain checks, native refund verifier and transaction reuse prevention; native keeper pays fixed testnet obligations automatically after approval | Same-task mainnet payments and real cross-chain refund; no unattended mainnet wallet or mainnet escrow; original FunctionCall lock preserved |
 | Lifecycle and operations | Live Workers/D1/Workflows; verified Access JWT/roles/session revocation; encrypted email/push outboxes, configured VAPID keys, device opt-in and foreground alerts; scheduled monitoring and actual GitHub encrypted-artifact recovery; isolated D1 restore | Configure Access application and verified email sender; real email/device delivery test; full Node model hosting separate; paid cloud AI disabled |
 
 The separate explicit authorization for one 0.5 NEAR mainnet demonstration, up to 0.1 NEAR extra storage/gas and $5 total fresh valuation, was consumed by the successful native transfer. It does not authorize a second payment, replaying the original ambiguous FunctionCall attempt, loosening action checks, resetting either journal or moving testnet task funds to mainnet. Earlier unchanged-balance and `PENDING_DEPOSIT` observations are preserved as history. See [payment recovery boundaries](MAINNET-PAYMENT.md) and [successful native payment](NATIVE-NEAR-PAYMENT.md). Credentials, seeds and private runtime state are never copied to Pages.

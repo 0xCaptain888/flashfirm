@@ -13,6 +13,9 @@
     "test": "node --test",
     "test:http": "node scripts/check-http.mjs",
     "test:sandbox": "node scripts/check-sandbox.mjs",
+    "test:task-settlement": "node scripts/check-task-settlement-sandbox.mjs",
+    "settlement:keeper": "node scripts/native-task-keeper.mjs",
+    "inference:private": "node scripts/run-confidential-inference.mjs",
     "build:contract": "node scripts/build-contract.mjs",
     "build:wallet": "node scripts/build-wallet.mjs",
     "operator:token": "node scripts/operator-token.mjs",
@@ -50,6 +53,7 @@
   },
   "dependencies": {
     "@defuse-protocol/one-click-sdk-typescript": "0.1.26",
+    "@phala/aci-verifier": "0.11.0",
     "web-push": "3.6.7"
   }
 }

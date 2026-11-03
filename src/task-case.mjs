@@ -93,11 +93,16 @@ export function caseNotifications(firm, record, review, jobs, acknowledged = [],
       `Semantic review: ${flow.quality.state}`, 'Inspect the signed claim and removal scores. Identity certification and payment remain separate gates.');
     if(flow.privacy?.privateQuotationVerified)add(`privacy:${plan}:${flow.privacy.proofHash}`,'info',
       'Confidential quotation proof verified','The exact task quotation result was checked. This does not attest model inference.');
+    if(flow.inference?.confidentialInferenceVerified)add(`inference:${plan}:${flow.inference.proofHash}`,'info',
+      'Task inference certificates verified','All task artifacts bind configured ACI verification certificates and external runtime audits. Inspect their trust policy.');
+    if(flow.nativeSettlement?.evidence?.verified)add(`native:${plan}:${hash(flow.nativeSettlement.evidence)}`,'info',
+      'Native testnet settlement verified','Worker, protocol fee and unused-budget transfers have finalized testnet evidence for this exact manifest. This is not a mainnet payment.');
     if(flow.manifest)add(`allocation:${hash(flow.manifest)}`,'info',
       'Contribution allocation locked','Worker invoices must match this reviewed allocation. An allocation is not a payment.');
     for(const invoice of flow.invoices??[]){
       if(invoice.state==='VERIFIED')add(`invoice:${invoice.invoiceHash}:verified`,'info',
-        'Worker payment verified','Both finalized chain transactions were checked for this task invoice. Protocol fee and refund accounting remain separate.');
+        invoice.kind==='PROTOCOL_FEE'?'Protocol fee payment verified':invoice.kind==='UNSPENT_REFUND'?'Unused budget returned':'Worker payment verified',
+        'Both finalized chain transactions were checked for this exact task obligation. Other obligations retain their own payment state.');
       if(invoice.state==='REFUND_PENDING')add(`invoice:${invoice.invoiceHash}:refund-pending`,'warning',
         'Refund needs chain evidence','A relay status alone is insufficient. Supply the exact final native refund receipt.');
       if(invoice.state==='REFUNDED')add(`invoice:${invoice.invoiceHash}:refunded`,'info',

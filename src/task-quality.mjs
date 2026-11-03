@@ -3,6 +3,19 @@ import {verifyReport, citationLocations} from './report-revision.mjs';
 
 const hex = v => /^[a-f0-9]{64}$/.test(v ?? '');
 const unique = rows => new Set(rows).size === rows.length;
+export function allocationPolicy(p) {
+  const policy=p.settlementPolicy;
+  if(policy===undefined)return null;
+  const address=v=>/^0x[a-f0-9]{40}$/.test(v??'')&&!/^0x0{40}$/.test(v);
+  if(policy?.version!=='flashfirm-allocation-policy/2'||
+    !Number.isSafeInteger(policy.spendUnits)||policy.spendUnits<0||policy.spendUnits>p.budgetUnits||
+    !Number.isInteger(policy.feeBps)||policy.feeBps<0||policy.feeBps>2000||
+    !address(policy.feeRecipient)||!address(policy.refundRecipient)||
+    policy.feeRecipient===policy.refundRecipient||
+    !unique([policy.feeRecipient,policy.refundRecipient,...p.workers.map(w=>w.recipient)]))
+    throw Error('INVALID_SIGNED_ALLOCATION_POLICY');
+  return policy;
+}
 export function reportWorkers(receipt) {
   if (!verifyReport(receipt).valid) throw Error('INVALID_REPORT');
   return receipt.payload.workers.map(w => ({id:w.worker.id, artifact:w.analysis}));
@@ -46,14 +59,15 @@ export function validatePlan(envelope, record, review, now=Date.now()) {
     !p.rubric.length || p.rubric.length>32 || !unique(p.rubric.map(r=>r.id)) ||
     p.rubric.some(r=>!/^[-a-z0-9_]{1,64}$/.test(r.id)||!Number.isInteger(r.weight)||r.weight<1) ||
     p.rubric.reduce((s,r)=>s+r.weight,0)!==100 ||
-    (p.privacyMode!==undefined&&!['PUBLIC_SOURCES','CONFIDENTIAL_QUOTATIONS'].includes(p.privacyMode)) ||
-    (p.privacyMode==='CONFIDENTIAL_QUOTATIONS'&&!hex(p.privateTaskDigest))) throw Error('INVALID_TASK_PLAN');
+    (p.privacyMode!==undefined&&!['PUBLIC_SOURCES','CONFIDENTIAL_QUOTATIONS','CONFIDENTIAL_INFERENCE'].includes(p.privacyMode)) ||
+    (['CONFIDENTIAL_QUOTATIONS','CONFIDENTIAL_INFERENCE'].includes(p.privacyMode)&&!hex(p.privateTaskDigest))) throw Error('INVALID_TASK_PLAN');
   const workers=reportWorkers(record.receipt);
   if (!Array.isArray(p.workers) || p.workers.length!==workers.length ||
     !unique(p.workers.map(w=>w.id)) || !unique(p.workers.map(w=>w.key)) ||
     p.workers.some(w=>!workers.some(a=>a.id===w.id&&hash(a.artifact)===w.artifactHash) || !review.commitment.policy.workerKeys.includes(w.key) ||
       p.reviewerKeys.includes(w.key) || w.key===p.buyerKey || !hex(w.subject) ||
       !/^0x[a-f0-9]{40}$/.test(w.recipient??'') || /^0x0{40}$/.test(w.recipient))) throw Error('INVALID_WORKER_ROSTER');
+  allocationPolicy(p);
   return {planHash:hash(envelope),plan:p,commitmentTiming:'POST_DELIVERY_PRE_EVALUATION',fundsMoved:false};
 }
 export function qualitySamples(receipt) {
@@ -120,8 +134,10 @@ export function assessTaskQuality(planEnvelope, receipt, evaluations) {
     return {id:w.id,duplicate,full:score(0),without:score(i+1),marginal,score:duplicate?0:Math.max(0,marginal),eligible:!duplicate&&marginal>0};
   });
   const issues=claims.filter(c=>evaluations.some(e=>e.payload.claims.find(v=>v.workerId===c.workerId&&v.claimIndex===c.claimIndex)?.verdict!=='SUPPORTED'));
+  const policy=allocationPolicy(p),allocation=allocate(policy?.spendUnits??p.budgetUnits,rows,policy?.feeBps??200);
+  if(policy){allocation.budget=p.budgetUnits;allocation.refund+=p.budgetUnits-policy.spendUnits;}
   return {planHash,resultRoot:p.resultRoot,qualityHash:hash(evaluations),state:issues.length?'CHALLENGED':'ASSESSED',
     issues:issues.map(c=>({workerId:c.workerId,claimIndex:c.claimIndex})),scores:rows,
-    allocation:allocate(p.budgetUnits,rows),methods:[...new Set(evaluations.map(e=>e.payload.method))],
+    allocation,methods:[...new Set(evaluations.map(e=>e.payload.method))],
     scope:'Signed semantic judgments and separately evaluated full/removal samples. Not objective truth or exact Shapley value.'};
 }

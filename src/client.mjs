@@ -22,7 +22,7 @@ export class FlashFirmClient {
   taskCase(firmId){return this.request(`/${encodeURIComponent(firmId)}/case`);}
   taskFlow(firmId){return this.request(`/${encodeURIComponent(firmId)}/flow`);}
   advanceTask(firmId,operation,envelope){
-    if(!['plan','quality','privacy','manifest','invoice','quote','verify','refund'].includes(operation))throw Error('Unknown task-flow action');
+    if(!['plan','quality','privacy','inference','manifest','invoice','quote','verify','refund','native','native-verify'].includes(operation))throw Error('Unknown task-flow action');
     return this.request(`/${encodeURIComponent(firmId)}/flow/${operation}`,'POST',envelope);
   }
   exportCase(firmId){return this.request(`/${encodeURIComponent(firmId)}/case-export`);}

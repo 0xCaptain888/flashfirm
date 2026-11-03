@@ -4,7 +4,7 @@ import {qualitySamples} from './task-quality.mjs';
 import {preflightLiveJob} from './live-job.mjs';
 import {BudgetedProvider} from './live.mjs';
 export async function evaluateTaskWithModel(runtime,plan,receipt,{provider=new BudgetedProvider(runtime),preflight=preflightLiveJob,onProgress=async()=>{}}={}){
-  if(plan.payload?.privacyMode==='CONFIDENTIAL_QUOTATIONS')throw Error('PRIVATE_MATERIAL_EXTERNAL_MODEL_RELEASE_FORBIDDEN');
+  if(['CONFIDENTIAL_QUOTATIONS','CONFIDENTIAL_INFERENCE'].includes(plan.payload?.privacyMode))throw Error('PRIVATE_MATERIAL_EXTERNAL_MODEL_RELEASE_FORBIDDEN');
   if(!validSeal(plan,plan.payload?.buyerKey)||!Number.isSafeInteger(plan.payload?.expiresAt)||
     plan.payload.expiresAt<=Date.now())throw Error('VALID_UNEXPIRED_BUYER_PLAN_REQUIRED');
   if(hash(receipt)!==plan.payload.resultRoot)throw Error('EXACT_REPORT_REQUIRED');

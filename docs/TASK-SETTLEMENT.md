@@ -1,5 +1,7 @@
 # One task, from delivery to verified payment
 
+**Settlement v2 / ACI update:** the original worker-only v1 route below is retained for compatibility. New buyer-signed v2 plans include fee and unused-budget obligations, a fixed-recipient native testnet execution adapter and per-artifact ACI certificate gates. See [the current implementation and evidence boundaries](SETTLEMENT-V2-ACI.md). Actual new five-transfer evidence is **local sandbox**, with explicitly synthetic identities.
+
 This upgrade adds a durable pipeline to both the local service and Cloudflare D1.
 It does not turn the historical 0.5 NEAR demonstration into payment for the AI report.
 That demonstration's source and destination transaction hashes are reserved in the

@@ -65,6 +65,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:sandbox
+      - run: npm run test:task-settlement
       - run: rustc --edition 2021 --test contracts/treasury/src/ledger.rs -o /tmp/flashfirm-ledger-tests
       - run: /tmp/flashfirm-ledger-tests
       - run: rustc --edition 2021 --test contracts/treasury/src/review.rs -o /tmp/flashfirm-review-tests

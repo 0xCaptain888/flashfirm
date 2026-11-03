@@ -4,6 +4,8 @@ import {citationLocations} from './report-revision.mjs';
 import {settlementManifest,authorizeInvoice,taskFlowStatus} from './task-settlement.mjs';
 import {bindTaskQuote,verifyTaskPayment,verifyNativeRefund} from './settlement-proof.mjs';
 import {verifyTaskPrivacy} from './task-privacy.mjs';
+import {validateNativeSettlement,verifyNativeTaskSettlement} from './native-task-settlement.mjs';
+import {acceptInferenceCertificates} from './aci-policy.mjs';
 const q=(db,sql,...args)=>db.prepare(sql).bind(...args);
 // The adapter supplies authenticated access, encryption and operator-pinned
 // verifier functions. None of those trust roots can come from an HTTP payload.
@@ -17,7 +19,7 @@ export async function taskFlowOperation(adapter,owner,firmId,operation,input={},
     samples:record?qualitySamples(record.receipt):[],
     claims:record?citationLocations(record.receipt).map(c=>({...c,claimHash:hash(c)})):[],
     identityAuthorityConfigured:!!adapter.security?.authority};
-  if(!['verify','refund'].includes(operation)&&await q(db,'SELECT 1 FROM recovery_holds WHERE firm=?',firmId).first())
+  if(!['verify','refund','native-verify'].includes(operation)&&await q(db,'SELECT 1 FROM recovery_holds WHERE firm=?',firmId).first())
     throw Error('RESTORED_TASK_REQUIRES_OPERATOR_RECONCILIATION');
   if(!record)throw Error('REPORT_REQUIRED');
   if(operation==='plan'){
@@ -34,7 +36,7 @@ export async function taskFlowOperation(adapter,owner,firmId,operation,input={},
   }
   if(!flow)throw Error('TASK_PLAN_REQUIRED');
   const p=flow.plan.payload;
-  if(operation!=='verify'&&operation!=='refund'&&now>=p.expiresAt)throw Error('TASK_PLAN_EXPIRED');
+  if(!['verify','refund','native-verify'].includes(operation)&&now>=p.expiresAt)throw Error('TASK_PLAN_EXPIRED');
   const claims=[];
   if(operation==='quality'){
     if(flow.manifest)throw Error('MANIFEST_ALREADY_LOCKED');
@@ -45,15 +47,37 @@ export async function taskFlowOperation(adapter,owner,firmId,operation,input={},
     if(flow.manifest)throw Error('MANIFEST_ALREADY_LOCKED');
     flow.privacy=await verifyTaskPrivacy(flow,input,adapter.security?.releaseAuthority,adapter.fetcher??fetch,now);
     flow.privacyProof=input;
+  }else if(operation==='inference'){
+    if(flow.manifest)throw Error('MANIFEST_ALREADY_LOCKED');
+    flow.inference=acceptInferenceCertificates(flow,input,adapter.security,now);
+    flow.inferenceProof=input;
   }else if(operation==='manifest'){
     if(flow.manifest)return {status:taskFlowStatus(flow)};
     flow.manifest=settlementManifest(flow,record,review,adapter.security,now);
+  }else if(operation==='native'){
+    if(!flow.manifest)throw Error('MANIFEST_REQUIRED');
+    if(hash(flow.manifest)!==hash(settlementManifest(flow,record,review,adapter.security,now)))throw Error('MANIFEST_BINDING_CHANGED');
+    if(flow.invoices.length)throw Error('PAYMENT_PATH_ALREADY_LOCKED');
+    const native=validateNativeSettlement(input,flow,now);
+    if(flow.nativeSettlement){
+      if(hash(flow.nativeSettlement.authorization)!==hash(input))throw Error('NATIVE_AUTHORIZATION_ALREADY_LOCKED');
+      return {status:taskFlowStatus(flow)};
+    }
+    flow.nativeSettlement={authorization:input,evidence:null};
+    claims.push(['native-treasury:testnet',native.plan.contractId,native.authorizationHash]);
+  }else if(operation==='native-verify'){
+    if(!flow.nativeSettlement)throw Error('NATIVE_AUTHORIZATION_REQUIRED');
+    if(!adapter.verifiers?.nativeRpc)throw Error('PINNED_NATIVE_VERIFIER_NOT_CONFIGURED');
+    const evidence=await verifyNativeTaskSettlement(flow.nativeSettlement.authorization,flow,input,adapter.verifiers.nativeRpc,now);
+    flow.nativeSettlement.evidence=evidence;
+    for(const tx of evidence.transactions)claims.push(['testnet',tx.hash,evidence.authorizationHash]);
   }else if(operation==='invoice'){
+    if(flow.nativeSettlement)throw Error('PAYMENT_PATH_ALREADY_LOCKED');
     if(!flow.manifest)throw Error('MANIFEST_REQUIRED');
     if(hash(flow.manifest)!==hash(settlementManifest(flow,record,review,adapter.security,now)))throw Error('MANIFEST_BINDING_CHANGED');
     const invoice=authorizeInvoice(input,flow.manifest,flow,now);
-    const old=flow.invoices.find(i=>i.workerId===invoice.workerId);
-    if(old){if(old.invoiceHash!==invoice.invoiceHash)throw Error('ONE_INVOICE_PER_WORKER_RECONCILE_BEFORE_RETRY');return {status:taskFlowStatus(flow)};}
+    const old=flow.invoices.find(i=>invoice.obligationId?i.obligationId===invoice.obligationId:i.workerId===invoice.workerId);
+    if(old){if(old.invoiceHash!==invoice.invoiceHash)throw Error('ONE_INVOICE_PER_OBLIGATION_RECONCILE_BEFORE_RETRY');return {status:taskFlowStatus(flow)};}
     flow.invoices.push({...invoice,authorization:input});
   }else if(['quote','verify','refund'].includes(operation)){
     const invoice=flow.invoices.find(i=>i.invoiceHash===input.invoiceHash);
