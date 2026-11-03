@@ -16,8 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: npm test
       - run: npm ci
+      - run: npm test
       - run: npm run build:pages
       - uses: actions/upload-pages-artifact@v3
         with:
