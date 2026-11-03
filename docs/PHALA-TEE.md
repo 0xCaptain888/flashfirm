@@ -16,7 +16,28 @@ No CVM or positive hardware evidence was obtained. Do not call this a live TEE,
 retry through an alternate entry point to bypass the refusal, or infer an
 account, geographic or application-specific cause without provider clarification.
 
-Prepared support message, for the account owner to send:
+The official [troubleshooting guide](https://docs.phala.com/phala-cloud/troubleshooting/troubleshooting.md)
+describes this message as a possible Docker-image anti-spam flag, including false
+positives, and recommends official base images or support review. It does not
+establish which rule triggered this deployment.
+
+One controlled diagnostic retry used the fully qualified official image
+reference `docker.io/library/node:22-alpine@sha256:025b8e975a61d94e33abeafaad1255ef44e4898cf1a1b6446860009c72e6d284`.
+The immutable image digest and application source were unchanged. It was also
+rejected, with request ID `915583642a9c3f2d9f5fda9461e52af7`.
+Thus image-reference normalization did not resolve the restriction. The resource
+list remained empty and the refreshed balance remained $5. No further deployment
+retry of that inline-source configuration is planned.
+
+The expanded support message is retained locally in ignored
+`.runtime/phala/support-review.txt`, including both request IDs, readable public
+source, image/Compose hashes, configuration and the limited workload scope.
+After explicit user authorization, it was submitted through the workspace's
+official support page. Ticket **#1342** is **Open**; the console shows creation
+time `2026-11-03 14:43` (as displayed by the console). No provider response or
+resolution has yet been observed. No secrets or wallet data were included.
+
+Short support message:
 
 > My workspace is 0xcaptain888s-projects. A deployment named
 > flashfirm-quotation-proof failed with a terms-of-use rejection,
@@ -106,6 +127,42 @@ eight executions and one hour of task acceptance; those limits do not replace
 provider resource shutdown. Do not add a card, enable auto-topup, increase the
 plan or erase cloud data without the appropriate authorization.
 
+## Standard dedicated-container alternative
+
+At the user's request, a second packaging method is prepared:
+
+- `tee/phala.Dockerfile` copies the readable module into `/app/phala-worker.mjs`
+  on the same digest-pinned official Node base.
+- `tee/.dockerignore` limits the build context to this worker and Dockerfile.
+  Repository runtime files, wallet material and provider credentials cannot enter
+  this build context.
+- `.github/workflows/phala-container.yml` builds a `linux/amd64` image, tests the
+  actual container, then publishes it to GHCR using the short-lived workflow
+  token. It runs only on explicit workflow dispatch.
+- `scripts/check-phala-container.mjs` mounts a **fake** dstack Unix socket and
+  tests encrypted delivery, result signatures, unsupported quotations, replay
+  rejection, and exact source bytes inside the image. Passing this integration
+  check proves container behavior, **not** a hardware attestation.
+
+After reviewing the successful workflow and anonymously accessible registry
+digest, build the deployment file with:
+
+```sh
+npm run tee:build -- --container-image ghcr.io/0xcaptain888/flashfirm-phala-quotation@sha256:THE_VERIFIED_IMAGE_DIGEST
+```
+
+The resulting Compose uses the dedicated immutable image and a plain
+`node /app/phala-worker.mjs` command. It contains no inline Base64 code, `node -e`,
+source download or package installation. Existing hardware/application evidence
+checks and the $5 first-run limit remain unchanged.
+
+This is transparent standard application packaging, not evidence of a policy
+clearance. A successful image build does not establish why the earlier request
+was rejected, nor guarantee Phala will accept this deployment. Keep support
+ticket #1342 and the original failure history; if this distinct packaging is
+also rejected, request provider review instead of changing identities, IP
+addresses, or concealing application behavior.
+
 Official technical references:
 
 - `https://docs.phala.com/phala-cloud/attestation/verify-your-application.md`
@@ -113,3 +170,5 @@ Official technical references:
 - `https://docs.phala.com/phala-cloud/phala-cloud-api/attestations.md`
 - `https://github.com/Dstack-TEE/dstack/tree/next/dstack/verifier`
 - `https://github.com/Dstack-TEE/dstack/blob/next/sdk/js/src/client-v0.ts`
+- `https://docs.phala.com/phala-cloud/cvm/create-with-docker-compose.md`
+- `https://docs.phala.com/phala-cloud/troubleshooting/troubleshooting.md`

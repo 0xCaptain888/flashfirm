@@ -1,0 +1,33 @@
+name: Publish Phala quotation container
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+concurrency:
+  group: phala-quotation-container
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      IMAGE: ghcr.io/0xcaptain888/flashfirm-phala-quotation
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Build only the public worker source
+        run: docker build --platform linux/amd64 --file tee/phala.Dockerfile --build-arg SOURCE_REVISION="$GITHUB_SHA" --tag "$IMAGE:sha-$GITHUB_SHA" tee
+      - name: Check real container with a fake dstack socket
+        run: node scripts/check-phala-container.mjs "$IMAGE:sha-$GITHUB_SHA"
+      - name: Publish tested candidate
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker push "$IMAGE:sha-$GITHUB_SHA"
+          image_ref="$(docker image inspect --format '{{index .RepoDigests 0}}' "$IMAGE:sha-$GITHUB_SHA")"
+          printf 'PHALA_IMAGE_REF=%s\n' "$image_ref"
+          printf 'Tested image: `%s`\n\nThis is a container test with a mock dstack socket, not hardware attestation.\n' "$image_ref" >> "$GITHUB_STEP_SUMMARY"
