@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import {mkdtemp, rm} from 'node:fs/promises';
+import {mkdtemp, rm, chmod} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import http from 'node:http';
@@ -37,6 +37,11 @@ await new Promise((resolve, reject) => {
   rpc.once('error', reject); rpc.listen(socket, resolve);
 });
 try {
+  // The host runner owns this empty fixture directory/socket. Container root
+  // has no DAC-override capability, so explicitly permit access to this fake
+  // RPC only. Production socket permissions are neither read nor changed.
+  await chmod(directory, 0o755);
+  await chmod(socket, 0o666);
   await execute('docker', ['run', '-d', '--name', name, '--read-only',
     '--cap-drop=ALL', '--security-opt=no-new-privileges:true', '--pids-limit=64',
     '--memory=512m', '--log-driver=none', '--restart=no',
