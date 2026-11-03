@@ -9,7 +9,7 @@ const {SignedTransaction,encodeTransaction}=createRequire(import.meta.url)('@nea
 
 // One explicitly approved demonstration. This is separate from the testnet treasury.
 export const paymentPolicy = Object.freeze({
-  network: 'mainnet', signer: '0xcaptain888.near',
+  network: 'mainnet', signer: '0cd07d0982767b3b7abed80e489129be51df7300f0b2729a8f28f6eef3200606',
   recipient: '0xa2c191561397c584ddad75388b5519e4931ef026',
   originAsset: 'nep141:wrap.near',
   destinationAsset: 'nep141:arb-0xaf88d065e77c8cc2239327c5edb3a432268e5831.omft.near',
@@ -45,6 +45,9 @@ export function validateQuote(response, request, now = Date.now(), verifySignatu
   if(!Object.hasOwn(request,'appFees')&&Object.hasOwn(echoed,'appFees')){
     if(!Array.isArray(echoed.appFees)||echoed.appFees.length>1)throw Error('UNEXPECTED_SERVICE_FEE');
     for(const fee of echoed.appFees){
+      // Executable quotes serialize the optional limit-order reference as
+      // null, while dry quotes omit it. A real order reference is not allowed.
+      if(Object.hasOwn(fee,'limitOrderId')&&fee.limitOrderId===null)delete fee.limitOrderId;
       if(Object.keys(fee).sort().join()!=='fee,recipient'||!Number.isInteger(fee.fee)||fee.fee<0||fee.fee>25)
         throw Error('UNEXPECTED_SERVICE_FEE');
       validateDestination('near',fee.recipient);
@@ -112,24 +115,70 @@ export async function preparePayment(journal, nearRpc, now = Date.now()) {
     maximumGasCost:String(maximumGasCost),totalAttachedNear:String(deposits),
     snapshot:finalBlock.header.hash,preparedAt:now};
 }
-export function validateSignedPayment(encoded, prepared) {
+// Installed OKX 4.22.2 attempts submission inside signTransaction itself.
+// Post-signature validation cannot prevent an extension-side broadcast. Keep
+// signing disabled until both parameter fidelity and submission are resolved.
+export const walletExecution = Object.freeze({
+  signingEnabled:false,
+  reason:'WALLET_ACTION_MISMATCH_REQUIRES_REVIEW',
+  walletMayBroadcast:true
+});
+export function inspectSignedPayment(encoded) {
   if (typeof encoded !== 'string' || encoded.length>20000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded))
     throw Error('INVALID_SIGNED_TRANSACTION');
   const bytes=Buffer.from(encoded,'base64'), signed=SignedTransaction.decode(bytes), tx=signed.transaction;
-  if (!Buffer.from(signed.encode()).equals(bytes) || tx.signerId !== prepared.signerId || tx.receiverId !== prepared.receiverId)
-    throw Error('SIGNED_TRANSACTION_SUBSTITUTED');
+  if (!Buffer.from(signed.encode()).equals(bytes)) throw Error('SIGNED_TRANSACTION_SUBSTITUTED');
   const actual=tx.actions.map(a=>{
     if (!a.functionCall) throw Error('UNEXPECTED_ACTION');
     const f=a.functionCall;
     return {methodName:f.methodName,args:JSON.parse(Buffer.from(f.args).toString()),gas:String(f.gas),deposit:String(f.deposit)};
   });
-  if (canonical(actual)!==canonical(prepared.actions)) throw Error('SIGNED_ACTIONS_SUBSTITUTED');
   const rawKey=tx.publicKey.ed25519Key?.data;
   if (!rawKey || signed.signature.ed25519Signature?.data?.length!==64) throw Error('UNSUPPORTED_SIGNATURE');
   const key=createPublicKey({key:Buffer.concat([Buffer.from('302a300506032b6570032100','hex'),Buffer.from(rawKey)]),format:'der',type:'spki'});
   const digest=createHash('sha256').update(encodeTransaction(tx)).digest();
   if (!verify(null,digest,key,Buffer.from(signed.signature.ed25519Signature.data))) throw Error('INVALID_WALLET_SIGNATURE');
-  return {hash:base58(digest),bytes:encoded};
+  return {hash:base58(digest),signerId:tx.signerId,receiverId:tx.receiverId,actions:actual};
+}
+export function validateSignedPayment(encoded, prepared) {
+  const observed=inspectSignedPayment(encoded);
+  if(observed.signerId!==prepared.signerId||observed.receiverId!==prepared.receiverId)
+    throw Error('SIGNED_TRANSACTION_SUBSTITUTED');
+  if(canonical(observed.actions)!==canonical(prepared.actions))throw Error('SIGNED_ACTIONS_SUBSTITUTED');
+  return {hash:observed.hash,bytes:encoded};
+}
+function comparableRequest(request) {
+  const value=structuredClone(request??{});
+  for(const key of ['referral','virtualChainRecipient','virtualChainRefundRecipient'])
+    if(value[key]===null)delete value[key];
+  for(const [key,defaultValue]of Object.entries({depositMode:'SIMPLE',quoteWaitingTimeMs:0,insured:false}))
+    if(value[key]===defaultValue)delete value[key];
+  for(const fee of value.appFees??[])if(fee.limitOrderId===null)delete fee.limitOrderId;
+  return value;
+}
+export function verifySavedQuoteStatus(journal,status,verifySignature=verifyQuoteSignature) {
+  const saved=journal?.quote,echoed=status?.quoteResponse;
+  if(!saved||canonical(comparableRequest(echoed?.quoteRequest))!==canonical(comparableRequest(saved.quoteRequest))||
+      canonical(echoed?.quote)!==canonical(saved.quote)||echoed?.timestamp!==saved.timestamp||
+      echoed?.signature!==saved.signature||verifySignature(saved)!==true||verifySignature(echoed)!==true)
+    throw Error('SWAP_IDENTITY_MISMATCH');
+  if(!['KNOWN_DEPOSIT_TX','PENDING_DEPOSIT','INCOMPLETE_DEPOSIT','PROCESSING','SUCCESS','REFUNDED','FAILED'].includes(status.status))
+    throw Error('UNKNOWN_RELAY_STATUS');
+  return status.status;
+}
+export async function observePayment(journal,status,nearRpc,now=Date.now(),verifySignature=verifyQuoteSignature) {
+  const relayStatus=verifySavedQuoteStatus(journal,status,verifySignature);
+  if((await nearRpc('status',[])).chain_id!=='mainnet')throw Error('WRONG_NEAR_NETWORK');
+  const block=await nearRpc('block',{finality:'final'});
+  const time=BigInt(block.header.timestamp_nanosec)/1000000n;
+  if(time<BigInt(now-120000)||time>BigInt(now+30000))throw Error('STALE_NEAR_RPC');
+  const account=await nearRpc('query',{request_type:'view_account',block_id:block.header.hash,account_id:paymentPolicy.signer});
+  if(account.block_hash!==block.header.hash)throw Error('INCONSISTENT_NEAR_SNAPSHOT');
+  return {checkedAt:now,relayStatus,sourceBalanceYocto:String(account.amount),snapshot:block.header.hash,
+    sourceTransactionKnown:!!journal.sourceHash,walletResponseHash:journal.walletResponse?.hash??null,
+    sourceHash:journal.sourceHash??null,paymentVerified:false,
+    scope:'Read-only relay and finalized account observations; neither non-deposit nor refund is proven by these observations.',
+    next:journal.sourceHash?'RECONCILE_SAVED_HASH_ONLY':'WALLET_REVIEW_REQUIRED_NO_NEW_SIGNATURE'};
 }
 export async function verifyOrigin(journal, nearRpc) {
   if (!journal?.sourceHash || !journal.prepared) throw Error('NO_SIGNED_PAYMENT');
@@ -161,10 +210,8 @@ export async function verifyOrigin(journal, nearRpc) {
 }
 export async function verifyCrossChain(journal, status, evmRpc, verifySignature = verifyQuoteSignature) {
   if (!journal.origin?.verified || journal.state==='VERIFIED') throw Error('ORIGIN_VERIFICATION_REQUIRED');
-  const saved=journal.quote, echoed=status?.quoteResponse;
-  if (canonical(echoed?.quoteRequest)!==canonical(saved.quoteRequest) ||
-      canonical(echoed?.quote)!==canonical(saved.quote) || echoed?.signature!==saved.signature ||
-      verifySignature(echoed)!==true) throw Error('SWAP_IDENTITY_MISMATCH');
+  const saved=journal.quote;
+  verifySavedQuoteStatus(journal,status,verifySignature);
   if (status.status!=='SUCCESS') return {verified:false,status:status.status,next:'WAIT_OR_RECONCILE_NO_REDEPOSIT'};
   const details=status.swapDetails;
   if (!details?.originChainTxHashes?.some(t=>t.hash===journal.sourceHash) ||

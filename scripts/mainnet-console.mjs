@@ -3,7 +3,7 @@ import {randomBytes} from 'node:crypto';
 import {mkdir,open,readFile,rename,writeFile,unlink} from 'node:fs/promises';
 import {readBounded} from '../src/live.mjs';
 import {canonical} from '../src/protocol.mjs';
-import {paymentPolicy,quoteRequest,validateQuote,preparePayment,validateSignedPayment,verifyOrigin,verifyCrossChain} from '../src/mainnet-payment.mjs';
+import {paymentPolicy,quoteRequest,validateQuote,preparePayment,inspectSignedPayment,validateSignedPayment,verifyOrigin,verifyCrossChain,observePayment,walletExecution} from '../src/mainnet-payment.mjs';
 
 if(process.env.FLASHFIRM_USE_SYSTEM_PROXY==='1'){
   const {ProxyAgent,setGlobalDispatcher}=await import('../cloudflare/node_modules/undici/index.js');
@@ -14,8 +14,10 @@ await mkdir(directory,{recursive:true,mode:0o700});
 const lock=await open(new URL('console.lock',directory),'wx',0o600);
 await lock.writeFile(String(process.pid));
 const filename=new URL('journal.json',directory);
-let journal=null,preview=null;
+const candidateFile=new URL('quote-candidate.json',directory);
+let journal=null,preview=null,candidate=null;
 try{journal=JSON.parse(await readFile(filename,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}
+try{candidate=JSON.parse(await readFile(candidateFile,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}
 if(journal&&canonical(journal.policy)!==canonical(paymentPolicy))throw Error('SAVED_PAYMENT_POLICY_CHANGED');
 async function save(){await writeFile(new URL('journal.tmp',directory),JSON.stringify(journal,null,2),{mode:0o600});await rename(new URL('journal.tmp',directory),filename);}
 async function remote(url,body) {
@@ -32,7 +34,7 @@ function rpc(endpoint,allowed){return async(method,params)=>{
 const nearRpc=rpc('https://rpc.mainnet.near.org',['status','block','query','gas_price','tx','broadcast_tx_commit']);
 const evmRpc=rpc('https://arb1.arbitrum.io/rpc',['eth_chainId','eth_getTransactionReceipt','eth_getBlockByNumber']);
 const csrf=randomBytes(32).toString('hex'),port=43186,origin=`http://127.0.0.1:${port}`;
-const publicState=()=>({policy:paymentPolicy,journal,preview,
+const publicState=()=>({policy:paymentPolicy,journal,preview,walletExecution,
   financialBroadcastByServer:!!journal?.sourceHash,taskTreasuryLinked:false});
 const send=(res,code,value)=>{res.writeHead(code,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
 let queue=Promise.resolve();
@@ -62,7 +64,14 @@ const server=http.createServer(async(req,res)=>{
       if(url.pathname==='/api/issue'){
         if(journal)throw Error('ONE_PAYMENT_ONLY');
         if(input.approval!=='NEAR_TO_ARBITRUM_USDC_MAX_5_USD'||!preview||Date.now()-preview.created>120000)throw Error('FRESH_PREVIEW_AND_EXPLICIT_APPROVAL_REQUIRED');
-        const request=quoteRequest(false),result=validateQuote(await remote('https://1click.chaindefuser.com/v0/quote',request),request);
+        if(!candidate){
+          const request=quoteRequest(false),response=await remote('https://1click.chaindefuser.com/v0/quote',request);
+          candidate={request,response,created:Date.now()};
+          // Keep even a rejected instruction for inspection; never obtain a
+          // replacement funding address automatically after validation failure.
+          await writeFile(candidateFile,JSON.stringify(candidate,null,2),{mode:0o600,flag:'wx'});
+        }
+        const result=validateQuote(candidate.response,candidate.request);
         if(BigInt(result.quote.minAmountOut)<BigInt(preview.result.quote.minAmountOut))throw Error('QUOTE_WORSENED_REFRESH_AND_REVIEW');
         journal={version:1,policy:paymentPolicy,state:'QUOTED',created:Date.now(),quote:result,sourceHash:null};
         await save();return publicState();
@@ -72,12 +81,20 @@ const server=http.createServer(async(req,res)=>{
         journal.prepared=await preparePayment(journal,nearRpc);journal.state='PREPARED';await save();return publicState();
       }
       if(url.pathname==='/api/begin'){
+        if(!walletExecution.signingEnabled)throw Error(walletExecution.reason);
         if(journal?.state!=='PREPARED'||Date.now()-journal.prepared.preparedAt>120000||input.account!==paymentPolicy.signer)
           throw Error('FRESH_PREPARATION_AND_EXACT_WALLET_REQUIRED');
         journal.state='AWAITING_SIGNATURE';await save();return {transaction:journal.prepared};
       }
       if(url.pathname==='/api/broadcast'){
         if(journal?.state!=='AWAITING_SIGNATURE'||journal.sourceHash)throw Error('NO_REPEAT_BROADCAST');
+        // Retain safe decoded fields and hash before validation. The extension
+        // may already have submitted, even if our validation rejects the bytes.
+        journal.walletResponse=inspectSignedPayment(input.signedTransaction);
+        journal.walletResponse.receivedAt=Date.now();await save();
+        try{validateSignedPayment(input.signedTransaction,journal.prepared);}
+        catch(error){journal.walletReview={reason:error.message,recordedAt:Date.now()};await save();throw error;}
+        if(!walletExecution.signingEnabled)throw Error(walletExecution.reason);
         if(Date.now()-journal.prepared.preparedAt>600000||Date.parse(journal.quote.quote.deadline)<Date.now()+60000)
           throw Error('SIGNATURE_WINDOW_EXPIRED_DO_NOT_BROADCAST');
         const signed=validateSignedPayment(input.signedTransaction,journal.prepared);
@@ -103,6 +120,15 @@ const server=http.createServer(async(req,res)=>{
         journal.lastChecked=Date.now();journal.relayState=result.status;
         if(result.verified){journal.evidence=result;journal.state='VERIFIED';}
         else journal.state='RECONCILING';
+        await save();return publicState();
+      }
+      if(url.pathname==='/api/observe'){
+        if(!journal)throw Error('SAVED_QUOTE_REQUIRED');
+        const status=await remote('https://1click.chaindefuser.com/v0/status?'+new URLSearchParams({depositAddress:journal.quote.quote.depositAddress}));
+        journal.observation=await observePayment(journal,status,nearRpc);
+        if(!journal.sourceHash&&!walletExecution.signingEnabled)
+          journal.walletReview??={reason:walletExecution.reason,recordedAt:Date.now(),
+            initialSignedResponseRetained:false};
         await save();return publicState();
       }
       throw Error('UNKNOWN_OPERATION');

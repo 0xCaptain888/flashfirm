@@ -19,14 +19,35 @@ The recorded output is historical and must not be used as a current price.
 No deposit address was issued, transaction signed or funds moved in that record.
 It is not payment evidence.
 
-The local console was initially started and rendered in Chrome. The live quote
-revealed additional official defaults, which are now validated explicitly
-(public confidentiality, no insurance, zero waiting delay and at most 25 bps
-in the default service-fee entry). The first UI preview rejected these defaults
-before generating any funding instruction. After the compatibility fix,
-restarting the local console was blocked because the approval service could
-not complete its review. Live wallet connection, balance preflight, executable
-quote issuance and actual payment remain unverified.
+The local console now obtains and verifies live dry quotes. Official service
+defaults are validated explicitly (public confidentiality, no insurance, zero
+waiting delay and at most 25 bps in the default service-fee entry).
+
+The OKX wallet display label is `0xcaptain888.near`, but the connected on-chain
+account is the user-supplied implicit account
+`0cd07d0982767b3b7abed80e489129be51df7300f0b2729a8f28f6eef3200606`.
+Read-only mainnet RPC checks found funds in this implicit account and a zero
+balance in the separate named account. Source and refund policies therefore
+pin the implicit account; wallet labels never authorize a different signer.
+An executable quote was saved, the account/storage/gas preflight passed and the
+user approved the OKX signing prompt. The returned transaction failed the exact
+action check (`SIGNED_ACTIONS_SUBSTITUTED`). No source hash was persisted and
+the local service did not broadcast. The first rejected signed response was
+not retained, so its exact field differences and hash cannot be reconstructed.
+An independent check found the source balance unchanged and the matching relay
+order still `PENDING_DEPOSIT`. These are observations, not proof that the wallet
+never attempted broadcast.
+
+Inspection of installed OKX 4.22.2 showed that its `signTransaction` handler
+attempts to submit before returning signed bytes. Therefore post-signature
+validation is insufficient to prevent extension-side submission. **Signing is
+disabled in both the local service and UI pending a wallet compatibility fix.**
+Do not retry, reset the journal or send a second deposit.
+The read-only saved-order check verifies the official quote signature and
+identity, then reads the finalized source balance. It never claims delivery.
+Subsequent signed-response diagnostics retain decoded actions and their
+cryptographically verified hash before an integrity error, without exposing
+the signed bytes in public state.
 
 ## Start locally
 
@@ -56,12 +77,14 @@ proxy this console. It is not a hosted payment API.
    executable quote; its output cannot fall below the previewed output minimum.
 4. Check a final NEAR block, account collateral, token storage and maximum
    prepaid gas. Only absent wNEAR registrations are added.
-5. Review exact actions and personally approve the wallet signature. The single
+5. Signing is currently disabled. The intended flow is to review exact actions
+   and personally approve the wallet signature. The single
    transaction targets `wrap.near`: storage registration if needed, wrapping
    exactly 0.5 NEAR, and an exact `ft_transfer` to the signed deposit account.
 6. The backend decodes the returned Borsh transaction, validates every action,
    signer, receiver, gas, deposit, arguments and Ed25519 signature, refreshes
-   the budget, then writes the deterministic hash before broadcasting once.
+   the budget, then writes the deterministic hash before any server broadcast.
+   This does not control a wallet that submits before returning the signature.
 7. Reconcile that same hash. Verify FINAL NEAR execution, exact actions and
    wNEAR transfer event, the saved quote identity/signature and relay mapping,
    then the USDC transfer against a pinned Arbitrum RPC at `finalized`.

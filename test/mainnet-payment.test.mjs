@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
 import {readFile} from 'node:fs/promises';
-import {paymentPolicy as policy,quoteRequest,validateQuote,usdMicros,preparePayment,validateSignedPayment,verifyOrigin,verifyCrossChain} from '../src/mainnet-payment.mjs';
+import {paymentPolicy as policy,quoteRequest,validateQuote,usdMicros,preparePayment,inspectSignedPayment,validateSignedPayment,verifyOrigin,verifyCrossChain,verifySavedQuoteStatus,observePayment,walletExecution} from '../src/mainnet-payment.mjs';
 const require=createRequire(import.meta.url);
 const {KeyPair}=require('@near-js/crypto');
 const {createTransaction,actionCreators,SignedTransaction,Signature,encodeTransaction}=require('@near-js/transactions');
@@ -11,11 +11,21 @@ const now=1804215600000,deposit='1'.repeat(64),sourceHash='2'.repeat(44),destina
 test('recorded real dry quote verifies against the official SDK key; changed amount fails',async()=>{
   const artifact=JSON.parse(await readFile(new URL('../evidence/mainnet-route-preview.json',import.meta.url),'utf8'));
   const response=artifact.quote;
-  const request=quoteRequest(true,Date.parse(response.quoteRequest.deadline)-30*60000);
+  // Historical quote predates correction from the wallet label to its actual
+  // implicit NEAR account. Preserve its original signed refund destination.
+  const request={...quoteRequest(true,Date.parse(response.quoteRequest.deadline)-30*60000),
+    refundTo:response.quoteRequest.refundTo};
   assert.equal(validateQuote(response,request,Date.parse(response.timestamp)),response);
   const tampered=structuredClone(response);tampered.quote.amountOut='1887517';
   assert.throws(()=>validateQuote(tampered,request,Date.parse(response.timestamp)),/SIGNED_QUOTE/);
   assert.equal(artifact.fundsMoved,false);
+});
+test('payment source and refunds use the supplied implicit account, never its wallet display label',()=>{
+  assert.equal(policy.signer,'0cd07d0982767b3b7abed80e489129be51df7300f0b2729a8f28f6eef3200606');
+  assert.equal(quoteRequest(false).refundTo,policy.signer);
+  const response=quote(true);
+  response.quoteRequest.refundTo='0xcaptain888.near';
+  assert.throws(()=>validateQuote(response,quoteRequest(true,now),now,()=>true),/SIGNED_QUOTE/);
 });
 function quote(dry=false){
   const request=quoteRequest(dry,now);
@@ -45,6 +55,11 @@ test('mainnet quote pins the approved route, rejects signatures, stale/degraded 
   assert.throws(()=>validateQuote({...response,quote:{...response.quote,depositAddress:deposit}},response.quoteRequest,now,()=>true),/FUNDING/);
   const defaults={...response,quoteRequest:{...response.quoteRequest,confidentiality:'public',quoteWaitingTimeMs:0,insured:false,appFees:[{recipient:deposit,fee:20}]}};
   assert.equal(validateQuote(defaults,response.quoteRequest,now,()=>true),defaults);
+  defaults.quoteRequest.appFees[0].limitOrderId=null;
+  assert.equal(validateQuote(defaults,response.quoteRequest,now,()=>true),defaults);
+  defaults.quoteRequest.appFees[0].limitOrderId='unapproved-order';
+  assert.throws(()=>validateQuote(defaults,response.quoteRequest,now,()=>true),/SERVICE_FEE/);
+  defaults.quoteRequest.appFees[0].limitOrderId=null;
   defaults.quoteRequest.appFees[0].fee=26;
   assert.throws(()=>validateQuote(defaults,response.quoteRequest,now,()=>true),/SERVICE_FEE/);
   assert.equal(usdMicros('1.0000000001'),1000001n);
@@ -81,6 +96,42 @@ test('signed bytes must match exact signer, receiver, methods, arguments and amo
   assert.throws(()=>validateSignedPayment(sign(prepared,{actions}),prepared),/SUBSTITUTED/);
   const corrupt=Buffer.from(bytes,'base64');corrupt[corrupt.length-1]^=1;
   assert.throws(()=>validateSignedPayment(corrupt.toString('base64'),prepared),/SIGNATURE/);
+});
+test('changed wallet actions retain a verifiable hash for investigation without approving or broadcasting them',async()=>{
+  const {journal,near}=fixture(),prepared=await preparePayment(journal,near,now);
+  const actions=structuredClone(prepared.actions);actions[0].gas='1';
+  const signed=sign(prepared,{actions}),inspection=inspectSignedPayment(signed);
+  assert.match(inspection.hash,/^[1-9A-HJ-NP-Za-km-z]{40,44}$/);
+  assert.equal(inspection.signerId,policy.signer);
+  assert.equal(inspection.actions[0].gas,'1');
+  assert.equal(inspection.bytes,undefined);
+  assert.throws(()=>validateSignedPayment(signed,prepared),/SIGNED_ACTIONS_SUBSTITUTED/);
+  assert.equal(walletExecution.signingEnabled,false);
+  assert.equal(walletExecution.walletMayBroadcast,true);
+});
+test('read-only recovery accepts equivalent status defaults, preserves quote identity and never treats waiting/refund as proof',async()=>{
+  const {journal,near}=fixture();
+  journal.quote.quoteRequest={...journal.quote.quoteRequest,insured:false,quoteWaitingTimeMs:0};
+  const status={status:'PENDING_DEPOSIT',quoteResponse:structuredClone(journal.quote)};
+  delete status.quoteResponse.quoteRequest.depositMode;
+  delete status.quoteResponse.quoteRequest.insured;
+  delete status.quoteResponse.quoteRequest.quoteWaitingTimeMs;
+  Object.assign(status.quoteResponse.quoteRequest,{referral:null,virtualChainRecipient:null,virtualChainRefundRecipient:null});
+  assert.equal(verifySavedQuoteStatus(journal,status,()=>true),'PENDING_DEPOSIT');
+  const observation=await observePayment(journal,status,near,now,()=>true);
+  assert.equal(observation.paymentVerified,false);
+  assert.equal(observation.sourceTransactionKnown,false);
+  assert.match(observation.next,/NO_NEW_SIGNATURE/);
+  status.status='REFUNDED';
+  assert.equal((await observePayment(journal,status,near,now,()=>true)).paymentVerified,false);
+  status.quoteResponse.quoteRequest.recipient='0x'+'b'.repeat(40);
+  assert.throws(()=>verifySavedQuoteStatus(journal,status,()=>true),/IDENTITY/);
+  status.quoteResponse=structuredClone(journal.quote);status.quoteResponse.timestamp=new Date(now+1).toISOString();
+  assert.throws(()=>verifySavedQuoteStatus(journal,status,()=>true),/IDENTITY/);
+  status.quoteResponse=structuredClone(journal.quote);
+  assert.throws(()=>verifySavedQuoteStatus(journal,status,()=>false),/IDENTITY/);
+  status.status='FAKE';
+  assert.throws(()=>verifySavedQuoteStatus(journal,status,()=>true),/UNKNOWN/);
 });
 test('origin verification requires final success, exact actions and the matching wNEAR Transfer event',async()=>{
   const {journal,near}=fixture();journal.prepared=await preparePayment(journal,near,now);journal.sourceHash=sourceHash;
