@@ -1,14 +1,22 @@
 import {execFileSync} from 'node:child_process';
 import {readFile,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import {verifyQuoteSignature} from '@defuse-protocol/one-click-sdk-typescript';
 const files=execFileSync('git',['ls-files','-z'],{encoding:'utf8'}).split('\0').filter(Boolean);
+// A genuine 1Click signature uses the same textual prefix/length as a NEAR
+// secret key. Exempt only the exact, cryptographically verified public signature
+// in this one evidence artifact; never exempt arbitrary ed25519 strings.
+const quoteEvidence=JSON.parse(await readFile('evidence/mainnet-route-preview.json','utf8'));
+if(!verifyQuoteSignature(quoteEvidence.quote))throw Error('Invalid recorded 1Click signature');
+const publicQuoteSignature=quoteEvidence.quote.signature;
 const secrets=[];
 try{const config=JSON.parse(await readFile('.runtime/provider-secret.json','utf8'));for(const [key,value]of Object.entries(config))if(/key|token|secret/i.test(key)&&typeof value==='string'&&value.length>12)secrets.push(value);}catch(e){if(e.code!=='ENOENT')throw e;}
 try{for(const name of await readdir('.runtime/cloudflare'))if(/-token\.txt$|^production-vault\.key$/.test(name)){const value=(await readFile('.runtime/cloudflare/'+name,'utf8')).trim();if(value.length>12)secrets.push(value);}}catch(e){if(e.code!=='ENOENT')throw e;}
 for(const file of files){
  if(file.startsWith('.runtime/')||file==='.env'||/\.sqlite(?:-wal|-shm)?$|vault\.key|operator-token\.txt/.test(file))throw Error('Private file staged');
  const bytes=await readFile(file);const text=bytes.toString('utf8');
- if (/ed25519:[1-9A-HJ-NP-Za-km-z]{80,}/.test(text)) throw Error(`NEAR private-key-like content found in ${file}`);
+ const keyLike=text.match(/ed25519:[1-9A-HJ-NP-Za-km-z]{80,}/g)??[];
+ if(keyLike.some(value=>file!=='evidence/mainnet-route-preview.json'||value!==publicQuoteSignature))throw Error(`NEAR private-key-like content found in ${file}`);
  if(secrets.some(secret=>text.includes(secret))||/-----BEGIN (?:RSA |EC |ENCRYPTED )?PRIVATE KEY-----|\bghp_[A-Za-z0-9]{30,}|\bsk-[A-Za-z0-9]{35,}/.test(text))throw Error(`Credential-like content found in ${file}`);
 }
 const build=JSON.parse(await readFile('artifacts/contract-build.json','utf8'));

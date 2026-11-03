@@ -14,7 +14,9 @@ Temporary agent teams. Reproducible contribution allocation. Proof before payout
 
 [Public demo](https://0xCaptain888.github.io/flashfirm/) · [Recorded real AI analysis](https://0xCaptain888.github.io/flashfirm/live.html) · [Testnet wallet console](https://0xCaptain888.github.io/flashfirm/treasury.html) · [Delivery status](docs/DELIVERY-STATUS.md)
 
-Development status: real model output + local durable backend + free public verification workspace + verified NEAR testnet settlement. **Not a production service; independent operators, TEE and Intents are not live.**
+Development status: real model output + local durable backend + free public verification workspace + verified NEAR testnet settlement. **Not a production service; independent operators, TEE and Intents payments are not live.**
+
+**Mainnet payment preparation:** a separate local NEAR → Arbitrum USDC console now pins one 0.5 NEAR payment, the approved recipient and a $5 total valuation ceiling. A real dry quote verifies against the official 1Click signing key; no funds have moved. Wallet signing, live balance preflight and payment verification remain pending. [Runbook and recovery boundaries](docs/MAINNET-PAYMENT.md) · [Historical signed dry quote](evidence/mainnet-route-preview.json).
 
 Wallet console: choose **Meteor Wallet** or **MyNearWallet**. For the Meteor extension, open the demo in the browser where it is installed. The connection targets NEAR testnet; no delegated key is requested and Meteor transactions explicitly disable function-call-key execution. Meteor buyer funding and allocation signatures have been verified; MyNearWallet signing is not verified.
 

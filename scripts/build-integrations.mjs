@@ -1,5 +1,6 @@
 import { readFile, writeFile, copyFile } from 'node:fs/promises';
 import { verifyLiveReceipt } from '../src/live.mjs';
+import { verifyQuoteSignature } from '@defuse-protocol/one-click-sdk-typescript';
 const root=new URL('../',import.meta.url),out=new URL('../dist/',import.meta.url);
 const report=JSON.parse(await readFile(new URL('evidence/integration-upgrade.json',root),'utf8'));
 const receipt=JSON.parse(await readFile(new URL('evidence/queued-live-receipt.json',root),'utf8'));
@@ -28,3 +29,9 @@ try {
  const integration=await readFile(new URL('integrations.html',out),'utf8');
  await writeFile(new URL('integrations.html',out),integration.replace('CI-verified container startup; access controls; encrypted restore','Free public D1 workspace and verification workflow; separate local Node integration backend').replace('Cloud hosting, organization auth and external alerts','Full Node integration hosting; organization auth, cloud restore drill and external alerts'));
 } catch(error) {if(error.code!=='ENOENT')throw error;}
+const mainnetPreview=JSON.parse(await readFile(new URL('evidence/mainnet-route-preview.json',root),'utf8'));
+if(mainnetPreview.fundsMoved!==false||mainnetPreview.paymentVerified!==false||!verifyQuoteSignature(mainnetPreview.quote))
+ throw Error('Invalid mainnet preview evidence');
+await copyFile(new URL('evidence/mainnet-route-preview.json',root),new URL('mainnet-route-preview.json',out));
+const mainnetHome=await readFile(new URL('index.html',out),'utf8');
+await writeFile(new URL('index.html',out),mainnetHome.replace('<section id="outcome">','<section class="panel allocation"><h2>NEAR → Arbitrum: signed route preview</h2><p>A real historical 1Click quote verifies against the official signing key. The separate local wallet console pins a 0.5 NEAR demonstration and a $5 total valuation ceiling. No mainnet payment has been signed or verified yet.</p><a class="button secondary" href="./mainnet-route-preview.json">Inspect signed dry quote ↗</a><p class="muted">This recorded quote is not a current price or payment receipt. Signing requires the local console and your own wallet approval.</p></section><section id="outcome">'));

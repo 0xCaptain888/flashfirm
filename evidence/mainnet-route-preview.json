@@ -1,0 +1,54 @@
+{
+  "status": "SIGNED_DRY_QUOTE_CAPTURED",
+  "capturedAt": "2026-11-03T02:59:10.621Z",
+  "origin": "NEAR mainnet",
+  "destination": "Arbitrum One",
+  "destinationSymbol": "USDC",
+  "sdk": "@defuse-protocol/one-click-sdk-typescript@0.1.26",
+  "fundsMoved": false,
+  "executableQuoteIssued": false,
+  "paymentVerified": false,
+  "teeDeployed": false,
+  "quote": {
+    "quote": {
+      "amountIn": "500000000000000000000000",
+      "amountInFormatted": "0.5",
+      "amountInUsd": "1.900000000000",
+      "minAmountIn": "500000000000000000000000",
+      "amountOut": "1887516",
+      "amountOutFormatted": "1.887516",
+      "amountOutUsd": "1.886260801860",
+      "minAmountOut": "1868640",
+      "timeEstimate": 21,
+      "refundFee": "0",
+      "withdrawFee": "5300"
+    },
+    "quoteRequest": {
+      "dry": true,
+      "depositMode": "SIMPLE",
+      "swapType": "EXACT_INPUT",
+      "slippageTolerance": 100,
+      "originAsset": "nep141:wrap.near",
+      "depositType": "ORIGIN_CHAIN",
+      "destinationAsset": "nep141:arb-0xaf88d065e77c8cc2239327c5edb3a432268e5831.omft.near",
+      "amount": "500000000000000000000000",
+      "refundTo": "0xcaptain888.near",
+      "refundType": "ORIGIN_CHAIN",
+      "recipient": "0xa2c191561397c584ddad75388b5519e4931ef026",
+      "recipientType": "DESTINATION_CHAIN",
+      "deadline": "2026-11-03T03:29:10.113Z",
+      "confidentiality": "public",
+      "quoteWaitingTimeMs": 0,
+      "insured": false,
+      "appFees": [
+        {
+          "recipient": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+          "fee": 20
+        }
+      ]
+    },
+    "signature": "ed25519:2ZM9rnQULyZKkpprrCAjc7MMMxjvgMPSnfVePmxm5DmQJAmou8TfJoofq9ktjTLXcALCpsU3uVag1amRGF1HKLj",
+    "timestamp": "2026-11-03T02:59:10.621Z",
+    "correlationId": "7dda16ac-f047-41d7-aaa9-b35a516cac78"
+  }
+}

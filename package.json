@@ -16,6 +16,7 @@
     "build:contract": "node scripts/build-contract.mjs",
     "build:wallet": "node scripts/build-wallet.mjs",
     "operator:token": "node scripts/operator-token.mjs",
+    "mainnet:console": "node scripts/mainnet-console.mjs",
     "build:pages": "node scripts/build-pages.mjs",
     "model:probe": "node scripts/probe-models.mjs",
     "live:run": "node scripts/run-live.mjs",
@@ -38,5 +39,8 @@
     "near-api-js": "5.1.1",
     "near-workspaces": "5.0.0",
     "util": "0.12.5"
+  },
+  "dependencies": {
+    "@defuse-protocol/one-click-sdk-typescript": "0.1.26"
   }
 }
