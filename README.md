@@ -1,5 +1,7 @@
 # FlashFirm
 
+**Real NEAR → Arbitrum payment verified:** the approved **0.5 NEAR** mainnet demonstration delivered **1.861840 native USDC** to the user's Arbitrum One wallet. Exact final NEAR execution, the official signed 1Click quote/order mapping and the finalized Arbitrum ERC-20 receipt are recorded. Source gas: **0.0071149895375 NEAR**. [Both-chain evidence](evidence/mainnet-native-payment.json) · [Verification and scope](docs/NATIVE-NEAR-PAYMENT.md). Run `npm run mainnet:verify` offline or add `-- --online` to query both chains again. This demonstration is separate from the AI task and testnet treasury.
+
 **Task dossier upgrade:** one signed report, exact source locations, bound review rounds, persistent in-app reminders and portable exports now work through the local and free cloud code paths. A separately signed operator revision fixes the rejected quotation while preserving the original model output. All nine revised quotations pass exact checks; the revision still awaits a new review. Three pinned source files were actually retrieved again and matched against their complete recorded hashes. Zero extra model calls or financial transactions. [Task workflow and SDK](docs/TASK-DOSSIERS.md) · [Signed revision](evidence/revised-live-receipt.json) · [Source audit](evidence/source-audit.json).
 
 **Public acceptance passed:** the free Workers/D1/Workflows deployment completed actual report binding, revised-receipt background verification, duplicate prevention, mismatched-report rejection, persisted inbox acknowledgement, dossier export/reverification and closure/readback. [Remote upgrade evidence](evidence/cloudflare-case-upgrade.json). The verification checks report consistency and quotations; it does not approve quality or execute settlement.
@@ -22,9 +24,9 @@ Temporary agent teams. Reproducible contribution allocation. Proof before payout
 
 [Traceable report correction and task dossier](https://0xCaptain888.github.io/flashfirm/delivery.html)
 
-Development status: real model output + local durable backend + free public verification workspace + verified NEAR testnet settlement + recorded real Phala TDX quotation-task proof. **Not a production service; independent operator quorum, confidential production TEE and completed Intents payments remain unverified. The TEE test instance is stopped.**
+Development status: real model output + local durable backend + free public verification workspace + verified NEAR testnet settlement + recorded real Phala TDX quotation-task proof + a verified real NEAR-to-Arbitrum Intents payment. **Not a production service; independent operator quorum, confidential production TEE and automatic task-bound mainnet payouts remain unfinished. The TEE test instance is stopped.**
 
-**Mainnet payment attempt — blocked:** a separate local NEAR → Arbitrum USDC console pins one 0.5 NEAR payment and a $5 ceiling. Signed quote verification and live balance/storage/gas preflight passed. The user-approved OKX response failed the exact-action check; the local service did not broadcast. An independent check found an unchanged source balance and an order awaiting deposit. Installed OKX may submit inside its signing method, so signing is disabled pending investigation; the saved-order check is read only. Payment is **not verified**. [Runbook and recovery boundaries](docs/MAINNET-PAYMENT.md) · [Historical signed dry quote](evidence/mainnet-route-preview.json).
+**Original FunctionCall wallet attempt remains blocked:** its OKX response failed the exact-action check; the original saved order and signing lock are preserved. Later observations found no executed outgoing payment for that order. A separate native Transfer via OKX `sendMoney` completed the real payment documented above, with final wallet confirmation performed by the user. The original batch encoder issue is still unresolved. [Original runbook](docs/MAINNET-PAYMENT.md) · [Native payment evidence](docs/NATIVE-NEAR-PAYMENT.md) · [Historical signed dry quote](evidence/mainnet-route-preview.json).
 
 An isolated official OKX SDK roundtrip of all four FunctionCall actions passes the unchanged validator using a random test key, without broadcasting. That narrows the investigation but does not establish browser-wallet compatibility or recover the original rejected response.
 
@@ -91,7 +93,7 @@ The sample console's last state is `PLANNED`. Private workspace closure is local
 2. Exercise the bounded persistent model runner with an explicitly renewed call allowance; then generalize beyond the approved public-source preset and pin task rubric before funding.
 3. Onboard independent evaluators and bind durable review/appeal commitments to settlement.
 4. Confidential execution with independently checked attestation; keep synthetic inputs until then.
-5. Bind a newly approved real task to its own verified settlement, then complete Intents delivery after resolving the locked wallet attempt.
+5. Bind a newly approved real task to its own verified mainnet settlement. The separate native-NEAR Intents delivery now has evidence; automatic task linkage, refund verification and the original locked FunctionCall path remain unfinished.
 
 ## GitHub Pages deployment
 

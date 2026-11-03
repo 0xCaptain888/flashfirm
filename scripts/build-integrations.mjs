@@ -1,6 +1,7 @@
 import { readFile, writeFile, copyFile } from 'node:fs/promises';
 import { verifyLiveReceipt } from '../src/live.mjs';
 import { verifyQuoteSignature } from '@defuse-protocol/one-click-sdk-typescript';
+import { verifyMainnetEvidence } from './verify-mainnet-payment.mjs';
 const root=new URL('../',import.meta.url),out=new URL('../dist/',import.meta.url);
 const report=JSON.parse(await readFile(new URL('evidence/integration-upgrade.json',root),'utf8'));
 const receipt=JSON.parse(await readFile(new URL('evidence/queued-live-receipt.json',root),'utf8'));
@@ -36,9 +37,21 @@ await copyFile(new URL('evidence/mainnet-route-preview.json',root),new URL('main
 const currentIntegrations=(await readFile(new URL('integrations.html',out),'utf8'))
  .replace('Experimental Nitro verifier','Nitro verifier; encrypted Phala TDX quotation worker and measured-Compose/RTMR3 checks')
  .replace('Hardware verification and enclave workload','Real Phala public-task hardware/application proof recorded; OS/KMS/governance and confidential inference remain unverified')
- .replace('Dry quote/status adapter; ERC-20 delivery checks','Signed live quote/preflight; locked wallet console; origin and final ERC-20 verification')
- .replace('Live service access, chosen route and payment proof','Browser wallet action mismatch investigation and actual finalized delivery proof')
- .replace('No mainnet funds were used.','A separate mainnet signature attempt remains unverified; wallet-side submission cannot be ruled out.');
+ .replace('Dry quote/status adapter; ERC-20 delivery checks','Real 0.5 NEAR → Arbitrum native-USDC payment; signed quote, final source execution and finalized destination receipt')
+ .replace('Live service access, chosen route and payment proof','Automatic task-bound mainnet payouts and independently verified refunds; original FunctionCall wallet path stays disabled')
+ .replace('No mainnet funds were used.','A separately approved native-NEAR mainnet demonstration is verified. It does not settle the AI report or move testnet treasury funds.');
 await writeFile(new URL('integrations.html',out),currentIntegrations);
+const paymentProof=JSON.parse(await readFile(new URL('evidence/mainnet-native-payment.json',root),'utf8'));
+const payment=await verifyMainnetEvidence(paymentProof);
+await copyFile(new URL('evidence/mainnet-native-payment.json',root),new URL('mainnet-native-payment.json',out));
+const amount=BigInt(payment.delivery.amount);
+const received=`${amount/1000000n}.${String(amount%1000000n).padStart(6,'0')}`;
+const sourceUrl='https://nearblocks.io/txns/'+payment.origin.hash;
+const destinationUrl='https://arbiscan.io/tx/'+payment.delivery.transactionHash;
+const paymentCard=`<section class="panel allocation" id="mainnet-payment"><p class="eyebrow">REAL MAINNET PAYMENT · FINALIZED</p><h2>0.5 NEAR → ${escape(received)} USDC.</h2><p>Delivered to the approved wallet on Arbitrum One. The exact native NEAR source transfer, official signed 1Click order, source-to-destination mapping and finalized USDC Transfer were checked.</p><p><strong>Recipient</strong><br><code>${escape(payment.delivery.recipient)}</code></p><p class="muted">This is one separately approved demonstration. It is not an automatic payout for the AI report or a transfer from the NEAR testnet treasury.</p><a class="button primary" href="${escape(sourceUrl)}">NEAR transaction ↗</a> <a class="button secondary" href="${escape(destinationUrl)}">Arbitrum transaction ↗</a> <a class="button secondary" href="./mainnet-native-payment.json">Download both-chain evidence ↓</a><details><summary>Reproduce verification</summary><pre>npm run mainnet:verify
+# Recheck with pinned live RPC endpoints:
+npm run mainnet:verify -- --online</pre><p class="muted">Offline checks validate recorded RPC snapshots and the signed quote. Online verification queries both chains again. These are RPC observations, not bridge light-client proofs. The original rejected FunctionCall attempt remains preserved and disabled.</p></details><p class="muted">Evidence captured ${escape(payment.checkedAt)}. Viewing this page invokes no wallet, transfer or paid-model calls.</p></section>`;
 const mainnetHome=await readFile(new URL('index.html',out),'utf8');
-await writeFile(new URL('index.html',out),mainnetHome.replace('<section id="outcome">','<section class="panel allocation"><h2>NEAR → Arbitrum: payment review</h2><p>A historical 1Click quote verifies against the official signing key. The separate local console pins a 0.5 NEAR demonstration and a $5 valuation ceiling. A later wallet signature failed exact-action validation; no payment is verified. Signing remains disabled and the original order is retained for review.</p><a class="button secondary" href="./mainnet-route-preview.json">Inspect historical signed dry quote ↗</a><p class="muted">The dry quote itself moved no funds. The later signature attempt is separate; unchanged balance and an awaiting-deposit order do not prove that the wallet never attempted submission.</p></section><section id="outcome">'));
+await writeFile(new URL('index.html',out),mainnetHome.replace('<section id="outcome">',paymentCard+'<section id="outcome">'));
+const integrationHome=await readFile(new URL('integrations.html',out),'utf8');
+await writeFile(new URL('integrations.html',out),integrationHome.replace('<section class="panel allocation">',paymentCard+'<section class="panel allocation">'));

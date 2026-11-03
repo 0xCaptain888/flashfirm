@@ -33,7 +33,7 @@ const history = await client.deliveries(firm.id);
 
 The expectation is immutable and survives process restarts. A chain/token/recipient tuple can belong to only one request across all owners, so shared collection addresses are intentionally unsupported. Finalized matching ERC-20 logs must meet the minimum amount, and their block time must be at or after request creation. A chain/transaction pair can be consumed only once, including concurrent requests and multiple matching logs. An RPC timeout or invalid observation leaves the request pending; it never initiates or repeats a transfer.
 
-`paymentVerified` describes the destination ERC-20 observation only. `crossChainOriginVerified:false` and `settlementExecuted:false` remain explicit. A destination transfer alone does not prove an Intents origin deposit, bridge identity, task delivery or refund. No funds have been sent through this integration. After restoring an old backup, pending requests require reconciliation; do not treat the snapshot as a complete transaction-consumption history.
+`paymentVerified` describes the destination ERC-20 observation only. `crossChainOriginVerified:false` and `settlementExecuted:false` remain explicit. A destination transfer alone does not prove an Intents origin deposit, bridge identity, task delivery or refund. No funds have been sent through this task-bound integration. A separate [native-NEAR demonstration](NATIVE-NEAR-PAYMENT.md) now verifies both chains and the signed order mapping; it is not automatically bound to this API's task records. After restoring an old backup, pending requests require reconciliation; do not treat the snapshot as a complete transaction-consumption history.
 
 ## TEE challenge lifecycle
 

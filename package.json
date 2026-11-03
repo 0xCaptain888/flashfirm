@@ -17,6 +17,8 @@
     "build:wallet": "node scripts/build-wallet.mjs",
     "operator:token": "node scripts/operator-token.mjs",
     "mainnet:console": "node scripts/mainnet-console.mjs",
+    "mainnet:native": "node scripts/native-payment-console.mjs",
+    "mainnet:verify": "node scripts/verify-mainnet-payment.mjs",
     "tee:build": "node scripts/build-phala.mjs",
     "tee:check": "node scripts/check-phala.mjs",
     "tee:verify-public": "node scripts/verify-phala-proof.mjs",

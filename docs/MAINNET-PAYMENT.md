@@ -1,5 +1,11 @@
 # NEAR → Arbitrum mainnet payment console
 
+**Update — November 3, 2026:** the original FunctionCall path described here
+remains locked. A separate native-NEAR Transfer completed the approved
+0.5 NEAR → **1.861840 USDC on Arbitrum One** demonstration, with both chains
+verified. See [the native recovery record](NATIVE-NEAR-PAYMENT.md) and
+`evidence/mainnet-native-payment.json`. Do not fund either order again.
+
 This is one separately approved demonstration payment, not an automatic payout
 from the NEAR testnet task treasury. The original Solana route was replaced by
 the user's Arbitrum destination.
