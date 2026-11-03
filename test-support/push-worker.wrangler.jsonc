@@ -1,0 +1,8 @@
+{
+  "name": "flashfirm-push-local-check",
+  "main": "./push-worker.mjs",
+  "compatibility_date": "2026-11-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false
+}

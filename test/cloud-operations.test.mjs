@@ -10,7 +10,7 @@ import {mailSubscription,enqueueMail,drainMail} from '../cloudflare/operations.m
 import {verifyAccessIdentity} from '../src/access-identity.mjs';
 function database(){
  const db=new DatabaseSync(':memory:');
- for(const file of ['0001_workspace.sql','0002_task_cases.sql','0003_task_flow.sql','0004_organizations.sql','0005_operations.sql'])
+ for(const file of ['0001_workspace.sql','0002_task_cases.sql','0003_task_flow.sql','0004_organizations.sql','0005_operations.sql','0006_push.sql'])
   db.exec(readFileSync(new URL('../cloudflare/migrations/'+file,import.meta.url),'utf8'));
  return db;
 }
@@ -22,6 +22,8 @@ test('cloud snapshot is encrypted, excludes model/wallet keys and restores isola
   db.prepare('INSERT INTO task_flows VALUES(?,?,0)').run('firm',"ciphertext-only-'" .repeat(10000));
   db.prepare("INSERT INTO jobs VALUES(?,?,?,?,?,?,'QUEUED',NULL,?)").run('job','firm','key','hash','encrypted','VERIFY_RECEIPT',1);
   db.prepare("UPDATE firms SET state='CLOSED'").run();
+  db.prepare('INSERT INTO push_subscriptions VALUES(?,?,?,?,1,?)').run('push','org','person','encrypted-subscription',1);
+  db.prepare("INSERT INTO push_outbox VALUES(?,?,?,'PENDING',0,NULL,?,?)").run('notice','push','encrypted-notice',1,1);
   const env={DB:sqliteAdapter(db),VAULT_KEY:key,BACKUP_PUBLIC_KEY:keys.publicKey.export({type:'spki',format:'pem'})};
   const envelope=await encryptedCloudSnapshot(env);
   assert(!JSON.stringify(envelope).includes('Private task'));assert(!JSON.stringify(envelope).includes(key));
@@ -34,6 +36,8 @@ test('cloud snapshot is encrypted, excludes model/wallet keys and restores isola
   assert.equal(target.prepare('SELECT state FROM jobs').get().state,'CANCELLED');
   assert.equal(target.prepare('SELECT state FROM firms').get().state,'CLOSED');
   assert.equal(target.prepare('SELECT firm FROM recovery_holds').get().firm,'firm');
+  assert.equal(target.prepare('SELECT enabled FROM push_subscriptions').get().enabled,0);
+  assert.equal(target.prepare('SELECT state FROM push_outbox').get().state,'CANCELLED');
   assert.equal(target.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
   const tampered={...envelope,tag:randomBytes(16).toString('base64')};
   assert.throws(()=>decryptCloudSnapshot(tampered,keys.privateKey));

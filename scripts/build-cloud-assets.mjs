@@ -1,7 +1,7 @@
 import {mkdir,readFile,writeFile,copyFile} from 'node:fs/promises';
 const root=new URL('../',import.meta.url),out=new URL('../.runtime/cloud-assets/',import.meta.url);
 await mkdir(new URL('api/',out),{recursive:true});
-for(const file of ['workspace.js','style.css','operations.css','favicon.svg'])await copyFile(new URL('web/'+file,root),new URL(file,out));
+for(const file of ['workspace.js','push-worker.js','style.css','operations.css','favicon.svg'])await copyFile(new URL('web/'+file,root),new URL(file,out));
 let html=await readFile(new URL('web/workspace.html',root),'utf8');
 html=html.replace('Local development','Cloudflare free preview').replace('LOCAL · PAID RUNS REQUIRE EXPLICIT ACTION','PUBLIC BACKEND · PAID MODEL CALLS DISABLED').replace('Run a bounded source review, verify its evidence, and keep a durable activity trail.','Verify signed evidence, save encrypted notes and retain task history in D1. Paid AI runs are disabled.').replace('Run <code>npm run operator:token</code>, then paste the token from <code>.runtime/operator-token.txt</code>. It expires in 24 hours and stays only in this page\'s memory.','Use your separately issued workspace access token. It expires and stays only in this page’s memory. Do not share it publicly.').replace('AES-256-GCM encryption on this computer.','AES-256-GCM encryption before D1 storage. The service operator holds the encryption key.').replace('href="/treasury.html"','href="https://0xcaptain888.github.io/flashfirm/treasury.html"').replace('href="/"','href="https://0xcaptain888.github.io/flashfirm/"');
 html=html.replace('href="/live.html"','href="https://0xcaptain888.github.io/flashfirm/live.html"')

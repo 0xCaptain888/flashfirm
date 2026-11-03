@@ -41,13 +41,44 @@ without a configured sender and a separate communication instruction.
   and subscription before sending, leases dispatch, uses a stable provider
   idempotency key, retries transient failures and stops after five attempts or
   one hour. An expired or failed notification remains inspectable in D1.
-- The scheduled collector considers at most 20 active subscriptions and the ten
-  most recent active workspaces per organization per tick. This is a bounded
-  preview, not an unbounded bulk-email system.
+- Each scheduled tick rotates through one subscription/workspace pair per
+  channel, with a durable cursor, up to three unread events and at most two
+  dispatches per channel. Previously queued unread events retain their retry
+  state without blocking later alerts. This is a bounded free-tier preview, not an immediate
+  or unbounded bulk-notification service.
 
 Email requires `RESEND_API_KEY`, an approved `MAIL_FROM` sender and
 `MAIL_SEND_ENABLED=yes`. No sender has been configured; no email has been sent.
-Background Web Push/VAPID registration and delivery remain unimplemented.
+Background Web Push is implemented separately from foreground alerts:
+
+- `/api/workspaces/push-config` reports availability; `/push-subscription` accepts
+  an explicit organization member opt-in or opt-out. At most three enabled
+  devices are permitted, including database enforcement for concurrent requests.
+- Subscriptions and queued metadata are encrypted before D1 storage. Only fixed
+  browser-vendor push hosts are accepted, never arbitrary HTTP destinations.
+- `web-push` generates standards-based AES128GCM payloads and VAPID signatures.
+  Fetch redirects are forbidden. Notifications contain only a generic task-update
+  message and workspace ID; reports, addresses and payment details are excluded.
+- A service worker displays alerts while the page is closed and opens only a
+  same-origin workspace link. The user must authenticate to read the task.
+- Dispatch rechecks subscription and active organization membership, uses bounded
+  leases/retries, coalescing topics/tags, and disables endpoints returning 404/410.
+  Network ambiguity can cause duplicate delivery; topics/tags reduce duplication.
+- The `ACCEPTED` state means the push service accepted the request. It does not
+  establish that the user's device displayed or read the notification.
+
+```sh
+node scripts/configure-web-push.mjs --apply
+```
+
+This stores private VAPID material only in the ignored local runtime and Workers
+Secrets. It enables the channel for verified organization users who subsequently
+opt in. VAPID is configured in the current deployment; no real push has been
+sent. Organization identity is still unconfigured, so legacy operator tokens
+cannot subscribe. [Public readback](../evidence/public-operations-upgrade.json)
+checks those separate states. Local standards-encryption tests and a real local Workers-runtime crypto
+compatibility check passed. Actual subscribed-device acceptance/display remains
+an external validation step, following organization identity setup.
 
 ## Encrypted offsite backups
 
@@ -76,6 +107,12 @@ residency or cross-region SLA is claimed. CI failures appear through GitHub's
 normal workflow notifications. This is scheduled monitoring, not continuous
 uptime coverage.
 
+Run `41617701302` passed both health checks and uploaded a real encrypted artifact.
+It was downloaded from GitHub, decrypted and restored into a fresh local database;
+integrity and revoked-session checks passed. See
+`evidence/offsite-backup-upgrade.json`. No private key or plaintext backup was
+uploaded to GitHub. The added push migration preserves older snapshot support.
+
 ## Recovery drill
 
 ```sh
@@ -88,7 +125,7 @@ It does not replace the production database, publish the restored vault key or
 start a second live worker.
 
 Restored sessions are revoked, queued/running jobs are cancelled, invitations are
-consumed, outbound email is disabled and payment flows require reconciliation.
+consumed, outbound email/push subscriptions are disabled and payment flows require reconciliation.
 Historical payment transaction reservations are retained. Restore the vault key
 separately to an isolated worker only after manual reconciliation; the drill
 deliberately does not activate that worker.
@@ -99,7 +136,8 @@ alone is not a completed cloud restore.
 
 On 2026-11-03 a real live encrypted snapshot was restored to
 `flashfirm-drill-mw0i4z6n`. Local integrity/foreign-key checks passed and all
-19 business tables were read back from D1 and matched by canonical row hashes.
+21 business tables were read back from D1 and matched by canonical row hashes
+after the additive push migration, including its two empty new tables.
 The remote API refused `PRAGMA integrity_check`, so remote validation uses all
 business row contents rather than claiming that remote pragma succeeded.
 The test database remains isolated; production was not replaced. A failed

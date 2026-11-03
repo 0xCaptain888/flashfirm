@@ -1,0 +1,12 @@
+{
+  "version": "flashfirm-push-runtime/1",
+  "checkedAt": "2026-11-03T10:34:00.984Z",
+  "workerCryptoCompatibilityChecked": true,
+  "syntheticSubscription": true,
+  "encryptedPayloadGenerated": true,
+  "vapidHeaderGenerated": true,
+  "networkCalls": 0,
+  "realPushSent": false,
+  "deviceDeliveryVerified": false,
+  "scope": "Local Workers runtime encryption/signing compatibility only; no subscribed device or push service was contacted."
+}

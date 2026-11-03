@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {randomBytes} from 'node:crypto';
-import {handle,sha,decryptReceipt} from '../cloudflare/api.mjs';
+import {handle,sha,decryptReceipt,operationsTick} from '../cloudflare/api.mjs';
 import {verifyCaseExport} from '../src/task-case.mjs';
 import {hash,identity} from '../src/protocol.mjs';
 const revised=JSON.parse(readFileSync(new URL('../evidence/revised-live-receipt.json',import.meta.url),'utf8'));
 const original=JSON.parse(readFileSync(new URL('../evidence/queued-live-receipt.json',import.meta.url),'utf8'));
 class D1 {
- constructor(){this.db=new DatabaseSync(':memory:');this.db.exec('PRAGMA foreign_keys=ON');for(const file of ['0001_workspace.sql','0002_task_cases.sql','0003_task_flow.sql','0004_organizations.sql','0005_operations.sql'])this.db.exec(readFileSync(new URL('../cloudflare/migrations/'+file,import.meta.url),'utf8'));}
+ constructor(){this.db=new DatabaseSync(':memory:');this.db.exec('PRAGMA foreign_keys=ON');for(const file of ['0001_workspace.sql','0002_task_cases.sql','0003_task_flow.sql','0004_organizations.sql','0005_operations.sql','0006_push.sql'])this.db.exec(readFileSync(new URL('../cloudflare/migrations/'+file,import.meta.url),'utf8'));}
  prepare(sql){const db=this.db;let args=[];return {bind(...values){args=values;return this;},async first(){return db.prepare(sql).get(...args)??null;},async all(){return {results:db.prepare(sql).all(...args)};},async run(){const result=db.prepare(sql).run(...args);return {meta:{changes:result.changes}};}};}
  async batch(statements){this.db.exec('BEGIN');try{const result=[];for(const s of statements)result.push(await s.run());this.db.exec('COMMIT');return result;}catch(e){this.db.exec('ROLLBACK');throw e;}}
 }
@@ -55,6 +55,25 @@ test('cloud dispatch failure retains the same queued job for explicit resume',as
  f.env.VERIFICATION=real;
  const resumed=await(await f.request(`/${f.firm.id}/jobs/${job.id}/resume`,'POST',{})).json();assert.equal(resumed.dispatched,true);assert.equal(resumed.id,job.id);
  assert.equal((await(await f.request(`/${f.firm.id}/jobs`)).json()).length,1);
+ }finally{f.DB.db.close();}
+});
+test('background notification collection advances past old unread alerts without duplicate sends',async()=>{
+ const f=await fixture();
+ try{
+  f.env.MAIL_SEND_ENABLED='yes'; // No sender key: collect only, never contact a provider.
+  f.DB.db.prepare('INSERT INTO organizations VALUES(?,?,?)').run('org','Test team',1);
+  f.DB.db.prepare('INSERT INTO organization_members VALUES(?,?,?,?,1)').run('org','person','test@example.com','ADMIN');
+  f.DB.db.prepare('INSERT INTO mail_subscriptions VALUES(?,?,1,?)').run('org','person','test@example.com');
+  f.DB.db.prepare('UPDATE firms SET owner=? WHERE id=?').run('org:org',f.firm.id);
+  for(let i=0;i<5;i++)f.DB.db.prepare("INSERT INTO jobs VALUES(?,?,?,?,?,?,'SUCCEEDED',?,?)")
+   .run('notification-job-'+i,f.firm.id,'request-'+i,'hash','','VERIFY_RECEIPT','{"valid":true}',i);
+  await operationsTick(f.env);
+  assert.equal(f.DB.db.prepare('SELECT count(*) n FROM notification_outbox').get().n,3);
+  await operationsTick(f.env);
+  assert.equal(f.DB.db.prepare('SELECT count(*) n FROM notification_outbox').get().n,5);
+  await operationsTick(f.env);
+  assert.equal(f.DB.db.prepare('SELECT count(*) n FROM notification_outbox').get().n,5);
+  assert.equal(f.DB.db.prepare('SELECT count(*) n FROM notification_acks').get().n,0);
  }finally{f.DB.db.close();}
 });
 test('cloud quota and payload limits reject before unbounded work',async()=>{

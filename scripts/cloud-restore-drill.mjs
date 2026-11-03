@@ -23,7 +23,7 @@ else{
 const snapshot=decryptCloudSnapshot(encrypted,setup.privateKey);
 const dir=await mkdtemp(new URL('drill-',base).pathname);
 const db=new DatabaseSync(dir+'/restore.sqlite');
-const files=['0001_workspace.sql','0002_task_cases.sql','0003_task_flow.sql','0004_organizations.sql','0005_operations.sql'];
+const files=['0001_workspace.sql','0002_task_cases.sql','0003_task_flow.sql','0004_organizations.sql','0005_operations.sql','0006_push.sql'];
 let schema='';
 for(const file of files){const sql=await readFile(new URL('cloudflare/migrations/'+file,root),'utf8');schema+=sql+'\n';db.exec(sql);}
 const columns=Object.fromEntries(backupTables.map(t=>[t,db.prepare(`PRAGMA table_info(${t})`).all().map(c=>c.name)]));

@@ -1,0 +1,18 @@
+{
+  "version": "flashfirm-offsite-backup/1",
+  "checkedAt": "2026-11-03T10:26:39.902Z",
+  "githubRun": "41617701302",
+  "source": "DOWNLOADED_GITHUB_ACTIONS_ENCRYPTED_ARTIFACT",
+  "payloadHash": "337a62a5851e3de456cdd74ff42926cc5e09653ab07b7fc16a7386989a863631",
+  "artifactDownloaded": true,
+  "decryptionVerified": true,
+  "isolatedSqliteRestore": true,
+  "integrityCheck": "ok",
+  "sessionsRevoked": true,
+  "outboundNotificationsDisabled": true,
+  "restoredTableCount": 21,
+  "olderSnapshotSchemaSupported": true,
+  "productionDatabaseModified": false,
+  "financialTransactions": 0,
+  "paidCalls": 0
+}

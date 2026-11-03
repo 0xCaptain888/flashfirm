@@ -147,8 +147,11 @@ export class WorkspaceStore {
   }
   notifications(owner,firm) {
     const jobs=this.db.prepare('SELECT id,state,result FROM jobs WHERE firm=? ORDER BY created DESC LIMIT 100').all(firm).map(j=>({...j,result:decode(j.result)}));
+    const flowRow=this.db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='task_flows'").get()?
+      this.db.prepare('SELECT blob FROM task_flows WHERE firm=?').get(firm):null;
     return caseNotifications(this.access(owner,firm),this.caseRecord(owner,firm),this.caseReview(owner,firm),jobs,
-      this.db.prepare('SELECT id FROM notification_acks WHERE firm=?').all(firm).map(n=>n.id),this.now());
+      this.db.prepare('SELECT id FROM notification_acks WHERE firm=?').all(firm).map(n=>n.id),this.now(),
+      flowRow?this.decrypt(firm,'flow',flowRow.blob):null);
   }
   acknowledge(owner,firm,id) {
     if(!this.notifications(owner,firm).items.some(n=>n.id===id))throw Error('Unknown notification');

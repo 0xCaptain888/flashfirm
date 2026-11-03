@@ -68,7 +68,7 @@ export function verifyCaseExport(envelope) {
 
 // Notifications are derived from durable evidence, not arbitrary caller messages.
 // Stable IDs let acknowledgement survive refresh without hiding later evidence.
-export function caseNotifications(firm, record, review, jobs, acknowledged = [], now = Date.now()) {
+export function caseNotifications(firm, record, review, jobs, acknowledged = [], now = Date.now(), flow = null) {
   const status = caseStatus(firm, record, review, now), rows = [], seen = new Set(acknowledged);
   const add = (key, severity, title, detail) => {
     const id = hash({firm: firm.id, key});
@@ -84,6 +84,25 @@ export function caseNotifications(firm, record, review, jobs, acknowledged = [],
     if (['FAILED', 'CANCELLED'].includes(job.state)) add(`job:${job.id}:${job.state}`, 'warning', `Task ${job.state.toLowerCase()}`, 'Inspect retained evidence before retrying. No paid work is automatically repeated.');
     if (job.state === 'SUCCEEDED') add(`job:${job.id}:complete`, job.result?.valid === false ? 'warning' : 'info',
       job.result?.valid === false ? 'Receipt verification failed' : 'Verification task completed', 'Open the result. A completed job alone proves neither report quality nor payment.');
+  }
+  if(flow){
+    if(flow.plan?.payload.taskRoot!==record?.taskRoot||flow.plan?.payload.resultRoot!==record?.receiptHash)
+      throw Error('NOTIFICATION_TASK_FLOW_MISMATCH');
+    const plan=hash(flow.plan);
+    if(flow.quality)add(`quality:${plan}:${flow.quality.qualityHash}`,'info',
+      `Semantic review: ${flow.quality.state}`, 'Inspect the signed claim and removal scores. Identity certification and payment remain separate gates.');
+    if(flow.privacy?.privateQuotationVerified)add(`privacy:${plan}:${flow.privacy.proofHash}`,'info',
+      'Confidential quotation proof verified','The exact task quotation result was checked. This does not attest model inference.');
+    if(flow.manifest)add(`allocation:${hash(flow.manifest)}`,'info',
+      'Contribution allocation locked','Worker invoices must match this reviewed allocation. An allocation is not a payment.');
+    for(const invoice of flow.invoices??[]){
+      if(invoice.state==='VERIFIED')add(`invoice:${invoice.invoiceHash}:verified`,'info',
+        'Worker payment verified','Both finalized chain transactions were checked for this task invoice. Protocol fee and refund accounting remain separate.');
+      if(invoice.state==='REFUND_PENDING')add(`invoice:${invoice.invoiceHash}:refund-pending`,'warning',
+        'Refund needs chain evidence','A relay status alone is insufficient. Supply the exact final native refund receipt.');
+      if(invoice.state==='REFUNDED')add(`invoice:${invoice.invoiceHash}:refunded`,'info',
+        'Native refund verified','The relay-linked exact native refund receipt was verified for this task invoice.');
+    }
   }
   return {items: rows, unread: rows.filter(n => !n.acknowledged).length, channels: ['IN_APP'], emailDeliveryEnabled: false};
 }

@@ -5,7 +5,8 @@
 status below. A verified-identity organization adapter, opt-in encrypted email
 outbox, scheduled external health checks, encrypted offsite backups and an actual
 isolated D1 restore have been added. Access/email providers still need setup;
-background push and trusted model inference remain unimplemented. The private
+background push has privately configured VAPID keys but awaits organization login
+and device delivery validation, and trusted model inference remains unimplemented. The private
 quotation client now verifies hardware/platform/release approval before
 encryption, but no real private-material trial has been completed.
 

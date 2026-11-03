@@ -8,6 +8,7 @@ import {validatePlan,assessTaskQuality,verifyRoster,runAblation,qualitySamples} 
 import {settlementManifest,authorizeInvoice} from '../src/task-settlement.mjs';
 import {sqliteAdapter} from '../src/sqlite-adapter.mjs';
 import {taskFlowOperation} from '../src/task-flow-store.mjs';
+import {caseNotifications} from '../src/task-case.mjs';
 test('semantic support requires exact claims, source context, separate signed evaluations and complete ablations',async()=>{
  const f=taskFixture();
  assert.equal(validatePlan(f.plan,f.record,f.review,f.now).commitmentTiming,'POST_DELIVERY_PRE_EVALUATION');
@@ -26,6 +27,20 @@ test('semantic support requires exact claims, source context, separate signed ev
  });
  assert.equal(inputs.length,4);assert.deepEqual(inputs.map(i=>i.length),[3,2,2,2]);
  assert.equal(samples[0].sampleHash,qualitySamples(f.receipt)[0].sampleHash);
+});
+test('task-flow inbox follows exact quality and invoice states without calling another task paid',()=>{
+ const f=taskFixture(),firm={id:'test-workspace',state:'ACTIVE'};
+ f.flow.quality=assessTaskQuality(f.plan,f.receipt,f.evaluations);
+ f.flow.invoices=[{invoiceHash:'a'.repeat(64),state:'REFUND_PENDING'}];
+ const first=caseNotifications(firm,f.record,f.review,[],[],f.now,f.flow);
+ assert(first.items.some(n=>n.title==='Semantic review: ASSESSED'));
+ assert(first.items.some(n=>n.title==='Refund needs chain evidence'));
+ assert(!first.items.some(n=>n.title==='Worker payment verified'));
+ f.flow.invoices[0].state='VERIFIED';
+ const next=caseNotifications(firm,f.record,f.review,[],first.items.map(n=>n.id),f.now,f.flow);
+ assert.equal(next.unread,1);assert(next.items.some(n=>n.title==='Worker payment verified'&&!n.acknowledged));
+ const wrong=structuredClone(f.flow);wrong.plan.payload.resultRoot='b'.repeat(64);
+ assert.throws(()=>caseNotifications(firm,f.record,f.review,[],[],f.now,wrong),/MISMATCH/);
 });
 test('one person controlling different keys, expired or self-issued authority identities cannot release funds',()=>{
  const f=taskFixture(),p=f.plan.payload;

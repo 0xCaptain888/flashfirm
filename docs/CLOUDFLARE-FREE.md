@@ -39,10 +39,19 @@ version. No existing workspace, note or token is deleted by that migration.
 The deployed upgrade passed real remote verification with a disposable test
 owner; evidence is in `evidence/cloudflare-case-upgrade.json`. The public script
 never uses the captain token, invokes a model or transfers funds. The D1 export
-endpoint returned an authentication error under the current narrow OAuth scope;
-do not present this deployment as having a validated cloud backup/restore drill.
+endpoint returned an authentication error under the current narrow OAuth scope.
+The later encrypted application-snapshot endpoint enabled a real isolated D1
+restore without widening that scope: all 21 business tables were compared,
+including two empty tables added for push subscriptions and delivery.
+An encrypted GitHub backup artifact was also downloaded, decrypted and restored.
+See [operations and recovery](OPERATIONS-UPGRADE.md) for the current evidence.
 
-Not ported: reviewer account-binding registry, TEE/OpenSSL verification, destination-chain receipt registry, full local database/history, organization login and a production backup/restore process. Their existing local implementations are preserved. D1 persistence is not proof of an offsite recovery drill.
+The current cloud variant also includes task-bound quality and payment proof
+verification, Access JWT identity and roles, encrypted email/push outboxes and
+isolated backup recovery. Access and email require provider configuration;
+VAPID keys are configured, but real delivery and independent review remain unverified. The full local model
+runner, TEE/OpenSSL hardware verification and local account-binding registry
+remain separate. Existing local database/history has not been migrated.
 
 ## Reproduce the local check
 

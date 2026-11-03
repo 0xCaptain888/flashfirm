@@ -1,6 +1,6 @@
 {
   "version": "flashfirm-cloud-restore/1",
-  "checkedAt": "2026-11-03T10:01:10.801Z",
+  "checkedAt": "2026-11-03T10:30:51.595Z",
   "source": "LIVE_D1_ENCRYPTED_SNAPSHOT",
   "snapshotHash": "9b0a602d8065789d9b5cbcceb61fe21e7129880b3b2e0a6082354d444f91d617",
   "isolatedSqliteRestore": true,
@@ -28,7 +28,9 @@
     "mail_subscriptions": 0,
     "notification_outbox": 0,
     "operations_health": 1,
-    "recovery_holds": 1
+    "recovery_holds": 1,
+    "push_subscriptions": 0,
+    "push_outbox": 0
   },
   "cloudRestoreExecuted": true,
   "productionDatabaseModified": false,
@@ -57,6 +59,8 @@
     "mail_subscriptions": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
     "notification_outbox": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
     "operations_health": "1dc4f15ba0b4c62708d223e785a0924e6a8fbd253c1573167755963280363f2f",
-    "recovery_holds": "692fee065eb76aa9dca5df86831c4d27f9edddc481852d76e262a9c3520a72a7"
+    "recovery_holds": "692fee065eb76aa9dca5df86831c4d27f9edddc481852d76e262a9c3520a72a7",
+    "push_subscriptions": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "push_outbox": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   }
 }

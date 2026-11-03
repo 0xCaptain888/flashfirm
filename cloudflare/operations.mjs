@@ -29,7 +29,7 @@ export async function enqueueMail(env,identity,notification,encrypt){
 }
 export async function drainMail(env,decrypt,fetcher=fetch,now=Date.now()){
   if(env.MAIL_SEND_ENABLED!=='yes'||!env.RESEND_API_KEY||!env.MAIL_FROM)return {enabled:false,sent:0};
-  const rows=(await q(env.DB,"SELECT * FROM notification_outbox WHERE (state='PENDING' OR state='SENDING') AND retry_at<=? AND attempts<5 LIMIT 10",now).all()).results;
+  const rows=(await q(env.DB,"SELECT * FROM notification_outbox WHERE (state='PENDING' OR state='SENDING') AND retry_at<=? AND attempts<5 LIMIT 2",now).all()).results;
   let sent=0;
   for(const row of rows){
     if(now-row.created>3600000){

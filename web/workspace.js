@@ -1,5 +1,6 @@
 const $ = s => document.querySelector(s);
 let token = '', firm = null, poll = null, epoch = 0, busy = false, availability = null, uncertain = null, taskCase = null;
+let pushSettings=null;
 const intentKey='flashfirm:job-intent:v1';
 try{uncertain=JSON.parse(sessionStorage.getItem(intentKey)||'null');}catch{sessionStorage.removeItem(intentKey);}
 function clearIntent(){uncertain=null;sessionStorage.removeItem(intentKey);}
@@ -19,7 +20,8 @@ function controls() {
   $('#refresh-jobs').disabled = busy || !firm; $('#create button').disabled = busy;
 }
 function lock() {
-  token = ''; firm = null; availability = null; taskCase = null; epoch++; clearTimeout(poll);
+  token = ''; firm = null; availability = null; taskCase = null; pushSettings=null; epoch++; clearTimeout(poll);
+  $('#push-enable').disabled=true;
   $('#workspace-content').hidden = true; $('#selected').hidden = true; $('#login-panel').hidden = false;
   for (const id of ['document','title','receipt','token','review-policy','review-envelope','flow-input','org-invite']) $('#'+id).value = '';
   for (const id of ['firms','events','jobs','result','budget','case-status','notifications','flow-status','org-status']) $('#'+id).textContent = '';
@@ -34,6 +36,11 @@ async function api(path, method='GET', data, key) {
 async function refresh() {
   const current = epoch, firms = await api(''); if (current !== epoch) return;
   $('#firms').innerHTML = firms.length ? firms.map(f=>`<div class="event"><button class="button secondary" data-firm="${escape(f.id)}">${escape(f.title)}</button> <span class="pill">${escape(f.state)}</span></div>`).join('') : '<p class="muted">No workspaces yet. Start with one focused task.</p>';
+  try{
+   pushSettings=await api('/push-config');if(current!==epoch)return;
+   $('#push-enable').disabled=!pushSettings.configured||!('serviceWorker' in navigator)||!('PushManager' in window);
+   $('#push-status').textContent=pushSettings.configured?'Background push is available by explicit opt-in. Device receipt has not been verified.':'Background push unavailable: '+pushSettings.reason+'.';
+  }catch{pushSettings=null;$('#push-enable').disabled=true;$('#push-status').textContent='Background push is unavailable in this deployment.';}
   return firms;
 }
 async function budget() {
@@ -82,13 +89,38 @@ function renderCase(){
 function download(value,filename){const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 async function perform(fn) { if (busy) return; busy = true; controls(); try { await fn(); } catch (e) { message(e.message); } finally { busy = false; controls(); } }
 function action(id, fn) { $(id).addEventListener('click', e=>{e.preventDefault();perform(fn);}); }
-$('#login').addEventListener('submit', async e=>{e.preventDefault();if(busy)return;await perform(async()=>{const current=epoch;token=$('#token').value.trim();$('#token').value='';const firms=await refresh();if(current!==epoch||!token)return;$('#login-panel').hidden=true;$('#workspace-content').hidden=false;const saved=sessionStorage.getItem('flashfirm:selected-workspace');if(firms?.some(f=>f.id===saved))await select(saved);message('Workspace unlocked.');});});
+$('#login').addEventListener('submit', async e=>{e.preventDefault();if(busy)return;await perform(async()=>{const current=epoch;token=$('#token').value.trim();$('#token').value='';const firms=await refresh();if(current!==epoch||!token)return;$('#login-panel').hidden=true;$('#workspace-content').hidden=false;const saved=new URL(location.href).searchParams.get('workspace')??sessionStorage.getItem('flashfirm:selected-workspace');if(firms?.some(f=>f.id===saved))await select(saved);message('Workspace unlocked.');});});
 $('#logout').onclick = ()=>perform(async()=>{try{await api('/logout','POST',{});}catch{}lock();message('Locked. Private page content and token cleared.');});
 action('#org-login',async()=>{
  const response=await fetch('/api/auth/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({invite:$('#org-invite').value||undefined})});
  const value=await response.json();if(!response.ok)throw Error(value.error??'Organization identity provider is not configured.');
  token=value.token;$('#org-invite').value='';$('#login-panel').hidden=true;$('#workspace-content').hidden=false;
- $('#org-status').textContent=`${value.email} · ${value.role}. Session expires ${new Date(value.expiresAt).toLocaleString()}.`;await refresh();
+ $('#org-status').textContent=`${value.email} · ${value.role}. Session expires ${new Date(value.expiresAt).toLocaleString()}.`;
+ const firms=await refresh(),target=new URL(location.href).searchParams.get('workspace');
+ if(firms?.some(f=>f.id===target))await select(target);
+});
+action('#push-enable',async()=>{
+ if(!pushSettings?.configured)throw Error('Background push requires organization identity and VAPID setup.');
+ if(!('Notification' in window)||await Notification.requestPermission()!=='granted')throw Error('Notification permission was not granted.');
+ const registration=await navigator.serviceWorker.register('/push-worker.js',{scope:'/'});
+ await navigator.serviceWorker.ready;
+ const publicKey=Uint8Array.from(atob(pushSettings.publicKey.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-pushSettings.publicKey.length%4)%4)),c=>c.charCodeAt(0));
+ let subscription=await registration.pushManager.getSubscription();
+ if(subscription&&subscription.options?.applicationServerKey){
+  const old=new Uint8Array(subscription.options.applicationServerKey);
+  if(old.length!==publicKey.length||old.some((b,i)=>b!==publicKey[i])){await subscription.unsubscribe();subscription=null;}
+ }
+ subscription??=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:publicKey});
+ try{await api('/push-subscription','POST',{enabled:true,subscription:subscription.toJSON()});}
+ catch(error){await subscription.unsubscribe();throw error;}
+ message('Background push subscribed. Generic alerts only; this does not verify device delivery.');
+});
+action('#push-disable',async()=>{
+ // Revoke server consent first; a browser failure cannot leave delivery enabled.
+ await api('/push-subscription','POST',{enabled:false});
+ const registration=await navigator.serviceWorker?.getRegistration('/');
+ await (await registration?.pushManager.getSubscription())?.unsubscribe();
+ message('Background push disabled for your organization identity. Queued sends recheck consent.');
 });
 action('#browser-notifications',async()=>{
  if(!('Notification' in window))throw Error('Browser notifications are unavailable.');

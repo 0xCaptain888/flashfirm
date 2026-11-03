@@ -1,0 +1,20 @@
+{
+  "version": "flashfirm-public-operations/1",
+  "checkedAt": "2026-11-03T10:40:34.928Z",
+  "endpoint": "https://flashfirm-api.fluoridated-rhinoceros.workers.dev",
+  "storage": "D1",
+  "healthReady": true,
+  "offsiteExportConfigured": true,
+  "backgroundPushKeysConfigured": true,
+  "legacyTokenPushSubscriptionBlocked": true,
+  "revokedQaTokenRejected": true,
+  "pushWorkerServed": true,
+  "organizationLoginConfigured": false,
+  "emailConfigured": false,
+  "paidCallsEnabled": false,
+  "teeInstanceEnabled": false,
+  "mainnetAutomaticSigning": false,
+  "realPushSent": false,
+  "deviceDeliveryVerified": false,
+  "scope": "Read-only public deployment check. No device subscription, notification, model call or financial transaction."
+}

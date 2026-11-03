@@ -1,8 +1,9 @@
 import {randomBytes,createCipheriv,createDecipheriv,publicEncrypt,privateDecrypt,constants} from 'node:crypto';
 import {hash} from './protocol.mjs';
-export const backupTables=['tokens','firms','jobs','events','documents','quotas','reviews','task_cases','notification_acks',
+const originalTables=['tokens','firms','jobs','events','documents','quotas','reviews','task_cases','notification_acks',
   'task_flows','task_payment_claims','organizations','organization_members','organization_sessions','organization_invites',
   'mail_subscriptions','notification_outbox','operations_health','recovery_holds'];
+export const backupTables=[...originalTables,'push_subscriptions','push_outbox'];
 export async function encryptedCloudSnapshot(env,now=Date.now()){
   if(!env.BACKUP_PUBLIC_KEY||!env.VAULT_KEY)throw Error('OFFSITE_BACKUP_NOT_CONFIGURED');
   const tables={};
@@ -30,9 +31,11 @@ export function decryptCloudSnapshot(envelope,privateKey){
   const p=JSON.parse(Buffer.concat([decipher.update(Buffer.from(envelope.ciphertext,'base64')),decipher.final()]));
   key.fill(0);
   if(hash(p)!==envelope.payloadHash||p.version!==envelope.version||!Number.isSafeInteger(p.createdAt)||
-    !/^[a-f0-9]{64}$/.test(p.vaultKey??'')||Object.keys(p.tables).sort().join()!==[...backupTables].sort().join())
+    !/^[a-f0-9]{64}$/.test(p.vaultKey??'')||
+    ![originalTables,backupTables].some(t=>Object.keys(p.tables).sort().join()===[...t].sort().join()))
     throw Error('INVALID_CLOUD_BACKUP_PAYLOAD');
-  return p;
+  // Additive push migration: old verified 19-table snapshots remain recoverable.
+  return {...p,tables:{...p.tables,push_subscriptions:p.tables.push_subscriptions??[],push_outbox:p.tables.push_outbox??[]}};
 }
 export function cloudRestoreSql(snapshot,schemaColumns){
   const literal=v=>v===null?'NULL':typeof v==='number'&&Number.isSafeInteger(v)?String(v):
@@ -65,7 +68,9 @@ export function cloudRestoreSql(snapshot,schemaColumns){
       if(table==='jobs'&&['QUEUED','RUNNING'].includes(row.state)){row.state='CANCELLED';row.input='';}
       if(table==='organization_invites')row.used=1;
       if(table==='mail_subscriptions')row.enabled=0;
+      if(table==='push_subscriptions')row.enabled=0;
       if(table==='notification_outbox'&&['PENDING','SENDING'].includes(row.state))row.state='CANCELLED';
+      if(table==='push_outbox'&&['PENDING','SENDING'].includes(row.state))row.state='CANCELLED';
       // Organization sessions cannot resurrect independently revoked membership.
       if(['organization_sessions','recovery_holds'].includes(table))continue;
       const values=columns.map(c=>encoded(row[c]));

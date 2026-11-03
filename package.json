@@ -49,6 +49,7 @@
     "util": "0.12.5"
   },
   "dependencies": {
-    "@defuse-protocol/one-click-sdk-typescript": "0.1.26"
+    "@defuse-protocol/one-click-sdk-typescript": "0.1.26",
+    "web-push": "3.6.7"
   }
 }

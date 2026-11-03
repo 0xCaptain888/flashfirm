@@ -5,6 +5,7 @@ import {taskFlowOperation} from '../src/task-flow-store.mjs';
 import {pinnedTaskVerifiers} from '../src/read-only-rpc.mjs';
 import {organizationSession,cloudPrincipal,organizationOperation} from './organizations.mjs';
 import {backupResponse,mailSubscription,enqueueMail} from './operations.mjs';
+import {pushConfigured,pushPreference,enqueuePush,drainPush} from './push.mjs';
 const json=(v,status=200)=>new Response(JSON.stringify(v),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'}});
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const q=(db,sql,...args)=>db.prepare(sql).bind(...args);
@@ -30,8 +31,9 @@ async function caseContext(env,firm){
  return {record:row?await decrypt(env,`${firm.id}:case`,row.blob):null,review:reviewRow?JSON.parse(reviewRow.body):null};
 }
 async function notifications(env,firm,context){
- const [jobs,acks]=await Promise.all([q(env.DB,'SELECT id,state,result FROM jobs WHERE firm=? ORDER BY created DESC LIMIT 100',firm.id).all(),q(env.DB,'SELECT id FROM notification_acks WHERE firm=?',firm.id).all()]);
- return caseNotifications(firm,context.record,context.review,jobs.results.map(j=>({...j,result:j.result?JSON.parse(j.result):null})),acks.results.map(a=>a.id));
+ const [jobs,acks,flowRow]=await Promise.all([q(env.DB,'SELECT id,state,result FROM jobs WHERE firm=? ORDER BY created DESC LIMIT 100',firm.id).all(),q(env.DB,'SELECT id FROM notification_acks WHERE firm=?',firm.id).all(),q(env.DB,'SELECT blob FROM task_flows WHERE firm=?',firm.id).first()]);
+ const flow=flowRow?await decrypt(env,`${firm.id}:flow`,flowRow.blob):null;
+ return caseNotifications(firm,context.record,context.review,jobs.results.map(j=>({...j,result:j.result?JSON.parse(j.result):null})),acks.results.map(a=>a.id),Date.now(),flow);
 }
 function jobResult(row){return {...row,requestKey:row.request_key,attempts:row.state==='QUEUED'?0:1,result:row.result?JSON.parse(row.result):null,input:undefined};}
 async function dispatch(env,job){
@@ -60,7 +62,7 @@ export async function handle(request,env){
   const identity=await cloudPrincipal(env.DB,await sha(token));
   if(!identity)fail('AUTH_REQUIRED',401);const owner=identity.owner;
   if(identity.role==='VIEWER'&&!['GET','HEAD'].includes(request.method)&&
-   !['/api/workspaces/logout','/api/workspaces/email-subscription'].includes(url.pathname))fail('READ_ONLY_MEMBER',403);
+   !['/api/workspaces/logout','/api/workspaces/email-subscription','/api/workspaces/push-subscription'].includes(url.pathname))fail('READ_ONLY_MEMBER',403);
   const day=new Date().toISOString().slice(0,10),minute=Math.floor(Date.now()/60000);
   await quota(env.DB,`minute:${owner}:${minute}`,60);
   const path=url.pathname.slice('/api/workspaces'.length);
@@ -72,10 +74,14 @@ export async function handle(request,env){
    return json(await enqueueMail(env,identity,item,(id,v)=>encrypt(env,id,v)));
   }
   if(path==='/email-subscription'&&request.method==='POST')return json(await mailSubscription(env,identity,await body(request)));
+  if(path==='/push-config'&&request.method==='GET')return json({configured:pushConfigured(env)&&!identity.legacy,
+    publicKey:pushConfigured(env)&&!identity.legacy?env.VAPID_PUBLIC_KEY:null,
+    reason:identity.legacy?'VERIFIED_ORGANIZATION_IDENTITY_REQUIRED':pushConfigured(env)?null:'VAPID_NOT_CONFIGURED'});
+  if(path==='/push-subscription'&&request.method==='POST')return json(await pushPreference(env,identity,await body(request),(id,v)=>encrypt(env,id,v)));
   if(path==='/operations'&&request.method==='GET')return json({identityProviderConfigured:!!env.ACCESS_ISSUER&&!!env.ACCESS_AUDIENCE,
     offsiteExportConfigured:!!env.BACKUP_PUBLIC_KEY&&!!env.BACKUP_AUTH_HASH,
     emailConfigured:env.MAIL_SEND_ENABLED==='yes'&&!!env.RESEND_API_KEY,
-    cloudPushConfigured:false,teeInstanceEnabled:false,mainnetAutomaticSigning:false,
+    cloudPushConfigured:pushConfigured(env),teeInstanceEnabled:false,mainnetAutomaticSigning:false,
     health:(await q(env.DB,'SELECT * FROM operations_health').all()).results});
   if(path==='/logout'&&request.method==='POST'){
    await q(env.DB,'UPDATE tokens SET revoked=1 WHERE hash=?',await sha(token)).run();return json({revoked:true});
@@ -195,18 +201,40 @@ export async function handle(request,env){
 export async function decryptReceipt(env,job){const value=JSON.parse(job.input);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(value.iv),additionalData:utf8.encode(`${job.firm}:${job.id}`)},await key(env),new Uint8Array(value.bytes));return JSON.parse(new TextDecoder().decode(plain));}
 export async function operationsTick(env){
  const {drainMail}=await import('./operations.mjs');
- if(env.MAIL_SEND_ENABLED==='yes'){
-  const subscriptions=(await q(env.DB,`SELECT s.* FROM mail_subscriptions s JOIN organization_members m
-   ON s.organization=m.organization AND s.principal=m.principal WHERE s.enabled=1 AND m.active=1 LIMIT 20`).all()).results;
-  for(const sub of subscriptions){
-   const owner='org:'+sub.organization,identity={...sub,owner};
-   const firms=(await q(env.DB,"SELECT * FROM firms WHERE owner=? AND state='ACTIVE' ORDER BY created DESC LIMIT 10",owner).all()).results;
-   for(const firm of firms){
-    const inbox=await notifications(env,firm,await caseContext(env,firm));
-    for(const n of inbox.items.filter(n=>!n.acknowledged).slice(0,5))
-     await enqueueMail(env,identity,n,(id,v)=>encrypt(env,id,v));
-   }
+ // Round-robin one subscription/workspace pair per channel. This keeps a tick
+ // within free-worker request limits and avoids always selecting the first user.
+ for(const channel of ['mail','push']){
+  if(channel==='mail'?env.MAIL_SEND_ENABLED!=='yes':!pushConfigured(env))continue;
+  const table=channel==='mail'?'mail_subscriptions':'push_subscriptions',cursorId=channel+'-cursor';
+  const cursorRow=await q(env.DB,'SELECT body FROM operations_health WHERE id=?',cursorId).first();
+  const cursor=cursorRow?JSON.parse(cursorRow.body).cursor:'';
+  const pairKey=channel==='mail'?"s.organization||':'||s.principal||':'||f.id":"s.id||':'||f.id";
+  const query=`SELECT s.*,f.id AS firm_id,${pairKey} AS cursor_key FROM ${table} s JOIN organization_members m
+    ON s.organization=m.organization AND s.principal=m.principal JOIN firms f ON f.owner='org:'||s.organization
+    WHERE s.enabled=1 AND m.active=1 AND f.state='ACTIVE' AND ${pairKey}>? ORDER BY cursor_key LIMIT 1`;
+  const sub=await q(env.DB,query,cursor).first()??(cursor?await q(env.DB,query,'').first():null);
+  if(!sub)continue;
+  await q(env.DB,'INSERT INTO operations_health VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body,checked=excluded.checked',
+    cursorId,JSON.stringify({cursor:sub.cursor_key}),Date.now()).run();
+  const owner='org:'+sub.organization,firm=await access(env.DB,owner,sub.firm_id);
+  const inbox=await notifications(env,firm,await caseContext(env,firm));
+  const candidates=inbox.items.filter(n=>!n.acknowledged).map(notification=>({
+   notification,id:channel==='mail'?
+    hash({organization:sub.organization,principal:sub.principal,notification:notification.id}):
+    hash({subscription:sub.id,firmId:firm.id,notification:notification.id})
+  }));
+  const outbox=channel==='mail'?'notification_outbox':'push_outbox';
+  const queued=new Set(candidates.length?(await q(env.DB,
+   `SELECT id FROM ${outbox} WHERE id IN (SELECT value FROM json_each(?))`,
+   JSON.stringify(candidates.map(n=>n.id))).all()).results.map(n=>n.id):[]);
+  // Old unread alerts retain their existing retry state without starving newer
+  // events. One JSON argument also keeps this below D1's SQL parameter limit.
+  for(const {notification:n} of candidates.filter(n=>!queued.has(n.id)).slice(0,3)){
+   if(channel==='mail')await enqueueMail(env,{...sub,owner},n,(id,v)=>encrypt(env,id,v));
+   else await enqueuePush(env,sub,firm.id,n,(id,v)=>encrypt(env,id,v));
   }
  }
- return drainMail(env,(id,blob)=>decrypt(env,id,blob));
+ // Delivery is best-effort. Read membership/consent again inside each drain.
+ return {mail:await drainMail(env,(id,blob)=>decrypt(env,id,blob)),
+  push:await drainPush(env,(id,blob)=>decrypt(env,id,blob))};
 }

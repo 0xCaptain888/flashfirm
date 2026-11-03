@@ -8,8 +8,8 @@ identity certificates, reviewed allocations, buyer invoices and both-chain
 payment verification. Actual public acceptance used synthetic judgments and
 made no payment. [Operations and recovery](OPERATIONS-UPGRADE.md) adds verified
 organization identity support, opt-in notification delivery and encrypted
-offsite backups. A real isolated cloud restoration passed with all 19 business
-tables compared. Real independent review, a paid removal study, private TEE
+offsite backups. A real isolated cloud restoration passed with all 21 business
+tables compared, including two empty tables added by the push migration. Real independent review, a paid removal study, private TEE
 execution, trusted inference and a task-bound mainnet payment remain pending.
 
 Task dossier upgrade: an immutable signed-report case, exact quote locations,
@@ -45,7 +45,7 @@ Latest deployment: [a dedicated Phala container](PHALA-TEE.md) completed a real 
 | NEAR settlement | Original buyer payout, challenge/arbitration refund, expiry refund, and real testnet failed-transfer credit restoration followed by successful retry; recovery treasury Closed | One earlier expiry deployment was interrupted by RPC 429 and retained without replay; independent reviewers still absent |
 | Privacy | Historical real public TDX task; new private quotation client verifies fresh hardware, approved measurements and external release policy before encryption, with task-bound result acceptance | Actual private trial and independent policy approval; trusted measured model inference is unimplemented; instance off, retained 20 GB disk billable |
 | Cross-chain collection | Separate real 0.5 NEAR → 1.861840 USDC proof; task-bound invoices/quotes, independent chain checks, exact native refund verifier and global transaction reuse prevention | Real same-task payments and independent real refund; fee/refund allocations are not automatic transfers; original FunctionCall lock preserved |
-| Lifecycle and operations | Live Workers/D1/Workflows; verified Access JWT/roles/session revocation; encrypted opt-in outbox; foreground notifications; scheduled monitoring and encrypted offsite backup workflow; actual isolated D1 restore | Configure Access application and verified email sender; background Web Push unimplemented; full Node model hosting separate; paid cloud AI disabled |
+| Lifecycle and operations | Live Workers/D1/Workflows; verified Access JWT/roles/session revocation; encrypted email/push outboxes, configured VAPID keys, device opt-in and foreground alerts; scheduled monitoring and actual GitHub encrypted-artifact recovery; isolated D1 restore | Configure Access application and verified email sender; real email/device delivery test; full Node model hosting separate; paid cloud AI disabled |
 
 The separate explicit authorization for one 0.5 NEAR mainnet demonstration, up to 0.1 NEAR extra storage/gas and $5 total fresh valuation, was consumed by the successful native transfer. It does not authorize a second payment, replaying the original ambiguous FunctionCall attempt, loosening action checks, resetting either journal or moving testnet task funds to mainnet. Earlier unchanged-balance and `PENDING_DEPOSIT` observations are preserved as history. See [payment recovery boundaries](MAINNET-PAYMENT.md) and [successful native payment](NATIVE-NEAR-PAYMENT.md). Credentials, seeds and private runtime state are never copied to Pages.
 
