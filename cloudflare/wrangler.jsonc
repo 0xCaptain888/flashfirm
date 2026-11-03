@@ -1,12 +1,13 @@
 {
   "name": "flashfirm-api",
+  "account_id": "1d467133217d2828cc677d7e8b5d1306",
   "main": "worker.mjs",
   "compatibility_date": "2026-11-02",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "preview_urls": false,
   "assets": {"directory": "../.runtime/cloud-assets", "binding": "ASSETS", "run_worker_first": true},
-  "d1_databases": [{"binding":"DB","database_name":"flashfirm-free","database_id":"00000000-0000-0000-0000-000000000000","migrations_dir":"migrations"}],
+  "d1_databases": [{"binding":"DB","database_name":"flashfirm-free","database_id":"bfc6e6e2-cd68-4b82-9d69-99c3970843a6","migrations_dir":"migrations"}],
   "workflows": [{"name":"flashfirm-verification","binding":"VERIFICATION","class_name":"VerificationWorkflow"}],
   "vars": {"CLOUD_PAID_CALLS":"disabled"},
   "observability": {"enabled": false}

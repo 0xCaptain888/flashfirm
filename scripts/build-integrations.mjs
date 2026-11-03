@@ -19,3 +19,12 @@ if(report.backend.containerBuilt){
   await writeFile(new URL('integrations.html',out),html.replace('Managed HTTP tests; encrypted restore; deployment files','CI-verified container startup; access controls; encrypted restore').replace('Container build, cloud hosting, auth and alerts','Cloud hosting, organization auth and external alerts'));
 }
 await writeFile(new URL('index.html',out),index.replace('<section id="outcome">','<section class="panel allocation"><h2>New: tested failure paths</h2><p>Real testnet refunds, a real queued AI review, and an explicit integration readiness report.</p><a class="button primary" href="./integrations.html">Inspect integration results ↗</a></section><section id="outcome">'));
+try {
+ const cloud=JSON.parse(await readFile(new URL('evidence/cloudflare-deployment.json',root),'utf8'));
+ if(cloud.status!=='PUBLIC_WORKER_D1_WORKFLOW_VERIFIED'||cloud.endpoint!=='https://flashfirm-api.fluoridated-rhinoceros.workers.dev'||!cloud.receiptValid||!cloud.duplicateJobPrevented||!cloud.closed)throw Error('Invalid cloud deployment evidence');
+ await copyFile(new URL('evidence/cloudflare-deployment.json',root),new URL('cloudflare-deployment.json',out));
+ const home=await readFile(new URL('index.html',out),'utf8');
+ await writeFile(new URL('index.html',out),home.replace('<section class="panel allocation">','<section class="panel allocation"><h2>A workspace that stays online.</h2><p>Verify a signed AI report, retain task history and save encrypted notes. The free public backend uses a private access token. Paid model calls and wallet transactions are disabled.</p><a class="button primary" href="'+escape(cloud.endpoint)+'/">Open cloud workspace ↗</a> <a class="button secondary" href="./cloudflare-deployment.json">Public deployment evidence ↗</a><p class="muted">The existing report is signed and verifiable; its quality remains CHALLENGED. This verification does not approve a payout.</p></section><section class="panel allocation">'));
+ const integration=await readFile(new URL('integrations.html',out),'utf8');
+ await writeFile(new URL('integrations.html',out),integration.replace('CI-verified container startup; access controls; encrypted restore','Free public D1 workspace and verification workflow; separate local Node integration backend').replace('Cloud hosting, organization auth and external alerts','Full Node integration hosting; organization auth, cloud restore drill and external alerts'));
+} catch(error) {if(error.code!=='ENOENT')throw error;}

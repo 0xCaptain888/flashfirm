@@ -1,10 +1,10 @@
 # FlashFirm
 
-**Free backend preparation:** a separate Cloudflare Workers + D1 + Workflows implementation now passes local emulator tests for persistent workspace writes, encrypted inputs, signed-receipt verification and duplicate prevention. Paid model calls remain disabled. Public deployment awaits account authorization. [Setup and feature boundaries](docs/CLOUDFLARE-FREE.md).
+**Free public backend is live:** [Open cloud workspace](https://flashfirm-api.fluoridated-rhinoceros.workers.dev/) · [Deployment evidence](evidence/cloudflare-deployment.json). Workers + D1 + Workflows passed a real public write → signed-report verification → duplicate prevention → persistent read → workspace closure check on 2026-11-03. Access requires a privately issued, expiring token. Paid model calls remain disabled. [Access instructions and feature boundaries](docs/CLOUDFLARE-FREE.md).
 
 **2026-11-03 (Asia/Shanghai): real testnet failed-transfer recovery verified.** A 0.001 NEAR claim failed because its named recipient did not exist; the callback restored the entire credit. After creating that recipient, retry succeeded and the isolated treasury closed with zero remaining credit/pending balance. No account was deleted. [All transaction evidence](evidence/testnet-recovery.json). Reviewers remain development identities under one operator.
 
-**Verification lifecycle upgrade:** reviewer revocation and fresh account-key rechecks; persistent single-use TEE challenges; immutable destination requests with global transaction replay protection; backup restore invalidation; public-backend HTTPS smoke check and testnet recovery preflight. These do not claim independent operators, a running enclave, a public backend or a completed cross-chain transfer. [Integration API and deployment guide](docs/EXTERNAL-INTEGRATIONS.md).
+**Verification lifecycle upgrade:** reviewer revocation and fresh account-key rechecks; persistent single-use TEE challenges; immutable destination requests with global transaction replay protection; backup restore invalidation; public-backend HTTPS smoke check and testnet recovery preflight. These local integration modules do not claim independent operators, a running enclave or a completed cross-chain transfer; the separate cloud workspace has the narrower scope described above. [Integration API and deployment guide](docs/EXTERNAL-INTEGRATIONS.md).
 
 **2026-11-02 integration upgrade:** real testnet challenge/arbitration refund and expiry refund completed; a four-call paid background job completed with a valid signed receipt and a `CHALLENGED` quality result. Cumulative conservative model reservation: **CNY 15.91 / 20**, 10 / 12 calls. [Upgrade evidence](evidence/integration-upgrade.json) · [Refund transactions](evidence/testnet-exceptions.json) · [Deployment and integration boundaries](docs/PRODUCTION-READINESS.md).
 
@@ -14,7 +14,7 @@ Temporary agent teams. Reproducible contribution allocation. Proof before payout
 
 [Public demo](https://0xCaptain888.github.io/flashfirm/) · [Recorded real AI analysis](https://0xCaptain888.github.io/flashfirm/live.html) · [Testnet wallet console](https://0xCaptain888.github.io/flashfirm/treasury.html) · [Delivery status](docs/DELIVERY-STATUS.md)
 
-Development status: real model output + local durable backend + verified NEAR testnet settlement. **Not a production service; independent operators, TEE and Intents are not live.**
+Development status: real model output + local durable backend + free public verification workspace + verified NEAR testnet settlement. **Not a production service; independent operators, TEE and Intents are not live.**
 
 Wallet console: choose **Meteor Wallet** or **MyNearWallet**. For the Meteor extension, open the demo in the browser where it is installed. The connection targets NEAR testnet; no delegated key is requested and Meteor transactions explicitly disable function-call-key execution. Meteor buyer funding and allocation signatures have been verified; MyNearWallet signing is not verified.
 
@@ -65,7 +65,7 @@ The original report's exact quotation checks and receipt verifier pass. A later 
 - Deterministic leave-one-out **fixture rubric coverage** scoring, not exact Shapley values or a claim of objective fairness.
 - Integer largest-remainder allocation, 2% fee, zero payout for failed work, full refund for an empty eligible set.
 - Standalone Node verifier recomputing signatures, graph, sources, coverage and payouts.
-- Compiled NEAR treasury v0.2 with fixed recipients, two-of-three approval, appeal timing, challenge freeze, pinned arbiter, timeout, pull claims and callback recovery. The same bytecode completed a real testnet payout and two real testnet refund scenarios. Failed-transfer restoration and the remaining arbitration variants still have sandbox-only evidence.
+- Compiled NEAR treasury v0.2 with fixed recipients, two-of-three approval, appeal timing, challenge freeze, pinned arbiter, timeout, pull claims and callback recovery. The same bytecode completed a real testnet payout, two real testnet refund scenarios, and failed-transfer credit restoration followed by a successful retry. The remaining arbitration variants still have sandbox-only evidence.
 
 ## Honest boundaries
 

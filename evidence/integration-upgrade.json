@@ -94,7 +94,12 @@
     "managedModeHttpTested": true,
     "encryptedBackupRestoreTested": true,
     "containerBuilt": true,
-    "publicDeployment": false,
+    "publicDeployment": true,
+    "cloudFreeDeployment": {
+      "evidence": "cloudflare-deployment.json",
+      "scope": "Separate D1 workspace, encrypted notes and receipt verification; paid AI and full Node integration modules disabled",
+      "verifiedAt": "2026-11-03T01:35:05.421Z"
+    },
     "containerVerification": {
       "status": "CI_BUILD_AND_SMOKE_TEST_PASSED",
       "testedCommit": "329ec46d0965f06361cbba9d7d40a85347ae7eef",

@@ -1,6 +1,6 @@
 # Verification APIs and external deployment
 
-These APIs record evidence. They do not send money, release secrets, run an enclave, or certify a reviewer's independence. All workspace endpoints require an owner-scoped bearer token. The production backend is not yet deployed.
+These APIs record evidence. They do not send money, release secrets, run an enclave, or certify a reviewer's independence. All workspace endpoints require an owner-scoped bearer token. The full Node integration backend remains local; a separate [Cloudflare free workspace](CLOUDFLARE-FREE.md) is publicly deployed with receipt verification, encrypted notes and durable history. The reviewer-binding registry, Nitro verifier and destination-chain delivery registry below are not exposed by that cloud variant.
 
 ## Operator configuration
 

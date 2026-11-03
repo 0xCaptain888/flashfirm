@@ -2,7 +2,7 @@
 
 This checklist separates implementation, actual integration evidence and remaining work. Passing local tests does not complete an external integration.
 
-Latest implementation additions: reviewer revocation/account-key rechecks; persistent TEE challenge consumption; immutable destination observation requests and global transaction replay prevention; restore invalidation; public HTTPS smoke checker; read-only testnet recovery funding preflight. See [integration guide](EXTERNAL-INTEGRATIONS.md). None of these additions supplies the missing external people, hardware, host or cross-chain transfer.
+Latest deployment: [free public verification workspace](CLOUDFLARE-FREE.md) passed a real Workers/D1/Workflows write-and-verification check. The full Node integration modules remain separate: reviewer revocation/account-key rechecks, persistent TEE challenge consumption, destination observation/replay prevention and restore invalidation. See [integration guide](EXTERNAL-INTEGRATIONS.md). Independent people, hardware attestation and an actual cross-chain transfer remain missing.
 
 | Requested capability | Implemented / verified | Still required |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ Latest implementation additions: reviewer revocation/account-key rechecks; persi
 | NEAR settlement | Original buyer payout, challenge/arbitration refund, expiry refund, and real testnet failed-transfer credit restoration followed by successful retry; recovery treasury Closed | One earlier expiry deployment was interrupted by RPC 429 and retained without replay; independent reviewers still absent |
 | Privacy | Encrypted local jobs; experimental Nitro COSE/ES384, pinned AWS root, certificate chain, nonce/task/key and PCR verification code; negative/claim tests | Actual enclave image and workload, reviewed PCR allowlist, hardware attestation success test, private ingress and secret release; not live TEE |
 | Cross-chain collection | Official 1Click dry-quote/status adapter, immutable destination requests, unique chain/transaction consumption, route/address limits and ERC-20 final receipt verification with tests | Official endpoint returned HTTP 521; no live quote/payment; chosen route, bridge-origin linkage, real delivery verification and explicit mainnet permission |
-| Lifecycle and operations | Durable jobs, managed HTTPS-origin mode, authenticated owner APIs, health endpoint, graceful draining, encrypted backup/restore tests; Docker build and managed startup/access smoke test passed in GitHub Actions | No cloud account or public backend deployment; organization auth, external uptime alerts, scheduled off-host backups |
+| Lifecycle and operations | Public Workers/D1/Workflows verification workspace; owner tokens, encrypted notes, persistent results and real public smoke check; separate Node container CI and local backup/restore tests | Full Node integration hosting; organization auth, external uptime alerts, scheduled off-host backups and cloud restore drill; paid cloud AI disabled |
 
 There is no mainnet authorization in this workflow. A `.near` account ID supplied by the user does not authorize switching a `.testnet` deployment plan to mainnet. Credentials, seeds and private runtime state are never copied to Pages.
 

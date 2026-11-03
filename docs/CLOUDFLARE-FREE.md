@@ -1,6 +1,14 @@
 # Cloudflare free backend
 
-Status: implemented and tested with the real local Workers/D1/Workflows emulator. **Not publicly deployed yet: Cloudflare account login is required.** This is a separate cloud workspace, not a transparent migration of the existing local database.
+Status: **publicly deployed and verified on 2026-11-03** at https://flashfirm-api.fluoridated-rhinoceros.workers.dev/. The account dashboard showed Workers Free as the current plan. No plan upgrade or billing enrollment was performed. [Public test evidence](../evidence/cloudflare-deployment.json). This is a separate cloud workspace, not a transparent migration of the existing local database.
+
+## Open your workspace
+
+Open the URL above. Copy the access token from the private local file `.runtime/cloudflare/captain-token.txt`, paste it into **Operator token**, and click **Unlock workspace**. Do not paste the token in chat or publish it. The initial token expires at **2026-11-04 09:32 Asia/Shanghai**; reissue it through the operator after expiry.
+
+Create a named workspace, then click **Verify recorded AI receipt**. Open the completed job to inspect the result; refresh/reopen to read the same D1 history. The report's signature is valid while its original quality state remains **CHALLENGED**. A completed verification does not certify a good report or trigger payment. The cloud does not spend the remaining local model budget.
+
+The dedicated deployment test workspace was closed, its disposable encrypted note removed, and its test token revoked. Its completed verification and audit metadata are retained.
 
 ## What the user needs to do
 
@@ -18,7 +26,7 @@ The operator handles database creation, migrations, encryption secret provisioni
 - Dispatch errors retain a queued job. POST the same input/idempotency key or explicitly call `POST /api/workspaces/:firm/jobs/:job/resume`; it uses the same workflow instance ID. Never create a new request key merely because a response was lost.
 - Pinned review policies, signed decisions, appeals and resolutions with optimistic revision checks; conflicting concurrent updates must reload rather than overwrite.
 - Closed workspaces cancel queued work and delete active notes. Historical audit metadata remains; this is not certified data erasure.
-- App-level limits: 60 authenticated requests per owner/minute, 500 write attempts per UTC day, 100 verification submissions per UTC day, 50 workspaces per owner, 100 jobs and 20 notes per workspace. Cloudflare platform free limits still apply. These app limits are not a financial billing cap on an already-paid Cloudflare account.
+- App-level limits: 60 authenticated requests per owner/minute; globally, 500 write attempts and 100 verification submissions per UTC day; 50 workspaces per owner, 100 jobs and 20 notes per workspace. Cloudflare platform free limits still apply. These app limits are not a financial billing cap on an already-paid Cloudflare account.
 
 Paid model execution is deliberately unavailable. The UI displays an explicitly recorded snapshot of the existing local ledger (10/12 calls, CNY 15.91/20 reserved), never a new spend allowance. No provider secret or wallet key is uploaded. To enable cloud model work later, first design an authoritative shared budget and reconcile all existing reservations; do not independently enable two ledgers.
 
@@ -51,10 +59,10 @@ node cloudflare/node_modules/wrangler/bin/wrangler.js d1 migrations apply flashf
 node scripts/build-cloud-assets.mjs
 ```
 
-Generate a new production AES-256 key privately and provision it as `VAULT_KEY` with Wrangler's secret command through stdin. Do not deploy the local `.dev.vars` key, print the key, commit it, or replace it after storing documents. Keep a recoverable private copy under operator control. Deploy the worker with `npm --prefix cloudflare run deploy`. Workflows may require a further narrowly scoped permission if the account's API rejects the current scopes; do not substitute a blanket account token.
+Generate a new production AES-256 key privately and provision it as `VAULT_KEY` with `node scripts/cloud-vault.mjs`. It uses Wrangler stdin, preserves `.runtime/cloudflare/production-vault.key` as a private backup, and reuses that exact key on retry. Do not deploy the local `.dev.vars` key, print the key, commit it, or replace it after storing documents. Keep a recoverable private copy under operator control. Deploy the worker with `npm --prefix cloudflare run deploy`. Workflows may require a further narrowly scoped permission if the account's API rejects the current scopes; do not substitute a blanket account token.
 
 Generate an expiring token with `node scripts/cloud-token.mjs captain`. Apply only `.runtime/cloudflare/captain-token.sql` remotely using `wrangler d1 execute`; it contains a hash, not the bearer token. Give the user the local private token-file path. No shared token belongs in public Pages, source code or the demo video. Revoke a token by updating its `revoked` column. Token rotation must preserve the encryption secret.
 
-Verify the returned `workers.dev` endpoint: healthy database, rejected unauthenticated requests, one authorized workspace write, one completed workflow receipt check, duplicate prevention, and successful reload after a separate request. Until those pass, do not label the public backend deployed. Monitor the Free dashboard and stop at limits instead of enabling paid overages.
+Verify the returned `workers.dev` endpoint: healthy database, rejected unauthenticated requests, one authorized workspace write, one completed workflow receipt check, duplicate prevention, and successful reload after a separate request. These checks passed for the deployed endpoint; `scripts/check-cloud-live.mjs` records them using a dedicated test token, never the user's token. Revoke each test token after its run. Monitor the Free dashboard and stop at limits instead of enabling paid overages.
 
 Official references consulted: Cloudflare Workflows Workers API, D1Database batch API and Wrangler configuration documentation. Local package and lockfile pin the tested Wrangler version.
