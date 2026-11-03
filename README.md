@@ -1,6 +1,6 @@
 # FlashFirm
 
-**Phala TEE implementation prepared; live deployment blocked:** the new dependency-free quotation worker encrypts task ingress/results, binds nonce/task/ephemeral keys to TDX evidence, and checks measured Compose plus RTMR3 event payloads. Local tests pass. Phala rejected the actual deployment with a terms-of-use message; no instance or hardware proof was obtained. Resources remained empty and balance $5. [Implementation, trust boundaries and next step](docs/PHALA-TEE.md).
+**Real Phala TDX public-task proof recorded:** deploying a dedicated source-verifiable container succeeded after the earlier inline-source deployment refusals. A real test verified the hardware signature through the official API, nonce/task/key binding, exact measured Compose, RTMR3 replay, encrypted delivery and signed quotation results. The invented quotation was correctly challenged. The test instance is powered off; its retained disk still incurs storage charges. This is a historical public-document test, not attested AI inference or confidential production readiness. [Proof and reproduction](docs/PHALA-TEE.md).
 
 **Free public backend is live:** [Open cloud workspace](https://flashfirm-api.fluoridated-rhinoceros.workers.dev/) · [Deployment evidence](evidence/cloudflare-deployment.json). Workers + D1 + Workflows passed a real public write → signed-report verification → duplicate prevention → persistent read → workspace closure check on 2026-11-03. Access requires a privately issued, expiring token. Paid model calls remain disabled. [Access instructions and feature boundaries](docs/CLOUDFLARE-FREE.md).
 
@@ -16,7 +16,7 @@ Temporary agent teams. Reproducible contribution allocation. Proof before payout
 
 [Public demo](https://0xCaptain888.github.io/flashfirm/) · [Recorded real AI analysis](https://0xCaptain888.github.io/flashfirm/live.html) · [Testnet wallet console](https://0xCaptain888.github.io/flashfirm/treasury.html) · [Delivery status](docs/DELIVERY-STATUS.md)
 
-Development status: real model output + local durable backend + free public verification workspace + verified NEAR testnet settlement. **Not a production service; independent operators, TEE and Intents payments are not live.**
+Development status: real model output + local durable backend + free public verification workspace + verified NEAR testnet settlement + recorded real Phala TDX quotation-task proof. **Not a production service; independent operator quorum, confidential production TEE and completed Intents payments remain unverified. The TEE test instance is stopped.**
 
 **Mainnet payment attempt — blocked:** a separate local NEAR → Arbitrum USDC console pins one 0.5 NEAR payment and a $5 ceiling. Signed quote verification and live balance/storage/gas preflight passed. The user-approved OKX response failed the exact-action check; the local service did not broadcast. An independent check found an unchanged source balance and an order awaiting deposit. Installed OKX may submit inside its signing method, so signing is disabled pending investigation; the saved-order check is read only. Payment is **not verified**. [Runbook and recovery boundaries](docs/MAINNET-PAYMENT.md) · [Historical signed dry quote](evidence/mainnet-route-preview.json).
 

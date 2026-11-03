@@ -43,7 +43,15 @@ try {
   // hashes, ephemeral public keys and a random challenge are sent here.
   const hardware = await json('https://cloud-api.phala.com/api/v1/attestations/verify', {hex: bundle.attestation?.quote});
   await save('hardware-verification.json', hardware);
-  const verification = verifyPhalaEvidence(bundle, expected, hardware);
+  if (!/^[a-f0-9]{64}$/.test(hardware.checksum ?? '')) throw Error('INVALID_OFFICIAL_REPORT_ID');
+  const rawResponse = await fetch('https://cloud-api.phala.com/api/v1/attestations/raw/' + hardware.checksum,
+    {redirect: 'error', signal: AbortSignal.timeout(45000)});
+  if (!rawResponse.ok) throw Error('OFFICIAL_RAW_QUOTE_HTTP_' + rawResponse.status);
+  const officialRawQuote = Buffer.from(await rawResponse.arrayBuffer());
+  if (officialRawQuote.length > 32768 ||
+    !officialRawQuote.equals(Buffer.from(bundle.attestation.quote.replace(/^0x/, ''), 'hex'))) throw Error('OFFICIAL_RAW_QUOTE_MISMATCH');
+  await writeFile(directory + '/official-quote.bin', officialRawQuote, {mode: 0o600});
+  const verification = verifyPhalaEvidence(bundle, expected, hardware, Date.now(), officialRawQuote);
   await save('verification.json', verification);
   const client = prepareEncryptedTask(bundle, task);
   const response = await json(new URL('/run', endpoint), client.request);

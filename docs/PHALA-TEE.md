@@ -2,9 +2,29 @@
 
 ## Status
 
-The standalone worker, encrypted client and evidence verifier are implemented.
-Local cryptographic/policy tests pass. A real Phala deployment was attempted on
-2026-11-03; the provider rejected it with:
+**A real TDX public quotation task passed on 2026-11-03 at 07:13:07 UTC.**
+A dedicated immutable GHCR container was accepted by Phala. The check verified
+the hardware signature through the official API, exact nonce/task/public-key
+binding, the measured Docker Compose file, RTMR3 event replay and a signed,
+encrypted result. The valid quotation was recognized; an invented quotation
+yielded `CHALLENGED`.
+
+The instance was then shut down; the console showed **CVM is powered off** and
+a remaining balance of **$4.99**. Its 20 GB disk is retained and still billed.
+No auto-topup or payment card was enabled. This is a completed historical
+public-task check, not an always-on endpoint or confidential production service.
+
+- Public evidence: [`../evidence/phala-public-task.json`](../evidence/phala-public-task.json)
+- Repository-pinned policy and lifecycle: [`../evidence/phala-readiness.json`](../evidence/phala-readiness.json)
+- Container: `ghcr.io/0xcaptain888/flashfirm-phala-quotation@sha256:a152f2f1f4fdfbce2a96255982537d4a9571256311382e7dfec6be4a462338b7`
+- Container source revision: `c32562eacfb76ffa7b9332064b0de34354ef7b7a`
+- Measured app-compose SHA-256: `9c5ac0e34d578d78a689b38cf8584a82cb891ae461f75027641edb69831c13d8`
+- Official verification report ID: `9f4b214fbbfa715f17d7cf7f06bf552f31e84148659e75bb3a05b795f8081fd0`
+- Raw quote SHA-256: `e06ade534cc5dc2b9622609a12b10f7dd6809cea0c30be50a3ac7afee4d86061`
+
+## Earlier deployment refusals
+
+The original inline-source deployment on 2026-11-03 was rejected with:
 
 > You are not allowed to deploy the target applications since it violates our terms of use.
 
@@ -12,7 +32,7 @@ Request ID: `97d611347f271bb2674907bca3275445`.
 
 The provider did not give a more specific reason. Its resource list subsequently
 showed “Nothing deployed yet”; billing still showed $5 and auto-topup disabled.
-No CVM or positive hardware evidence was obtained. Do not call this a live TEE,
+At that stage no CVM or positive hardware evidence was obtained. Do not
 retry through an alternate entry point to bypass the refusal, or infer an
 account, geographic or application-specific cause without provider clarification.
 
@@ -34,8 +54,14 @@ The expanded support message is retained locally in ignored
 source, image/Compose hashes, configuration and the limited workload scope.
 After explicit user authorization, it was submitted through the workspace's
 official support page. Ticket **#1342** is **Open**; the console shows creation
-time `2026-11-03 14:43` (as displayed by the console). No provider response or
-resolution has yet been observed. No secrets or wallet data were included.
+time `2026-11-03 14:43` (as displayed by the console), assigned to Leechael.
+No substantive provider explanation was observed before the dedicated-container
+deployment succeeded. Its success does not establish the earlier scanner's
+exact trigger. No secrets or wallet data were included.
+A follow-up reporting the successful container, public proof identifiers and API
+format observations was submitted to the same ticket; the console showed
+`2026-11-03 15:21`. It requests clarification only, with no resource or billing
+changes.
 
 Short support message:
 
@@ -52,24 +78,63 @@ Short support message:
 ## Build and verify
 
 ```sh
-npm run tee:build
+npm run tee:build -- --container-image ghcr.io/0xcaptain888/flashfirm-phala-quotation@sha256:a152f2f1f4fdfbce2a96255982537d4a9571256311382e7dfec6be4a462338b7
 node --test test/phala.test.mjs
-# After the provider resolves the deployment restriction:
-# deploy the exact .runtime/phala/docker-compose.json through the Phala console
+# Historical public evidence; offline replay explicitly uses a recorded API verdict:
+npm run tee:verify-public
+# Independently ask the official API to reverify the historical quote:
+npm run tee:verify-public -- --online
+# For a new authorized short test, deploy the exact generated Compose:
+# clear the console's optional prelaunch-script.sh; leave it empty.
+# Keep Public Logs and Public System Info OFF; use no secrets/SSH keys.
 FLASHFIRM_USE_SYSTEM_PROXY=1 npm run tee:check -- https://YOUR-ENDPOINT.phala.network/
 ```
 
 The proxy option requires the separately installed Cloudflare development
 dependencies and uses the workstation's existing localhost proxy. It makes no
-system proxy changes. The build embeds the complete reviewed worker module into
-Compose, pins the official Node linux/amd64 image by digest, and writes a source
-and Compose hash manifest into ignored `.runtime/phala/`. No runtime source
-download, package install, provider key or wallet secret is involved.
+system proxy changes. The recommended build uses the dedicated linux/amd64
+container and writes a source and Compose hash manifest into ignored
+`.runtime/phala/`. Calling `tee:build` without `--container-image` instead emits
+the older embedded-source form; that is not the successful deployment method.
+No runtime source download, package install, provider key or wallet secret is
+involved in the successful configuration.
 
 The check command creates a unique evidence directory before contacting the
 CVM. It uses public repository documentation, with one exact quotation and one
 invented quotation that must yield `CHALLENGED`. It does not call an AI model.
 The command never publishes private runtime files to GitHub automatically.
+`scripts/export-phala-proof.mjs` separately exports only a successful test whose
+sole source exactly matches public `docs/MAINNET-PAYMENT.md`. It whitelists proof
+fields and checks them before publication.
+
+## Real-service compatibility checks
+
+The actual v0.5.12 service exposed three details absent from the synthetic fixture:
+
+- The quote retained 70 zero-filled buffer bytes beyond its declared signature
+  length. The parser accepts at most 256 trailing zero bytes, rejects truncation
+  and any nonzero tail, and hashes/submits the entire original buffer.
+- The official API's report identifier labelled `checksum` differed from
+  SHA-256 of the raw bytes in this observation. Instead of dropping byte
+  binding, the live checker downloads `/attestations/raw/{id}` from the official
+  API and requires an exact byte-for-byte match. The report ID and actual raw
+  SHA-256 are recorded separately.
+- Runtime event `digest` fields were empty, including events with empty payloads.
+  Every digest is independently computed using dstack's v1 rule, then the whole
+  RTMR3 is replayed and matched to the signed quote. A supplied nonempty digest
+  must also match. Event tampering is rejected in either representation.
+
+Phala initially added an optional prelaunch script. It was removed through the
+console and the instance restarted before the successful challenge. The verifier
+still rejects any nonempty prelaunch script; no script allowlist was learned from
+the prover. Regression tests cover the compatibility cases and their invalid
+counterparts.
+
+The offline public-proof command checks the repository-pinned container/source/
+Compose policy, recorded challenge time, event replay, task/result binding and
+attested-key signature. Its recorded API verdict is not a new hardware check.
+`--online` fetches a new official verdict and exact original bytes independently;
+it rechecks historical evidence and does not create a new task or fresh nonce.
 
 ## What is checked
 
@@ -120,8 +185,10 @@ The approved first-run cap is $5. The selected console configuration estimated
 $0.06074/hour, including 20 GB storage, before the failed deployment.
 This is an observed estimate, not a guaranteed future price.
 
-After an eventual successful short test, stop the CVM immediately and check
-whether retained disks still incur charges. An application process timeout
+The successful short test was followed by shutdown. The official billing page
+states that CPU storage is charged while running **and stopped**; deleting the
+machine is required to end all charges. The 20 GB disk is still retained pending
+explicit deletion approval. An application process timeout
 does not stop VM billing. This worker limits itself to 32 attestation attempts,
 eight executions and one hour of task acceptance; those limits do not replace
 provider resource shutdown. Do not add a card, enable auto-topup, increase the
@@ -129,7 +196,7 @@ plan or erase cloud data without the appropriate authorization.
 
 ## Standard dedicated-container alternative
 
-At the user's request, a second packaging method is prepared:
+At the user's request, a second packaging method was implemented and deployed:
 
 - `tee/phala.Dockerfile` copies the readable module into `/app/phala-worker.mjs`
   on the same digest-pinned official Node base.
@@ -156,12 +223,14 @@ The resulting Compose uses the dedicated immutable image and a plain
 source download or package installation. Existing hardware/application evidence
 checks and the $5 first-run limit remain unchanged.
 
-This is transparent standard application packaging, not evidence of a policy
-clearance. A successful image build does not establish why the earlier request
-was rejected, nor guarantee Phala will accept this deployment. Keep support
-ticket #1342 and the original failure history; if this distinct packaging is
-also rejected, request provider review instead of changing identities, IP
-addresses, or concealing application behavior.
+The workflow at revision `c32562eacfb76ffa7b9332064b0de34354ef7b7a`
+successfully built, container-tested and published the image. Anonymous registry
+verification checked the manifest/config/layer hashes, linux/amd64 architecture,
+source revision, startup command and exact worker source before deployment.
+
+Phala accepted this packaging in the same account/workspace. The original
+failure history and support ticket #1342 are retained. This successful deployment
+does not establish the scanner's exact earlier trigger.
 
 Official technical references:
 
@@ -172,3 +241,5 @@ Official technical references:
 - `https://github.com/Dstack-TEE/dstack/blob/next/sdk/js/src/client-v0.ts`
 - `https://docs.phala.com/phala-cloud/cvm/create-with-docker-compose.md`
 - `https://docs.phala.com/phala-cloud/troubleshooting/troubleshooting.md`
+- `https://github.com/Dstack-TEE/dstack/blob/d7e15dc9020101bb37d93ea9eec5f1f4fefe93e7/dstack/cc-eventlog/src/runtime_events.rs`
+- `https://cloud.phala.com/about/billing`

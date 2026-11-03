@@ -3,7 +3,8 @@ import {requestReportData} from '../tee/phala-worker.mjs';
 
 function hex(value, size) {
   const result = typeof value === 'string' ? value.replace(/^0x/, '').toLowerCase() : '';
-  if (!Number.isInteger(size) || !/^[a-f0-9]+$/.test(result) || result.length !== size * 2) throw Error('INVALID_ATTESTATION_HEX');
+  if (typeof value !== 'string' || !Number.isInteger(size) || size < 0 ||
+    !/^[a-f0-9]*$/.test(result) || result.length !== size * 2) throw Error('INVALID_ATTESTATION_HEX');
   return result;
 }
 const hash = (algorithm, bytes) => createHash(algorithm).update(bytes).digest();
@@ -12,14 +13,20 @@ export function parseTdxQuote(encoded) {
   const bytes = Buffer.from(hex(encoded, encoded.replace(/^0x/, '').length / 2), 'hex');
   // Quote v4, ECDSA P256, Intel TDX TD1.0 only. v5 has different framing.
   if (bytes.length < 636 || bytes.readUInt16LE(0) !== 4 || bytes.readUInt16LE(2) !== 2 ||
-    bytes.readUInt32LE(4) !== 0x81 || bytes.readUInt32LE(632) !== bytes.length - 636) throw Error('UNSUPPORTED_TDX_QUOTE');
+    bytes.readUInt32LE(4) !== 0x81) throw Error('UNSUPPORTED_TDX_QUOTE');
+  const signatureSize = bytes.readUInt32LE(632), quoteSize = 636 + signatureSize;
+  // Some dstack/QGS responses retain a zero-filled output-buffer tail. Keep
+  // hashing the entire response; never trim bytes sent to the official verifier.
+  // Accept only a small zero tail, never truncation or another payload/quote.
+  if (!signatureSize || quoteSize > bytes.length || bytes.length - quoteSize > 256 ||
+    bytes.subarray(quoteSize).some(value => value !== 0)) throw Error('UNSUPPORTED_TDX_QUOTE');
   if (bytes.readBigUInt64LE(168) & 1n) throw Error('DEBUG_TDX_REJECTED');
   const body = {};
   for (const [name, offset, size] of [['mrtd',136,48], ['rtmr0',328,48], ['rtmr1',376,48],
     ['rtmr2',424,48], ['rtmr3',472,48], ['reportdata',520,64]]) {
     body[name] = bytes.subarray(48 + offset, 48 + offset + size).toString('hex');
   }
-  return {checksum: hash('sha256', bytes).toString('hex'), body};
+  return {checksum: hash('sha256', bytes).toString('hex'), body, zeroPaddingBytes: bytes.length - quoteSize};
 }
 export function verifyRtmr3(eventLog, expected) {
   if (typeof eventLog !== 'string' || eventLog.length > 1048576) throw Error('INVALID_EVENT_LOG');
@@ -34,13 +41,16 @@ export function verifyRtmr3(eventLog, expected) {
     const payload = Buffer.from(hex(event.event_payload, (event.event_payload?.length ?? 0) / 2), 'hex');
     const type = Buffer.alloc(4); type.writeUInt32LE(event.event_type);
     const computed = hash('sha384', Buffer.concat([type, Buffer.from(':' + event.event + ':'), payload]));
-    if (computed.toString('hex') !== hex(event.digest, 48)) throw Error('EVENT_PAYLOAD_DIGEST_MISMATCH');
+    // dstack v0.5.x runtime events may leave digest empty. Recompute every
+    // digest from the event bytes regardless; the final signed RTMR3 must match.
+    if (event.digest !== '' && event.digest !== undefined &&
+      computed.toString('hex') !== hex(event.digest, 48)) throw Error('EVENT_PAYLOAD_DIGEST_MISMATCH');
     rtmr = hash('sha384', Buffer.concat([rtmr, computed])); runtime.push(event);
   }
   if (!runtime.length || rtmr.toString('hex') !== hex(expected, 48)) throw Error('RTMR3_MISMATCH');
   return runtime;
 }
-export function verifyPhalaEvidence(bundle, expected, hardwareVerification, now = Date.now()) {
+export function verifyPhalaEvidence(bundle, expected, hardwareVerification, now = Date.now(), independentlyDownloadedQuote) {
   const {context, attestation, info} = bundle;
   if (!expected || !/^[a-f0-9]{64}$/.test(expected.nonce ?? '') ||
     !/^[a-f0-9]{64}$/.test(expected.taskDigest ?? '') ||
@@ -60,8 +70,16 @@ export function verifyPhalaEvidence(bundle, expected, hardwareVerification, now 
   if (parsed.body.reportdata !== requestReportData(context)) throw Error('REPORT_DATA_MISMATCH');
   // This verifier result is obtained by the relying party from Phala over TLS.
   // A prover-supplied "verified:true" is never a valid substitute.
+  // The live API returned an identifier labelled "checksum" that differed from
+  // SHA-256(raw quote). Do not waive byte binding on that basis. In that case
+  // the relying party must download /attestations/raw/{identifier} directly
+  // from the official service and supply the exact matching original bytes.
+  const exactDownloadedQuote = Buffer.isBuffer(independentlyDownloadedQuote) &&
+    independentlyDownloadedQuote.equals(Buffer.from(attestation.quote.replace(/^0x/, ''), 'hex'));
   if (hardwareVerification?.success !== true || hardwareVerification?.quote?.verified !== true ||
-    hardwareVerification.checksum !== parsed.checksum || hardwareVerification.quote.header?.version !== 4 ||
+    !/^[a-f0-9]{64}$/.test(hardwareVerification.checksum ?? '') ||
+    (hardwareVerification.checksum !== parsed.checksum && !exactDownloadedQuote) ||
+    hardwareVerification.quote.header?.version !== 4 ||
     hardwareVerification.quote.header?.tee_type !== 'TEE_TDX') throw Error('HARDWARE_VERIFICATION_REQUIRED');
   for (const [field, value] of Object.entries(parsed.body)) {
     if (hex(hardwareVerification.quote.body?.[field], value.length / 2) !== value) throw Error('VERIFIER_QUOTE_MISMATCH');
@@ -79,7 +97,9 @@ export function verifyPhalaEvidence(bundle, expected, hardwareVerification, now 
   const appEvents = events.filter(event => event.event === 'app-id');
   if (appEvents.length !== 1 || (expected.appId && appEvents[0].event_payload !== expected.appId)) throw Error('APP_ID_MISMATCH');
   return {hardwareSignatureVerifiedVia: 'Phala Cloud verification API over TLS; not a local DCAP verifier',
-    checksum: parsed.checksum, requestBound: true, eventPayloadsAndRtmr3Verified: true,
+    checksum: parsed.checksum, verificationReportId: hardwareVerification.checksum,
+    rawQuoteBinding: exactDownloadedQuote ? 'EXACT_OFFICIAL_RAW_DOWNLOAD' : 'MATCHING_SHA256',
+    zeroPaddingBytes: parsed.zeroPaddingBytes, requestBound: true, eventPayloadsAndRtmr3Verified: true,
     expectedWorkloadVerified: true, composeHash, appId: appEvents[0].event_payload,
     platformMeasurementsIndependentlyVerified: false, kmsAndGovernanceVerified: false,
     secretReleaseAllowed: false, remoteModelInferenceAttested: false,

@@ -16,6 +16,7 @@ function fakeEvidence(reportData, dockerCompose = 'expected compose') {
   const appCompose = JSON.stringify({docker_compose_file: dockerCompose, public_logs: false, public_sysinfo: false});
   let rtmr3 = Buffer.alloc(48);
   const events = [
+    {imr: 3, event_type: 0x08000001, event: 'system-preparing', event_payload: ''},
     {imr: 3, event_type: 0x08000001, event: 'app-id', event_payload: 'ab'.repeat(20)},
     {imr: 3, event_type: 0x08000001, event: 'compose-hash', event_payload: digest(appCompose)},
   ];
@@ -95,7 +96,7 @@ test('event payload changes cannot be concealed behind replaying the original di
     expiresAt: expected.expiresAt, signingPublicKey, encryptionPublicKey};
   const bundle = {context, ...fakeEvidence(requestReportData(context))};
   const hardware = fakeHardware(bundle), events = JSON.parse(bundle.attestation.event_log);
-  events[1].event_payload = '00'.repeat(32);
+  events[2].event_payload = '00'.repeat(32);
   bundle.attestation.event_log = JSON.stringify(events);
   assert.throws(() => verifyPhalaEvidence(bundle, expected, hardware, now), /EVENT_PAYLOAD_DIGEST/);
   const raw = Buffer.from(bundle.attestation.quote, 'hex');
@@ -105,6 +106,42 @@ test('event payload changes cannot be concealed behind replaying the original di
   assert.throws(() => parseTdxQuote(raw.toString('hex')), /UNSUPPORTED/);
   raw.writeUInt16LE(4, 0);
   assert.throws(() => parseTdxQuote(raw.toString('hex') + 'a'), /INVALID_ATTESTATION_HEX/);
+});
+test('omitted runtime digests are recomputed and still bound to the signed RTMR3', () => {
+  const expected = {...challenge(), dockerCompose: 'expected compose'};
+  const context = {version: 'flashfirm-phala-context/v1', nonce: expected.nonce, taskDigest: expected.taskDigest,
+    expiresAt: expected.expiresAt, signingPublicKey, encryptionPublicKey};
+  const bundle = {context, ...fakeEvidence(requestReportData(context))};
+  const hardware = fakeHardware(bundle), events = JSON.parse(bundle.attestation.event_log);
+  for (const event of events) event.digest = '';
+  bundle.attestation.event_log = JSON.stringify(events);
+  assert.equal(verifyPhalaEvidence(bundle, expected, hardware, now).eventPayloadsAndRtmr3Verified, true);
+  events[2].event_payload = '00'.repeat(32);
+  bundle.attestation.event_log = JSON.stringify(events);
+  assert.throws(() => verifyPhalaEvidence(bundle, expected, hardware, now), /RTMR3_MISMATCH/);
+});
+test('quote padding is bounded and API identifiers need exact independently downloaded bytes', () => {
+  const expected = {...challenge(), dockerCompose: 'expected compose'};
+  const context = {version: 'flashfirm-phala-context/v1', nonce: expected.nonce, taskDigest: expected.taskDigest,
+    expiresAt: expected.expiresAt, signingPublicKey, encryptionPublicKey};
+  const bundle = {context, ...fakeEvidence(requestReportData(context))};
+  const original = bundle.attestation.quote;
+  bundle.attestation.quote += '00'.repeat(70);
+  assert.equal(parseTdxQuote(bundle.attestation.quote).zeroPaddingBytes, 70);
+  assert.throws(() => parseTdxQuote(original + '00'.repeat(69) + '01'), /UNSUPPORTED/);
+  assert.throws(() => parseTdxQuote(original + '00'.repeat(257)), /UNSUPPORTED/);
+  assert.throws(() => parseTdxQuote(original.slice(0, -2)), /UNSUPPORTED/);
+  const hardware = {...fakeHardware(bundle), checksum: 'ef'.repeat(32)};
+  assert.throws(() => verifyPhalaEvidence(bundle, expected, hardware, now), /HARDWARE/);
+  const downloaded = Buffer.from(bundle.attestation.quote, 'hex');
+  const result = verifyPhalaEvidence(bundle, expected, hardware, now, downloaded);
+  assert.equal(result.rawQuoteBinding, 'EXACT_OFFICIAL_RAW_DOWNLOAD');
+  assert.equal(result.checksum, createHash('sha256').update(downloaded).digest('hex'));
+  downloaded[downloaded.length - 1] = 1;
+  assert.throws(() => verifyPhalaEvidence(bundle, expected, hardware, now, downloaded), /HARDWARE/);
+  const mismatch = structuredClone(hardware); mismatch.quote.body.reportdata = '00'.repeat(64);
+  assert.throws(() => verifyPhalaEvidence(bundle, expected, mismatch, now,
+    Buffer.from(bundle.attestation.quote, 'hex')), /VERIFIER_QUOTE_MISMATCH/);
 });
 test('standalone HTTP worker enforces routes and exchanges encrypted task/results without returning keys', async () => {
   const server = workerServer(createWorker({now: () => now, rpc: async () => ({testOnly: true})}));

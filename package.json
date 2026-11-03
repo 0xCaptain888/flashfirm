@@ -19,6 +19,7 @@
     "mainnet:console": "node scripts/mainnet-console.mjs",
     "tee:build": "node scripts/build-phala.mjs",
     "tee:check": "node scripts/check-phala.mjs",
+    "tee:verify-public": "node scripts/verify-phala-proof.mjs",
     "build:pages": "node scripts/build-pages.mjs",
     "model:probe": "node scripts/probe-models.mjs",
     "live:run": "node scripts/run-live.mjs",
