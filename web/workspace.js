@@ -66,7 +66,7 @@ async function history() {
   const nativeDone=flow.status.nativeTestnetSettlementVerified===true;
   const obligationRows=obligations.map(o=>{
    const invoice=flow.status.invoices?.find(i=>i.obligationId===o.id);
-   return `<tr><td>${escape(o.workerId??kind(o.kind))}</td><td>${escape((o.amount/1000000).toFixed(6))} USDC allocation</td><td>${nativeDone?'Paid in buyer-approved testnet NEAR':escape(invoice?.state??'Not funded')}</td></tr>`;
+   return `<tr><td>${escape(o.workerId??kind(o.kind))}</td><td>${escape((o.amount/1000000).toFixed(6))} USDC allocation</td><td>${nativeDone?'Paid in buyer-approved testnet NEAR':escape(invoice?.state??(flow.status.nativeSettlement?'Native payment evidence pending':'Not funded'))}</td></tr>`;
   }).join('');
   const privacy=flow.status.confidentialInferenceVerified?
    'Task artifacts have ACI verifier certificates under the configured external OS/KMS/model audit policy.':

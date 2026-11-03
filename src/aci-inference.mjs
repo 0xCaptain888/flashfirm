@@ -53,6 +53,8 @@ export async function runConfidentialInference({taskRoot,task,model,workerId,app
    checked.receipt.event_log?.filter(e=>e.type==='upstream.verified'&&e.session_id===audit.sessionId&&e.required===true&&e.result==='verified').length!==1)
    throw Error('ACI_EXACT_MODEL_AND_SESSION_RECEIPT_REQUIRED');
   if(now()>=policy.expiresAt||now()>=audit.expiresAt)throw Error('ACI_APPROVAL_EXPIRED_DURING_INFERENCE');
+  verifyAciRuntimeAudit(signedAudit,releaseAuthority,policy,connection.identity,now());
+  requireAciPass(connection.identity.transcript,['id-1','id-2','id-3','id-4','id-6']);
   const value=JSON.parse(text);
   if(value.choices?.length!==1||value.choices[0].finish_reason!=='stop'||
    typeof value.choices[0].message?.content!=='string')throw Error('ACI_COMPLETE_MODEL_OUTPUT_REQUIRED');

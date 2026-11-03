@@ -53,7 +53,7 @@ test('private material is withheld until release, SDK checks, upstream session a
  assert.equal(result.proof.artifactHash,hash(f.output));assert.equal(f.stats.sent,1);
  assert.equal(f.stats.reserved,1);assert.equal(f.stats.closed,1);
  assert(!JSON.stringify(result.proof).includes(f.input.task.document));
- for(const failure of ['release','hardware-skip','audit','budget','receipt-skip','wrong-model','wrong-session']){
+ for(const failure of ['release','hardware-skip','audit','budget','receipt-skip','wrong-model','wrong-session','identity-rotation']){
   const x=await fixture();
   if(failure==='release')x.input.approval.signature='invalid';
   if(failure==='hardware-skip')x.connection.identity.transcript.lines[0].status='skip';
@@ -63,8 +63,12 @@ test('private material is withheld until release, SDK checks, upstream session a
    transcript:pass(['receipt-1','receipt-2','receipt-3','upstream-1','upstream-2'])});
   if(failure==='wrong-model')x.receipt.model='other-model';
   if(failure==='wrong-session')x.receipt.event_log[0].session_id=hash('other-session');
+  if(failure==='identity-rotation'){
+   const verify=x.connection.verifyReceipt;
+   x.connection.verifyReceipt=async()=>{x.connection.identity.workloadKeysetDigest=hash('rotated-keyset');return verify();};
+  }
   await assert.rejects(runConfidentialInference(x.input,{connect:async()=>x.connection}));
-  if(!['receipt-skip','wrong-model','wrong-session'].includes(failure))assert.equal(x.stats.sent,0,failure);
+  if(!['receipt-skip','wrong-model','wrong-session','identity-rotation'].includes(failure))assert.equal(x.stats.sent,0,failure);
  }
 });
 test('official receipt verifier rejects changed wire bodies, signature, session and skipped mandatory checks',async()=>{
