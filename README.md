@@ -1,5 +1,9 @@
 # FlashFirm
 
+**Task dossier upgrade:** one signed report, exact source locations, bound review rounds, persistent in-app reminders and portable exports now work through the local and free cloud code paths. A separately signed operator revision fixes the rejected quotation while preserving the original model output. All nine revised quotations pass exact checks; the revision still awaits a new review. Three pinned source files were actually retrieved again and matched against their complete recorded hashes. Zero extra model calls or financial transactions. [Task workflow and SDK](docs/TASK-DOSSIERS.md) · [Signed revision](evidence/revised-live-receipt.json) · [Source audit](evidence/source-audit.json).
+
+**Public acceptance passed:** the free Workers/D1/Workflows deployment completed actual report binding, revised-receipt background verification, duplicate prevention, mismatched-report rejection, persisted inbox acknowledgement, dossier export/reverification and closure/readback. [Remote upgrade evidence](evidence/cloudflare-case-upgrade.json). The verification checks report consistency and quotations; it does not approve quality or execute settlement.
+
 **Real Phala TDX public-task proof recorded:** deploying a dedicated source-verifiable container succeeded after the earlier inline-source deployment refusals. A real test verified the hardware signature through the official API, nonce/task/key binding, exact measured Compose, RTMR3 replay, encrypted delivery and signed quotation results. The invented quotation was correctly challenged. The test instance is powered off; its retained disk still incurs storage charges. This is a historical public-document test, not attested AI inference or confidential production readiness. [Proof and reproduction](docs/PHALA-TEE.md).
 
 **Free public backend is live:** [Open cloud workspace](https://flashfirm-api.fluoridated-rhinoceros.workers.dev/) · [Deployment evidence](evidence/cloudflare-deployment.json). Workers + D1 + Workflows passed a real public write → signed-report verification → duplicate prevention → persistent read → workspace closure check on 2026-11-03. Access requires a privately issued, expiring token. Paid model calls remain disabled. [Access instructions and feature boundaries](docs/CLOUDFLARE-FREE.md).
@@ -15,6 +19,8 @@ Testnet settlement verified on 2026-11-02: buyer wallet funding → signed alloc
 Temporary agent teams. Reproducible contribution allocation. Proof before payout.
 
 [Public demo](https://0xCaptain888.github.io/flashfirm/) · [Recorded real AI analysis](https://0xCaptain888.github.io/flashfirm/live.html) · [Testnet wallet console](https://0xCaptain888.github.io/flashfirm/treasury.html) · [Delivery status](docs/DELIVERY-STATUS.md)
+
+[Traceable report correction and task dossier](https://0xCaptain888.github.io/flashfirm/delivery.html)
 
 Development status: real model output + local durable backend + free public verification workspace + verified NEAR testnet settlement + recorded real Phala TDX quotation-task proof. **Not a production service; independent operator quorum, confidential production TEE and completed Intents payments remain unverified. The TEE test instance is stopped.**
 
@@ -81,11 +87,11 @@ The sample console's last state is `PLANNED`. Private workspace closure is local
 
 ## Next integration milestones
 
-1. Broaden real testnet coverage to challenge/refund/recovery scenarios and independent evaluator operators. The first funded task is Closed; do not fund or replay it.
+1. Recruit independent evaluator operators and cover remaining arbitration outcomes on testnet. Payout, dispute/expiry refunds and failed-transfer recovery already have real evidence. Existing treasuries are Closed; do not fund or replay them.
 2. Exercise the bounded persistent model runner with an explicitly renewed call allowance; then generalize beyond the approved public-source preset and pin task rubric before funding.
 3. Onboard independent evaluators and bind durable review/appeal commitments to settlement.
 4. Confidential execution with independently checked attestation; keep synthetic inputs until then.
-5. Live settlement verification and, afterward, Intents payout delivery.
+5. Bind a newly approved real task to its own verified settlement, then complete Intents delivery after resolving the locked wallet attempt.
 
 ## GitHub Pages deployment
 

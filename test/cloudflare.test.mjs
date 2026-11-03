@@ -4,8 +4,12 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {randomBytes} from 'node:crypto';
 import {handle,sha,decryptReceipt} from '../cloudflare/api.mjs';
+import {verifyCaseExport} from '../src/task-case.mjs';
+import {hash,identity} from '../src/protocol.mjs';
+const revised=JSON.parse(readFileSync(new URL('../evidence/revised-live-receipt.json',import.meta.url),'utf8'));
+const original=JSON.parse(readFileSync(new URL('../evidence/queued-live-receipt.json',import.meta.url),'utf8'));
 class D1 {
- constructor(){this.db=new DatabaseSync(':memory:');this.db.exec('PRAGMA foreign_keys=ON');this.db.exec(readFileSync(new URL('../cloudflare/migrations/0001_workspace.sql',import.meta.url),'utf8'));}
+ constructor(){this.db=new DatabaseSync(':memory:');this.db.exec('PRAGMA foreign_keys=ON');for(const file of ['0001_workspace.sql','0002_task_cases.sql'])this.db.exec(readFileSync(new URL('../cloudflare/migrations/'+file,import.meta.url),'utf8'));}
  prepare(sql){const db=this.db;let args=[];return {bind(...values){args=values;return this;},async first(){return db.prepare(sql).get(...args)??null;},async all(){return {results:db.prepare(sql).all(...args)};},async run(){const result=db.prepare(sql).run(...args);return {meta:{changes:result.changes}};}};}
  async batch(statements){this.db.exec('BEGIN');try{const result=[];for(const s of statements)result.push(await s.run());this.db.exec('COMMIT');return result;}catch(e){this.db.exec('ROLLBACK');throw e;}}
 }
@@ -59,5 +63,44 @@ test('cloud quota and payload limits reject before unbounded work',async()=>{
  const day=new Date().toISOString().slice(0,10);await f.DB.prepare('INSERT INTO quotas VALUES(?,?) ON CONFLICT(bucket) DO UPDATE SET count=500').bind('write:'+day,500).run();
  assert.equal((await f.request('','POST',{title:'limited'})).status,429);
  assert.equal(f.created.size,0);
+ }finally{f.DB.db.close();}
+});
+test('cloud task dossier is encrypted, immutable, owner scoped and retained after closure',async()=>{
+ const f=await fixture(),path=`/${f.firm.id}`;
+ try{
+  assert.equal((await(await f.request(path+'/case')).json()).status.attached,false);
+  const response=await f.request(path+'/case','POST',{receipt:revised});assert.equal(response.status,201);
+  const result=await response.json();assert.equal(result.status.state,'AWAITING_REVIEW');
+  assert.equal(result.status.settlementExecuted,false);
+  assert.equal((await f.request(path+'/jobs','POST',{kind:'VERIFY_RECEIPT',receipt:original},f.a,{'Idempotency-Key':'wrong-case-report'})).status,409);
+  assert.equal((await f.request(path+'/jobs','POST',{kind:'VERIFY_RECEIPT',receipt:revised},f.a,{'Idempotency-Key':'exact-case-report'})).status,202);
+  const blob=f.DB.db.prepare('SELECT blob FROM task_cases').get().blob;
+  assert.ok(!blob.includes(revised.payload.taskId));
+  assert.equal((await f.request(path+'/case','POST',{receipt:original})).status,409);
+  assert.equal((await f.request(path+'/case','GET',undefined,f.b)).status,404);
+  assert.equal((await f.request(path+'/case-export','GET',undefined,f.b)).status,404);
+  const inbox=await(await f.request(path+'/notifications')).json();assert.equal(inbox.unread,1);
+  assert.equal((await f.request(path+'/notifications/'+inbox.items[0].id,'POST',{})).status,200);
+  assert.equal((await(await f.request(path+'/notifications')).json()).unread,0);
+  await f.request(path+'/dissolve','POST',{});
+  const dossier=await(await f.request(path+'/case-export')).json();
+  assert.equal(verifyCaseExport(dossier).valid,true);assert.equal(dossier.status.state,'CLOSED');
+  assert.equal((await f.request(path+'/case','POST',{receipt:revised})).status,409);
+ }finally{f.DB.db.close();}
+});
+test('cloud database guards case/review binding and closed-workspace races atomically',async()=>{
+ const f=await fixture(),path=`/${f.firm.id}`;
+ try{
+  const status=(await(await f.request(path+'/case','POST',{receipt:revised})).json()).status;
+  const keys=Array.from({length:6},()=>identity().publicKey);
+  const policy={taskRoot:status.taskRoot,buyerKey:keys[0],appealKey:keys[1],workerKeys:[keys[2]],reviewers:keys.slice(3).map((key,i)=>({key,operator:'development-'+i})),expiresAt:Date.now()+600000,appealWindowMs:60000};
+  assert.equal((await f.request(path+'/review','POST',{policy,resultRoot:hash(original)})).status,400);
+  assert.equal((await f.request(path+'/review','POST',{policy,resultRoot:hash(revised)})).status,201);
+  const stored=f.DB.db.prepare('SELECT body FROM reviews').get().body;
+  const changed=JSON.parse(stored);changed.resultRoot=hash(original);
+  assert.throws(()=>f.DB.db.prepare('UPDATE reviews SET body=?').run(JSON.stringify(changed)),/CASE_REVIEW_MISMATCH/);
+  const another=await(await f.request('','POST',{title:'race test'})).json();
+  await f.request('/'+another.id+'/dissolve','POST',{});
+  assert.throws(()=>f.DB.db.prepare('INSERT INTO task_cases VALUES(?,?,?,?)').run(another.id,'x','y','{}'),/WORKSPACE_CLOSED/);
  }finally{f.DB.db.close();}
 });

@@ -187,8 +187,11 @@ This is an observed estimate, not a guaranteed future price.
 
 The successful short test was followed by shutdown. The official billing page
 states that CPU storage is charged while running **and stopped**; deleting the
-machine is required to end all charges. The 20 GB disk is still retained pending
-explicit deletion approval. An application process timeout
+machine is required to end all charges. The user explicitly chose to retain the
+stopped instance and its 20 GB disk. Official storage pricing checked through
+the console's pricing page was $0.000139/GB/hour: $0.00278/hour, $0.06672/day or
+$2.0016 per 30 days for 20 GB, billed by the minute against allocated capacity.
+This is ongoing storage usage, not a new resource deployment. An application process timeout
 does not stop VM billing. This worker limits itself to 32 attestation attempts,
 eight executions and one hour of task acceptance; those limits do not replace
 provider resource shutdown. Do not add a card, enable auto-topup, increase the

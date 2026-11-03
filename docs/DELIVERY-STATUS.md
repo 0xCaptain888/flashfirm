@@ -2,17 +2,37 @@
 
 This checklist separates implementation, actual integration evidence and remaining work. Passing local tests does not complete an external integration.
 
+Task dossier upgrade: an immutable signed-report case, exact quote locations,
+bound review rounds, persistent in-app reminders, SDK endpoints and portable
+exports are implemented in both Node and Workers. Local Workers/D1/Workflows and
+an isolated browser identity passed import, persisted acknowledgement and
+refresh/re-authentication checks. A signed operator revision restores the missing
+Solidity comment prefix in one quotation, preserving the original report and
+its CHALLENGED result. All nine revised quotations pass, but the revision is
+AWAITING_NEW_REVIEW. Three real immutable source files were retrieved again and
+their complete hashes matched; repeated evidence is flagged, not paid twice by
+an invented score. [Workflow and scope](TASK-DOSSIERS.md).
+
+The upgrade subsequently passed a real public Workers/D1/Workflows acceptance
+run: exact report binding, revised-report workflow verification, duplicate
+prevention, rejection of a different report, persistent read acknowledgement,
+export re-verification, and closure with retained evidence.
+See `evidence/cloudflare-case-upgrade.json`. It creates no independent reviewers,
+task-bound TEE assertion or payment. D1's export endpoint rejected the existing
+narrow OAuth authorization, so a complete cloud export/restore backup is not
+claimed; the additive migration preserved existing tables and data.
+
 Latest deployment: [a dedicated Phala container](PHALA-TEE.md) completed a real hardware/application-verified public quotation task and was then powered off. The [free public verification workspace](CLOUDFLARE-FREE.md) separately passed a real Workers/D1/Workflows write-and-verification check. The full Node integration modules remain separate: reviewer revocation/account-key rechecks, persistent TEE challenge consumption, destination observation/replay prevention and restore invalidation. See [integration guide](EXTERNAL-INTEGRATIONS.md). Independent people, confidential production TEE assurance and an actual cross-chain transfer remain missing.
 
 | Requested capability | Implemented / verified | Still required |
 | --- | --- | --- |
-| Real AI collaboration | Real four-call queued run completed once, signed receipt verified; three specialists plus same-provider critique; exact citation gate retained CHALLENGED despite model PASS | Broader project presets/tools; revised delivery after the rejected quotation; no automatic paid retry |
+| Real AI collaboration | Real four-call queued run completed once; original CHALLENGED report preserved; separately signed operator correction passes nine exact quotations and awaits new review | Broader presets/tools; real review of the revised delivery; no automatic paid retry |
 | Automatic team formation | Capability/price matching, signed offers, budget-constrained selection | Real independent supplier offers and onboarding |
-| Source verification | Pinned OpenZeppelin retrieval, exact quotation checks, critique history | General discovery, semantic entailment evaluation and larger real-data benchmark |
+| Source verification | Pinned OpenZeppelin retrieval and repeat full-hash comparison, exact quotation locations, repeated-evidence flags, critique and correction history | General discovery, semantic entailment evaluation and larger real-data benchmark |
 | Contribution scoring | Fixed rubric, signed coverage, leave-one-out values, duplicate artifact exclusion | Real counterfactual re-execution study and independent anti-Sybil identity assurance |
 | Independent review | Pinned decisions/appeals and native NEAR quorum; dual-signature account binding; authenticated onboarding challenge API, owner-scoped persistent registry and atomic single-use nonce checks | Real independent operators, live signed onboarding and identity/conflict checks |
 | NEAR settlement | Original buyer payout, challenge/arbitration refund, expiry refund, and real testnet failed-transfer credit restoration followed by successful retry; recovery treasury Closed | One earlier expiry deployment was interrupted by RPC 429 and retained without replay; independent reviewers still absent |
-| Privacy | Encrypted local jobs; experimental Nitro verifier; real Phala TDX public quotation task with official hardware verification, encrypted ingress/result signatures, nonce/task/key binding, exact measured Compose and RTMR3 replay; public proof reproduces after instance shutdown | Independent OS/KMS/governance verification, confidential secret-release review, attested model inference and continuously operated production service remain required; stopped 20 GB disk remains billable pending deletion approval |
+| Privacy | Encrypted local jobs; experimental Nitro verifier; real Phala TDX public quotation task with official hardware verification, encrypted ingress/result signatures, nonce/task/key binding, exact measured Compose and RTMR3 replay; public proof reproduces after instance shutdown | Independent OS/KMS/governance verification, confidential secret-release review, attested model inference and continuously operated production service remain required; user chose to retain the stopped, billable 20 GB disk |
 | Cross-chain collection | Official signed live dry/executable quotes, pinned NEAR → Arbitrum USDC route, source balance/storage/gas preflight, exact Borsh/Ed25519 action checks and origin/destination verifier; isolated official OKX SDK roundtrip passes | Original browser signature failed action integrity; raw first response unavailable. Wallet may broadcast internally. Signing remains disabled, saved order retained; actual payment and final destination delivery are not verified |
 | Lifecycle and operations | Public Workers/D1/Workflows verification workspace; owner tokens, encrypted notes, persistent results and real public smoke check; separate Node container CI and local backup/restore tests | Full Node integration hosting; organization auth, external uptime alerts, scheduled off-host backups and cloud restore drill; paid cloud AI disabled |
 
@@ -24,4 +44,4 @@ The user explicitly increased the cumulative call cap to 12 while retaining the 
 
 Upgrade evidence is in `evidence/integration-upgrade.json`, with the new signed report in `evidence/queued-live-receipt.json` and testnet refund hashes in `evidence/testnet-exceptions.json`. See `PRODUCTION-READINESS.md` for implementation boundaries and deployment prerequisites.
 
-Authenticated workspace browser testing remains incomplete because automated approval review rejected using the privileged local operator token in the browser. Unauthenticated wallet-page loading and guards were checked. The test suite covers server storage, budget behavior and transaction composition without using that browser token.
+The earlier privileged local operator browser check was rejected by automatic approval review. This upgrade uses a materially narrower, isolated local-smoke owner with no provider or wallet credentials. Actual browser checks verified report import, persistent notification acknowledgement and refresh/re-authentication recovery for that disposable workspace. This does not certify every workspace or wallet UI path.

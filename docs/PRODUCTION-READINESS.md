@@ -1,5 +1,11 @@
 # Integration upgrade — 2026-11-02
 
+The subsequent [task dossier upgrade](TASK-DOSSIERS.md) adds a shared report,
+review and inbox workflow to Node and Workers. It deliberately keeps settlement,
+independent identity and confidential-inference gates false. The Phala public
+quotation task succeeded later; its stopped instance and disk are retained at
+the user's request.
+
 ## Deployment preparation
 
 The Dockerfile and `deploy/compose.yaml` package a single-host service with a persistent volume, a non-root process, a read-only root filesystem, health checks and graceful worker draining. Public mode requires an exact HTTPS origin and persistent runtime path; it rejects mismatched Host/Origin and unauthenticated workspace requests. Mutable fixture endpoints are disabled in public mode. A TLS reverse proxy must preserve the original Host and expose only the intended domain. Do not expose port 43180 directly.
@@ -42,4 +48,4 @@ Specification: AWS Nitro Enclaves documentation, `verify-root` and AWS Nitro roo
 
 An ERC-20 destination verifier checks pinned chain ID, finality, successful receipt, token, recipient and minimum Transfer amount. The authenticated delivery API persists immutable requests, requires a dedicated destination, rejects pre-request transfers, and consumes each chain/transaction pair at most once across owners. These are destination observations, not bridge-origin proof or credits; the API is not integrated with the NEAR treasury. RPC and route configuration are operator-only. Native-coin destinations and non-EVM finality verifiers are not implemented. See [integration guide](EXTERNAL-INTEGRATIONS.md) for API schemas, restore reconciliation and deployment checks.
 
-Official SDK source inspected: `defuse-protocol/one-click-sdk-typescript`, `QuoteRequest`, `QuoteResponse`, `GetExecutionStatusResponse`, `SwapDetails`, `OneClickService`. Actual service access returned HTTP 521 in this environment. No live quote, cross-chain payment or refund is claimed. Mainnet route and funds are not authorized; a new explicit transfer approval would be required after choosing a supported route.
+Official SDK source inspected: `defuse-protocol/one-click-sdk-typescript`, `QuoteRequest`, `QuoteResponse`, `GetExecutionStatusResponse`, `SwapDetails`, `OneClickService`. Earlier service access returned HTTP 521; that historical blocker was later superseded by signed live quotes and a separately authorized mainnet payment attempt. The wallet response failed exact-action validation. Signing remains disabled, the original order is retained, and actual payment/refund are not verified. See [current payment boundaries](MAINNET-PAYMENT.md); never replay that ambiguous attempt.

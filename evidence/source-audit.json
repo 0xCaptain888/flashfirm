@@ -1,0 +1,53 @@
+{
+  "status": "PINNED_PUBLIC_SOURCES_RETRIEVED_AND_MATCHED",
+  "checkedAt": "2026-11-03T07:49:42.145Z",
+  "verified": true,
+  "files": [
+    {
+      "id": "source-1",
+      "url": "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/access/Ownable.sol",
+      "fullHash": "1686ef113e110c73c79d73cdaad7b8e80c5d366458bd1755fcaeaf647a1947c3",
+      "excerptHash": "1686ef113e110c73c79d73cdaad7b8e80c5d366458bd1755fcaeaf647a1947c3",
+      "bytes": 3102
+    },
+    {
+      "id": "source-2",
+      "url": "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/contracts/utils/Pausable.sol",
+      "fullHash": "de73f571d18c86c716c88f750f12e9020c7a7adea4bba3fd05ab0d02917d7ef9",
+      "excerptHash": "de73f571d18c86c716c88f750f12e9020c7a7adea4bba3fd05ab0d02917d7ef9",
+      "bytes": 2706
+    },
+    {
+      "id": "source-3",
+      "url": "https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/c64a1edb67b6e3f4a15cca8909c9482ad33a02b0/README.md",
+      "fullHash": "daf427f9a1bbcdde886e0bd44efd2bffa8ee5eee7ebf649765a686feda356398",
+      "excerptHash": "8d3eb3fa79034bc63afc3c22fa6b7da4c398db64d9d3df29a1ded44b65c168d7",
+      "bytes": 8047
+    }
+  ],
+  "sourceTaskId": "61d17cf2-9ac6-4f98-9972-9c03d24b39d0",
+  "receiptHash": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+  "scope": "Retrieved bytes match the signed pinned revision. This does not establish source authority or semantic support.",
+  "overlap": {
+    "claims": 9,
+    "exactClaims": 9,
+    "repeatedEvidence": [
+      {
+        "fingerprint": "2f60cd1d30f8820d55abf552d253c8a9acf90cfd1bb6781d4fc3ed85ac8d464f",
+        "contributors": [
+          {
+            "workerId": "continuity-live",
+            "claimIndex": 1
+          },
+          {
+            "workerId": "evidence-live",
+            "claimIndex": 1
+          }
+        ]
+      }
+    ],
+    "scope": "Repeated quotation flags only. Shared evidence can be legitimate; this is not a plagiarism finding, causal contribution score, or payout allocation."
+  },
+  "modelCalls": 0,
+  "financialTransactions": 0
+}

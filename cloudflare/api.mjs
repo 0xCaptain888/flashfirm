@@ -1,5 +1,6 @@
 import {hash} from '../src/protocol.mjs';
 import {commitPolicy,assessReview,validateAppeal,resolveAppeal} from '../src/governance.mjs';
+import {createCase,assertCaseReview,caseStatus,exportCase,caseNotifications} from '../src/task-case.mjs';
 const json=(v,status=200)=>new Response(JSON.stringify(v),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'}});
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const q=(db,sql,...args)=>db.prepare(sql).bind(...args);
@@ -19,6 +20,15 @@ async function quota(db,bucket,max){
 }
 async function key(env){if(!/^[a-f0-9]{64}$/.test(env.VAULT_KEY??''))fail('VAULT_NOT_CONFIGURED',503);return crypto.subtle.importKey('raw',Uint8Array.from(env.VAULT_KEY.match(/../g),b=>parseInt(b,16)),'AES-GCM',false,['encrypt','decrypt']);}
 async function encrypt(env,id,value){const iv=crypto.getRandomValues(new Uint8Array(12));const bytes=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:utf8.encode(id)},await key(env),utf8.encode(JSON.stringify(value)));return JSON.stringify({iv:[...iv],bytes:[...new Uint8Array(bytes)]});}
+async function decrypt(env,id,blob){const value=JSON.parse(blob);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(value.iv),additionalData:utf8.encode(id)},await key(env),new Uint8Array(value.bytes));return JSON.parse(new TextDecoder().decode(plain));}
+async function caseContext(env,firm){
+ const [row,reviewRow]=await Promise.all([q(env.DB,'SELECT blob FROM task_cases WHERE firm=?',firm.id).first(),q(env.DB,'SELECT body FROM reviews WHERE firm=?',firm.id).first()]);
+ return {record:row?await decrypt(env,`${firm.id}:case`,row.blob):null,review:reviewRow?JSON.parse(reviewRow.body):null};
+}
+async function notifications(env,firm,context){
+ const [jobs,acks]=await Promise.all([q(env.DB,'SELECT id,state,result FROM jobs WHERE firm=? ORDER BY created DESC LIMIT 100',firm.id).all(),q(env.DB,'SELECT id FROM notification_acks WHERE firm=?',firm.id).all()]);
+ return caseNotifications(firm,context.record,context.review,jobs.results.map(j=>({...j,result:j.result?JSON.parse(j.result):null})),acks.results.map(a=>a.id));
+}
 function jobResult(row){return {...row,requestKey:row.request_key,attempts:row.state==='QUEUED'?0:1,result:row.result?JSON.parse(row.result):null,input:undefined};}
 async function dispatch(env,job){
  try{await env.VERIFICATION.create({id:job.id,params:{jobId:job.id}});return true;}
@@ -44,6 +54,38 @@ export async function handle(request,env){
   const path=url.pathname.slice('/api/workspaces'.length);
   if(path==='/model-status')return json({enabled:false,reason:'CLOUD_PAID_RUNS_DISABLED_KEEP_EXISTING_LOCAL_LEDGER',budget:{calls:10,maxCalls:12,reservedFen:1591,capFen:2000},snapshotOnly:true,recordedAt:'2026-11-02'});
   if(path==='/integration-status')return json({deployment:'CLOUDFLARE_FREE',workflows:true,teeConfigured:false,settlementEnabled:false,routeIds:[],independentOperatorsVerified:false});
+  const caseMatch=path.match(/^\/([a-f0-9-]{36})\/(case|case-export|notifications)(?:\/([a-f0-9]{64}))?$/);
+  if(caseMatch){
+   const [,id,action,nid]=caseMatch,firm=await access(env.DB,owner,id);
+   const context=await caseContext(env,firm);
+   if(request.method==='GET'&&!nid){
+    if(action==='case')return json({...context,status:caseStatus(firm,context.record,context.review)});
+    if(action==='case-export')return json(exportCase(firm,context.record,context.review));
+    if(action==='notifications')return json(await notifications(env,firm,context));
+   }
+   if(request.method==='POST'){
+    await quota(env.DB,`write:${day}`,500);
+    if(action==='notifications'&&nid){
+     if(!(await notifications(env,firm,context)).items.some(n=>n.id===nid))fail('UNKNOWN_NOTIFICATION',404);
+     await q(env.DB,'INSERT OR IGNORE INTO notification_acks VALUES(?,?,?)',id,nid,Date.now()).run();
+     return json({acknowledged:true,id:nid});
+    }
+    if(action==='case'&&!nid){
+     if(firm.state!=='ACTIVE')fail('WORKSPACE_CLOSED',409);
+     const input=await body(request);
+     if(JSON.stringify(input.receipt).length>90000)fail('CASE_TOO_LARGE',413);
+     const record=createCase(input.receipt);
+     if(context.record){if(context.record.receiptHash!==record.receiptHash)fail('IMMUTABLE_CASE_CREATE_NEW_WORKSPACE',409);return json({...context,status:caseStatus(firm,context.record,context.review)});}
+     if(context.review)assertCaseReview(record,context.review.commitment,context.review.resultRoot);
+     const inserted=await q(env.DB,'INSERT INTO task_cases VALUES(?,?,?,?) ON CONFLICT(firm) DO NOTHING',id,record.taskRoot,record.receiptHash,await encrypt(env,`${id}:case`,record)).run();
+     const stored=await caseContext(env,firm);
+     if(stored.record.receiptHash!==record.receiptHash)fail('IMMUTABLE_CASE_CREATE_NEW_WORKSPACE',409);
+     if(inserted.meta.changes===1)await event(env.DB,id,'CASE_ATTACHED',{receiptHash:record.receiptHash,taskRoot:record.taskRoot}).run();
+     return json({...stored,status:caseStatus(firm,stored.record,stored.review)},201);
+    }
+   }
+   fail('NOT_FOUND',404);
+  }
   if(!path){
    if(request.method==='GET')return json((await q(env.DB,'SELECT * FROM firms WHERE owner=? ORDER BY created DESC',owner).all()).results);
    if(request.method==='POST'){await quota(env.DB,`write:${day}`,500);const input=await body(request);if(typeof input.title!=='string'||!input.title.trim()||input.title.length>160)fail('INVALID_TITLE');const id=crypto.randomUUID();await env.DB.batch([q(env.DB,'INSERT INTO firms VALUES(?,?,?,?,?)',id,owner,input.title.trim(),'ACTIVE',Date.now()),event(env.DB,id,'CREATED')]);return json(await access(env.DB,owner,id),201);}
@@ -63,6 +105,8 @@ export async function handle(request,env){
     if(item&&resume){const job=await q(env.DB,'SELECT * FROM jobs WHERE id=? AND firm=?',item,id).first();if(!job)fail('NOT_FOUND',404);if(job.state!=='QUEUED')return json(jobResult(job));return json({...jobResult(job),dispatched:await dispatch(env,job)});}
     if(item)fail('NOT_FOUND',404);
     if(input.kind!=='VERIFY_RECEIPT'||!input.receipt)fail('ONLY_FREE_RECEIPT_VERIFICATION_SUPPORTED',409);
+    const taskCase=await q(env.DB,'SELECT receipt_hash FROM task_cases WHERE firm=?',id).first();
+    if(taskCase&&hash(input.receipt)!==taskCase.receipt_hash)fail('CASE_REPORT_MISMATCH_USE_NEW_WORKSPACE',409);
     const requestKey=request.headers.get('Idempotency-Key');if(!/^[A-Za-z0-9_-]{8,100}$/.test(requestKey??''))fail('IDEMPOTENCY_KEY_REQUIRED');
     const fingerprint=hash(input);let job=await q(env.DB,'SELECT * FROM jobs WHERE firm=? AND request_key=?',id,requestKey).first();
     if(job){if(job.input_hash!==fingerprint)fail('IDEMPOTENCY_CONFLICT',409);return json({...jobResult(job),dispatched:job.state==='QUEUED'?await dispatch(env,job):true},202);}
@@ -80,8 +124,10 @@ export async function handle(request,env){
     const row=await q(env.DB,'SELECT * FROM reviews WHERE firm=?',id).first();
     if(action==='review'){
      const commitment=commitPolicy(input.policy);if(input.policy.expiresAt<=Date.now())fail('EXPIRED_POLICY');assessReview(commitment,input.resultRoot,[],Date.now());
+     const caseRow=await q(env.DB,'SELECT task_root,receipt_hash FROM task_cases WHERE firm=?',id).first();
+     if(caseRow)assertCaseReview({taskRoot:caseRow.task_root,receiptHash:caseRow.receipt_hash},commitment,input.resultRoot);
      if(row){const current=JSON.parse(row.body);if(hash(current.commitment)!==hash(commitment)||current.resultRoot!==input.resultRoot)fail('IMMUTABLE_POLICY',409);return json(assessment(current));}
-     const current={commitment,resultRoot:input.resultRoot,decisions:[],appeal:null,resolution:null};await q(env.DB,'INSERT INTO reviews(firm,body) VALUES(?,?)',id,JSON.stringify(current)).run();return json(assessment(current),201);
+     const current={commitment,resultRoot:input.resultRoot,decisions:[],appeal:null,resolution:null};await q(env.DB,'INSERT INTO reviews(firm,body) VALUES(?,?)',id,JSON.stringify(current)).run();await event(env.DB,id,'REVIEW_POLICY_PINNED',{policyHash:commitment.digest,resultRoot:input.resultRoot}).run();return json(assessment(current),201);
     }
     if(!row)fail('POLICY_REQUIRED',409);const current=JSON.parse(row.body),before=assessment(current);
     if(action==='decision'){
@@ -95,7 +141,7 @@ export async function handle(request,env){
      if(current.resolution){if(hash(current.resolution)!==hash(input))fail('IMMUTABLE_RESOLUTION',409);return json(before);}
      resolveAppeal(current.commitment,current.resultRoot,current.decisions,current.appeal,input,Date.now());current.resolution=input;
     }
-    const result=await q(env.DB,'UPDATE reviews SET body=?,revision=revision+1 WHERE firm=? AND revision=?',JSON.stringify(current),id,row.revision).run();if(result.meta.changes!==1)fail('CONCURRENT_UPDATE_RELOAD_REQUIRED',409);return json(assessment(current));
+    const result=await q(env.DB,'UPDATE reviews SET body=?,revision=revision+1 WHERE firm=? AND revision=?',JSON.stringify(current),id,row.revision).run();if(result.meta.changes!==1)fail('CONCURRENT_UPDATE_RELOAD_REQUIRED',409);await event(env.DB,id,'REVIEW_'+action.toUpperCase(),{resultRoot:current.resultRoot}).run();return json(assessment(current));
    }
   }
   if(request.method==='GET'&&action==='review'){const row=await q(env.DB,'SELECT body FROM reviews WHERE firm=?',id).first();if(!row)fail('NOT_FOUND',404);return json(assessment(JSON.parse(row.body)));}

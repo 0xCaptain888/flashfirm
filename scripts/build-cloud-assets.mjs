@@ -15,5 +15,6 @@ html=html.replace('href="/live.html"','href="https://0xcaptain888.github.io/flas
 await writeFile(new URL('index.html',out),html);
 await writeFile(new URL('workspace.html',out),html);
 await copyFile(new URL('evidence/queued-live-receipt.json',root),new URL('api/live-receipt',out));
+await copyFile(new URL('evidence/revised-live-receipt.json',root),new URL('revised-live-receipt.json',out));
 await writeFile(new URL('_headers',out),'/*\n  Cache-Control: no-store\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n  Content-Security-Policy: default-src \'self\'; script-src \'self\'; style-src \'self\'; connect-src \'self\'; img-src \'self\' data:; frame-ancestors \'none\'; base-uri \'none\'\n/api/live-receipt\n  Content-Type: application/json\n');
 console.log('Cloud assets prepared; only public evidence included.');

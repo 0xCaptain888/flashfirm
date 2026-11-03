@@ -45,6 +45,7 @@ export function validateAnalysis(analysis, sources) {
   if (!analysis || typeof analysis.summary !== 'string' || analysis.summary.length > 4000 || !Array.isArray(analysis.claims) || analysis.claims.length < 1 || analysis.claims.length > 6 || !Array.isArray(analysis.limitations)) return { valid: false, issues: ['INVALID_SCHEMA'] };
   const seen = new Set();
   for (const [index, claim] of analysis.claims.entries()) {
+    if (!claim || typeof claim !== 'object') { issues.push(`claim-${index}:INVALID_CLAIM`); continue; }
     const source = sources.find(s => s.id === claim.sourceId);
     if (typeof claim.statement !== 'string' || claim.statement.length < 10 || claim.statement.length > 1000 || !['observation','inference'].includes(claim.kind)) issues.push(`claim-${index}:INVALID_CLAIM`);
     if (!source || typeof claim.quote !== 'string' || claim.quote.length < 20 || claim.quote.length > 600 || !source.excerpt.includes(claim.quote)) issues.push(`claim-${index}:QUOTE_NOT_IN_PINNED_SOURCE`);
@@ -74,9 +75,10 @@ export function verifyLiveReceipt(receipt) {
     const p=receipt.payload;
     if(p.version!=='flashfirm-live/0.1'||p.mode!=='LIVE_MODEL_PUBLIC_SOURCES')errors.push('Unsupported live receipt');
     if(!validSeal(receipt,p.coordinatorKey))errors.push('Invalid coordinator signature');
-    if(p.project.revision!==project.revision||p.sources.length!==3)errors.push('Unexpected source scope');
+    if(p.project.revision!==project.revision||hash(p.project)!==hash(project)||p.sources.length!==3||new Set(p.sources.map(s=>s.id)).size!==3)errors.push('Unexpected source scope');
     for(const [i,s]of p.sources.entries()){
-      if(s.url!==`https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/${project.revision}/${project.files[i]}`||s.revision!==project.revision||hash(s.excerpt)!==s.excerptHash)errors.push(`Source mismatch: ${s.id}`);
+      if(s.id!==`source-${i+1}`||s.file!==project.files[i]||s.url!==`https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-contracts/${project.revision}/${project.files[i]}`||s.revision!==project.revision||hash(s.excerpt)!==s.excerptHash||
+        s.excerptStart!==0||s.excerptEnd!==s.excerpt.length||typeof s.truncated!=='boolean'||(!s.truncated&&s.fullHash!==hash(s.excerpt)))errors.push(`Source mismatch: ${s.id}`);
     }
     const expected=selectCoalition(candidates,['access','resilience','scope'],600);
     if(p.workers.length!==expected.length)errors.push('Incomplete coalition');

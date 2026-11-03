@@ -35,7 +35,7 @@ if(mainnetPreview.fundsMoved!==false||mainnetPreview.paymentVerified!==false||!v
 await copyFile(new URL('evidence/mainnet-route-preview.json',root),new URL('mainnet-route-preview.json',out));
 const currentIntegrations=(await readFile(new URL('integrations.html',out),'utf8'))
  .replace('Experimental Nitro verifier','Nitro verifier; encrypted Phala TDX quotation worker and measured-Compose/RTMR3 checks')
- .replace('Hardware verification and enclave workload','Phala rejected real deployment; no hardware proof; OS/KMS/governance verification remains required')
+ .replace('Hardware verification and enclave workload','Real Phala public-task hardware/application proof recorded; OS/KMS/governance and confidential inference remain unverified')
  .replace('Dry quote/status adapter; ERC-20 delivery checks','Signed live quote/preflight; locked wallet console; origin and final ERC-20 verification')
  .replace('Live service access, chosen route and payment proof','Browser wallet action mismatch investigation and actual finalized delivery proof')
  .replace('No mainnet funds were used.','A separate mainnet signature attempt remains unverified; wallet-side submission cannot be ruled out.');

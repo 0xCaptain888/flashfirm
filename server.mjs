@@ -13,6 +13,7 @@ import { serverPolicy } from './src/server-policy.mjs';
 import { verifyReviewerBinding } from './src/reviewer-binding.mjs';
 import { IntegrationLedger } from './src/integration-ledger.mjs';
 import { loadIntegrationConfig } from './src/integration-config.mjs';
+import { verifyReport } from './src/report-revision.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const policy = serverPolicy();
@@ -30,7 +31,7 @@ const worker=setInterval(async ()=>{
     const job=store.claim();if(!job)return;
     try {
       const receipt=job.input.receipt;
-      const result=job.input.kind==='LIVE_PUBLIC_REVIEW' ? await executeLiveJob(store,job,runtime) : receipt?.payload?.version==='flashfirm-live/0.1'?verifyLiveReceipt(receipt):verifyReceipt(receipt);
+      const result=job.input.kind==='LIVE_PUBLIC_REVIEW' ? await executeLiveJob(store,job,runtime) : ['flashfirm-live/0.1','flashfirm-revision/1'].includes(receipt?.payload?.version)?verifyReport(receipt):verifyReceipt(receipt);
       store.finish(job.id,job.lease,result);
     }catch(error){store.finish(job.id,job.lease,{error:/^[A-Z0-9_]+$/.test(error.message)?error.message:'Job failed; inspect local configuration and retained partial work'},true);}
   }catch(error){console.error('Background verifier failed:',error.code??'INTERNAL_ERROR');}
@@ -70,6 +71,16 @@ const server = http.createServer(async (req, res) => {
       else if(++window.count>120){res.setHeader('Retry-After','60');return send(res,429,{error:'Request limit reached'});}
       if(req.method==='GET'&&url.pathname==='/api/workspaces/model-status')return send(res,200,await modelAvailability(runtime));
       if(req.method==='GET'&&url.pathname==='/api/workspaces/integration-status')return send(res,200,integrations.status());
+      const casePath=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)\/(case|case-export|notifications)(?:\/([a-f0-9]{64}))?$/);
+      if(casePath){
+        const [,firm,action,id]=casePath;
+        if(req.method==='GET'&&!id&&action==='case')return send(res,200,store.case(owner,firm));
+        if(req.method==='POST'&&!id&&action==='case')return send(res,201,store.attachCase(owner,firm,(await body(req)).receipt));
+        if(req.method==='GET'&&!id&&action==='case-export')return send(res,200,store.exportCase(owner,firm));
+        if(req.method==='GET'&&!id&&action==='notifications')return send(res,200,store.notifications(owner,firm));
+        if(req.method==='POST'&&id&&action==='notifications')return send(res,200,store.acknowledge(owner,firm,id));
+        return send(res,404,{error:'Unknown task case operation'});
+      }
       const integrationPath=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)\/(deliveries|attestations)(?:\/([a-f0-9-]+))?$/);
       if(integrationPath){
         const [,firmId,kind,id]=integrationPath;
@@ -167,6 +178,7 @@ const server = http.createServer(async (req, res) => {
     staticFiles['/workspace.html']=['workspace.html','text/html'];
     staticFiles['/workspace.js']=['workspace.js','text/javascript'];
     staticFiles['/operations.css']=['operations.css','text/css'];
+    staticFiles['/revised-live-receipt.json']=['../evidence/revised-live-receipt.json','application/json'];
     staticFiles['/treasury.html']=['treasury.html','text/html'];
     staticFiles['/treasury.bundle.js']=['treasury.bundle.js','text/javascript'];
     staticFiles['/treasury.bundle.js.LEGAL.txt']=['treasury.bundle.js.LEGAL.txt','text/plain'];

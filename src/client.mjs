@@ -18,6 +18,11 @@ export class FlashFirmClient {
   job(firmId,jobId){return this.request(`/${encodeURIComponent(firmId)}/jobs/${encodeURIComponent(jobId)}`);}
   jobs(firmId){return this.request(`/${encodeURIComponent(firmId)}/jobs`);}
   modelStatus(){return this.request('/model-status');}
+  attachCase(firmId,receipt){return this.request(`/${encodeURIComponent(firmId)}/case`,'POST',{receipt});}
+  taskCase(firmId){return this.request(`/${encodeURIComponent(firmId)}/case`);}
+  exportCase(firmId){return this.request(`/${encodeURIComponent(firmId)}/case-export`);}
+  notifications(firmId){return this.request(`/${encodeURIComponent(firmId)}/notifications`);}
+  acknowledge(firmId,id){return this.request(`/${encodeURIComponent(firmId)}/notifications/${encodeURIComponent(id)}`,'POST',{});}
   integrationStatus(){return this.request('/integration-status');}
   createDelivery(firmId,routeId){return this.request(`/${encodeURIComponent(firmId)}/deliveries`,'POST',{routeId});}
   deliveries(firmId){return this.request(`/${encodeURIComponent(firmId)}/deliveries`);}

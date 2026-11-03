@@ -3,6 +3,8 @@ import { createHash, randomBytes, randomUUID, createCipheriv, createDecipheriv }
 import { chmodSync } from 'node:fs';
 import { commitPolicy, assessReview, validateAppeal, resolveAppeal } from './governance.mjs';
 import { verifyReviewerBinding, verifyReviewerAccount } from './reviewer-binding.mjs';
+import {hash} from './protocol.mjs';
+import { createCase, assertCaseReview, caseStatus, exportCase, caseNotifications } from './task-case.mjs';
 
 const digest = s => createHash('sha256').update(s).digest('hex');
 const encode = v => JSON.stringify(v);
@@ -30,6 +32,8 @@ export class WorkspaceStore {
       CREATE TABLE IF NOT EXISTS binding_challenges (nonce TEXT PRIMARY KEY, owner TEXT NOT NULL, expected TEXT NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL, used INTEGER NOT NULL DEFAULT 0);
       CREATE TABLE IF NOT EXISTS reviewer_bindings (owner TEXT NOT NULL, account TEXT NOT NULL, policy TEXT NOT NULL, evidence TEXT NOT NULL, PRIMARY KEY(owner,account,policy));
       CREATE TABLE IF NOT EXISTS reviewer_revocations (owner TEXT NOT NULL, account TEXT NOT NULL, policy TEXT NOT NULL, reason TEXT NOT NULL, revoked INTEGER NOT NULL, PRIMARY KEY(owner,account,policy));
+      CREATE TABLE IF NOT EXISTS task_cases (firm TEXT PRIMARY KEY REFERENCES firms(id), task_root TEXT NOT NULL, receipt_hash TEXT NOT NULL, blob TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS notification_acks (firm TEXT NOT NULL REFERENCES firms(id), id TEXT NOT NULL, created INTEGER NOT NULL, PRIMARY KEY(firm,id));
       PRAGMA user_version=1;`);
     if (!this.db.prepare('PRAGMA table_info(jobs)').all().some(c => c.name === 'paid_started')) {
       this.db.exec('ALTER TABLE jobs ADD COLUMN paid_started INTEGER NOT NULL DEFAULT 0');
@@ -111,10 +115,51 @@ export class WorkspaceStore {
   }
   list(owner) { return this.db.prepare('SELECT * FROM firms WHERE owner=? ORDER BY created DESC').all(owner); }
   events(owner,id) { this.access(owner,id); return this.db.prepare('SELECT * FROM events WHERE firm=? ORDER BY seq').all(id).map(e=>({...e,data:decode(e.data)})); }
+  caseRecord(owner,firm) {
+    this.access(owner,firm);
+    const row=this.db.prepare('SELECT blob FROM task_cases WHERE firm=?').get(firm);
+    return row ? this.decrypt(firm,'case',row.blob) : null;
+  }
+  caseReview(owner,firm) {
+    this.access(owner,firm);
+    return this.db.prepare('SELECT 1 FROM review_policies WHERE firm=?').get(firm) ? this.review(owner,firm) : null;
+  }
+  attachCase(owner,firm,receipt) {
+    if(Buffer.byteLength(encode(receipt))>90000)throw Error('Case report too large');
+    const record=createCase(receipt);
+    return this.transaction(()=>{
+      this.access(owner,firm,true);
+      const old=this.caseRecord(owner,firm);
+      if(old){if(old.receiptHash!==record.receiptHash)throw Error('Case report is immutable; use a new workspace for a revision');return this.case(owner,firm);}
+      const review=this.caseReview(owner,firm);
+      if(review)assertCaseReview(record,review.commitment,review.resultRoot);
+      this.db.prepare('INSERT INTO task_cases VALUES(?,?,?,?)').run(firm,record.taskRoot,record.receiptHash,this.encrypt(firm,'case',record));
+      this.event(firm,'CASE_ATTACHED',{receiptHash:record.receiptHash,taskRoot:record.taskRoot});
+      return this.case(owner,firm);
+    });
+  }
+  case(owner,firm) {
+    const f=this.access(owner,firm),record=this.caseRecord(owner,firm),review=this.caseReview(owner,firm);
+    return {status:caseStatus(f,record,review,this.now()),record,review};
+  }
+  exportCase(owner,firm) {
+    return exportCase(this.access(owner,firm),this.caseRecord(owner,firm),this.caseReview(owner,firm),this.now());
+  }
+  notifications(owner,firm) {
+    const jobs=this.db.prepare('SELECT id,state,result FROM jobs WHERE firm=? ORDER BY created DESC LIMIT 100').all(firm).map(j=>({...j,result:decode(j.result)}));
+    return caseNotifications(this.access(owner,firm),this.caseRecord(owner,firm),this.caseReview(owner,firm),jobs,
+      this.db.prepare('SELECT id FROM notification_acks WHERE firm=?').all(firm).map(n=>n.id),this.now());
+  }
+  acknowledge(owner,firm,id) {
+    if(!this.notifications(owner,firm).items.some(n=>n.id===id))throw Error('Unknown notification');
+    this.db.prepare('INSERT OR IGNORE INTO notification_acks VALUES(?,?,?)').run(firm,id,this.now());
+    return {acknowledged:true,id};
+  }
   pinReview(owner,firm,policy,resultRoot) {
     return this.transaction(()=>{
       this.access(owner,firm,true);
       const commitment=commitPolicy(policy);
+      assertCaseReview(this.caseRecord(owner,firm),commitment,resultRoot);
       if(policy.expiresAt<=this.now())throw Error('Review policy already expired');
       assessReview(commitment,resultRoot,[],this.now());
       const old=this.db.prepare('SELECT * FROM review_policies WHERE firm=?').get(firm);
@@ -169,6 +214,11 @@ export class WorkspaceStore {
     const ciphertext=Buffer.concat([cipher.update(encode(value),'utf8'),cipher.final()]);
     return encode({iv:iv.toString('base64'),tag:cipher.getAuthTag().toString('base64'),ciphertext:ciphertext.toString('base64')});
   }
+  decrypt(firm,id,blob) {
+    const b=decode(blob), decipher=createDecipheriv('aes-256-gcm',this.key,Buffer.from(b.iv,'base64'));
+    decipher.setAAD(Buffer.from(`${firm}:${id}`));decipher.setAuthTag(Buffer.from(b.tag,'base64'));
+    return JSON.parse(Buffer.concat([decipher.update(Buffer.from(b.ciphertext,'base64')),decipher.final()]).toString('utf8'));
+  }
   put(owner,firm,value) {
     if(Buffer.byteLength(encode(value))>200000)throw Error('Document too large');
     return this.transaction(()=>{
@@ -193,6 +243,8 @@ export class WorkspaceStore {
     if ((!verification && !live) || Buffer.byteLength(encode(input))>400000) throw Error('Unsupported job or invalid public-review authorization');
     return this.transaction(()=>{
       this.access(owner,firm,true); const inputHash=digest(encode(input));
+      const taskCase=this.caseRecord(owner,firm);
+      if(taskCase && (!verification || hash(input.receipt)!==taskCase.receiptHash))throw Error('CASE_REPORT_MISMATCH_USE_NEW_WORKSPACE');
       const old=this.db.prepare('SELECT * FROM jobs WHERE firm=? AND request_key=?').get(firm,key);
       if(old){if(old.input_hash!==inputHash)throw Error('Idempotency key conflict');return this.publicJob(old);}
       if(this.db.prepare('SELECT count(*) AS n FROM jobs WHERE firm=?').get(firm).n>=100)throw Error('Job limit reached');

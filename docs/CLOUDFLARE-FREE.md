@@ -30,6 +30,18 @@ The operator handles database creation, migrations, encryption secret provisioni
 
 Paid model execution is deliberately unavailable. The UI displays an explicitly recorded snapshot of the existing local ledger (10/12 calls, CNY 15.91/20 reserved), never a new spend allowance. No provider secret or wallet key is uploaded. To enable cloud model work later, first design an authoritative shared budget and reconcile all existing reservations; do not independently enable two ledgers.
 
+The subsequent [task dossier upgrade](TASK-DOSSIERS.md) adds immutable encrypted
+report attachment, exact source locations, bound signed review rounds, portable
+exports and persistent in-app acknowledgements. It also verifies signed editorial
+revisions as free background jobs without treating them as newly approved model
+outputs. Apply additive migration `0002_task_cases.sql` before deploying this
+version. No existing workspace, note or token is deleted by that migration.
+The deployed upgrade passed real remote verification with a disposable test
+owner; evidence is in `evidence/cloudflare-case-upgrade.json`. The public script
+never uses the captain token, invokes a model or transfers funds. The D1 export
+endpoint returned an authentication error under the current narrow OAuth scope;
+do not present this deployment as having a validated cloud backup/restore drill.
+
 Not ported: reviewer account-binding registry, TEE/OpenSSL verification, destination-chain receipt registry, full local database/history, organization login and a production backup/restore process. Their existing local implementations are preserved. D1 persistence is not proof of an offsite recovery drill.
 
 ## Reproduce the local check
