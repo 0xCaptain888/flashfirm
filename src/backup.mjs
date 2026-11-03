@@ -47,6 +47,10 @@ export async function restoreBackup(backupFile, freshDirectory, key) {
       if(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(table))db.exec(`UPDATE ${table} SET used=1`);
     }
     if(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='delivery_requests'").get())db.exec("UPDATE delivery_requests SET state='RECONCILIATION_REQUIRED' WHERE state='PENDING'");
+    if(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='task_flows'").get()){
+      db.exec("CREATE TABLE IF NOT EXISTS recovery_holds(firm TEXT PRIMARY KEY)");
+      db.exec("INSERT OR IGNORE INTO recovery_holds SELECT firm FROM task_flows");
+    }
   } finally { db.close(); }
   return { status: 'RESTORE_VERIFIED', sessionsRevoked: true, queuedWorkDisabled: true, paidCallsEnabled: false, note: 'Provider policy and current spending ledger must be reconciled separately before enabling paid work' };
 }

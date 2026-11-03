@@ -1,5 +1,14 @@
 # Integration upgrade — 2026-11-02
 
+**2026-11-03 follow-up:** [Task settlement](TASK-SETTLEMENT.md) and
+[operations/recovery](OPERATIONS-UPGRADE.md) supersede the earlier implementation
+status below. A verified-identity organization adapter, opt-in encrypted email
+outbox, scheduled external health checks, encrypted offsite backups and an actual
+isolated D1 restore have been added. Access/email providers still need setup;
+background push and trusted model inference remain unimplemented. The private
+quotation client now verifies hardware/platform/release approval before
+encryption, but no real private-material trial has been completed.
+
 The subsequent [task dossier upgrade](TASK-DOSSIERS.md) adds a shared report,
 review and inbox workflow to Node and Workers. It deliberately keeps settlement,
 independent identity and confidential-inference gates false. The Phala public

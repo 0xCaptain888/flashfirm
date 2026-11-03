@@ -1,0 +1,43 @@
+name: Public service monitor and encrypted offsite backup
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: flashfirm-operations
+  cancel-in-progress: false
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check public D1 service
+        run: |
+          curl --fail --silent --show-error --max-time 30 --retry 2 \
+            https://flashfirm-api.fluoridated-rhinoceros.workers.dev/healthz \
+            | jq -e '.status == "READY" and .storage == "D1"'
+      - name: Check deployed public evidence
+        run: |
+          curl --fail --silent --show-error --max-time 30 --retry 2 \
+            https://0xcaptain888.github.io/flashfirm/mainnet-native-payment.json \
+            | jq -e '.version == "flashfirm-mainnet-native/1"'
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download encrypted snapshot
+        env:
+          FLASHFIRM_BACKUP_TOKEN: ${{ secrets.FLASHFIRM_BACKUP_TOKEN }}
+        run: |
+          test -n "$FLASHFIRM_BACKUP_TOKEN"
+          curl --fail --silent --show-error --max-time 60 \
+            -H "Authorization: Bearer $FLASHFIRM_BACKUP_TOKEN" \
+            https://flashfirm-api.fluoridated-rhinoceros.workers.dev/api/operations/backup \
+            -o flashfirm-encrypted-backup.json
+          jq -e '.version == "flashfirm-cloud-backup/1" and .walletKeysIncluded == false' flashfirm-encrypted-backup.json > /dev/null
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flashfirm-encrypted-backup-${{ github.run_id }}
+          path: flashfirm-encrypted-backup.json
+          retention-days: 30
+          if-no-files-found: error

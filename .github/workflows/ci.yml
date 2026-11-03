@@ -9,6 +9,7 @@ jobs:
         with:
           node-version: '24'
       - run: npm ci --prefix cloudflare
+      - run: npm ci
       - run: node scripts/build-cloud-assets.mjs
       - run: npm --prefix cloudflare run check
       - run: node cloudflare/node_modules/wrangler/bin/wrangler.js d1 migrations apply flashfirm-free --local --config cloudflare/wrangler.jsonc

@@ -8,7 +8,7 @@ export class FlashFirmClient {
     this.base=baseUrl.replace(/\/$/,'');this.token=token;this.fetch=fetchImpl;
   }
   async request(path,method='GET',input,key) {
-    const response=await this.fetch(this.base+'/api/workspaces'+path,{method,redirect:'error',signal:AbortSignal.timeout(15000),headers:{Authorization:`Bearer ${this.token}`,'Content-Type':'application/json',...(key?{'Idempotency-Key':key}:{})},...(input===undefined?{}:{body:JSON.stringify(input)})});
+    const response=await this.fetch(this.base+'/api/workspaces'+path,{method,redirect:'error',signal:AbortSignal.timeout(/\/flow\/(?:privacy|verify|refund)$/.test(path)?90000:15000),headers:{Authorization:`Bearer ${this.token}`,'Content-Type':'application/json',...(key?{'Idempotency-Key':key}:{})},...(input===undefined?{}:{body:JSON.stringify(input)})});
     const body=await response.json();if(!response.ok){const error=new Error(body.error??'Request failed');error.status=response.status;throw error;}return body;
   }
   list(){return this.request('');}
@@ -20,6 +20,11 @@ export class FlashFirmClient {
   modelStatus(){return this.request('/model-status');}
   attachCase(firmId,receipt){return this.request(`/${encodeURIComponent(firmId)}/case`,'POST',{receipt});}
   taskCase(firmId){return this.request(`/${encodeURIComponent(firmId)}/case`);}
+  taskFlow(firmId){return this.request(`/${encodeURIComponent(firmId)}/flow`);}
+  advanceTask(firmId,operation,envelope){
+    if(!['plan','quality','privacy','manifest','invoice','quote','verify','refund'].includes(operation))throw Error('Unknown task-flow action');
+    return this.request(`/${encodeURIComponent(firmId)}/flow/${operation}`,'POST',envelope);
+  }
   exportCase(firmId){return this.request(`/${encodeURIComponent(firmId)}/case-export`);}
   notifications(firmId){return this.request(`/${encodeURIComponent(firmId)}/notifications`);}
   acknowledge(firmId,id){return this.request(`/${encodeURIComponent(firmId)}/notifications/${encodeURIComponent(id)}`,'POST',{});}

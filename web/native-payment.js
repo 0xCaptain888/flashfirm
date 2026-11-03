@@ -7,6 +7,7 @@ function render(){
   $('account').textContent=submitted?'Saved payment · read only':account||'Disconnected';
   $('connect').hidden=submitted;
   $('funding-controls').hidden=submitted;
+  if(state.manualPreview){$('manual-preview').hidden=false;$('manual-details').textContent=JSON.stringify(state.manualPreview,null,2);}
   const q=state.journal?.quote??state.preview?.response;
   $('quote').textContent=q?`Signed quote: 0.5 NEAR → ${q.quote.amountOutFormatted} USDC; minimum ${(BigInt(q.quote.minAmountOut)/1000000n).toString()}.${(BigInt(q.quote.minAmountOut)%1000000n).toString().padStart(6,'0')} USDC. Input valuation $${q.quote.amountInUsd}.`:'No quote yet.';
   $('state').textContent=state.journal?.state??'No native transfer initiated';
@@ -47,11 +48,13 @@ $('accept').onclick=()=>action(async()=>{state=await request('accept-quote',{app
 $('prepare').onclick=()=>action(async()=>{state=await request('prepare');$('message').textContent='Finalized source balance and fresh budget checked. Review the native transfer in OKX within 90 seconds.';});
 $('sign').onclick=()=>action(async()=>{
   if(wallet()?.getAccountId()!==state.policy.signer)throw Error('Approved source account required.');
-  const {transaction}=await request('begin',{account,approval});
-  $('message').textContent='Waiting for your confirmation in OKX. Do not initiate a second payment.';
-  const result=await wallet().sendMoney(transaction);
-  if(result?.code!==0||!result.txHash)throw Error('Wallet handoff interrupted. Inspect history before any further payment.');
-  state=await request('record',{hash:result.txHash});
+  const {preview}=await request('manual-start',{account,approval});
+  $('manual-preview').hidden=false;$('manual-details').textContent=JSON.stringify(preview,null,2);
+  $('message').textContent='No wallet request sent. Compare these instructions in the wallet native Send screen, then paste the resulting hash once.';
+});
+$('record-manual').onclick=()=>action(async()=>{
+  state=await request('record',{hash:$('manual-hash').value.trim()});
+  $('manual-hash').value='';$('manual-preview').hidden=true;
   $('message').textContent='Source transaction recorded. Check both chains; this alone does not prove delivery.';
 });
 $('check').onclick=()=>action(async()=>{

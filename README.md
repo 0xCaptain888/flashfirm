@@ -1,5 +1,9 @@
 # FlashFirm
 
+**2026-11-03 upgrade — task-bound verification and cloud recovery:** the local service, public Workers/D1 backend and SDK now share a signed report → semantic/removal evaluation → externally certified roster → reviewed allocation → worker invoice → both-chain receipt pipeline. The public acceptance used explicitly synthetic reviewer judgments and did not move funds. A real encrypted D1 snapshot was restored into an isolated cloud database and all 19 business tables matched; old sessions were revoked and restored payments held. [Task flow and signing](docs/TASK-SETTLEMENT.md) · [Organizations, notifications and recovery](docs/OPERATIONS-UPGRADE.md) · [Public acceptance](evidence/task-flow-public-upgrade.json) · [Actual cloud recovery](evidence/cloud-restore-upgrade.json) · [Upgrade demo](https://0xcaptain888.github.io/flashfirm/upgrade.html).
+
+The confidential quotation client verifies fresh hardware, exact application/platform measurements and external release approval before encrypting material. No private live trial or trusted model inference is claimed; the Phala instance remains off. Organization login and email delivery require identity/sender configuration. Foreground browser notifications work; background push is not implemented. The new native payment preview uses the wallet's own Send screen and preserves the original FunctionCall lock. A real task-bound mainnet payment and independently captured cross-chain refund remain pending.
+
 **Real NEAR → Arbitrum payment verified:** the approved **0.5 NEAR** mainnet demonstration delivered **1.861840 native USDC** to the user's Arbitrum One wallet. Exact final NEAR execution, the official signed 1Click quote/order mapping and the finalized Arbitrum ERC-20 receipt are recorded. Source gas: **0.0071149895375 NEAR**. [Both-chain evidence](evidence/mainnet-native-payment.json) · [Verification and scope](docs/NATIVE-NEAR-PAYMENT.md). Run `npm run mainnet:verify` offline or add `-- --online` to query both chains again. This demonstration is separate from the AI task and testnet treasury.
 
 **Task dossier upgrade:** one signed report, exact source locations, bound review rounds, persistent in-app reminders and portable exports now work through the local and free cloud code paths. A separately signed operator revision fixes the rejected quotation while preserving the original model output. All nine revised quotations pass exact checks; the revision still awaits a new review. Three pinned source files were actually retrieved again and matched against their complete recorded hashes. Zero extra model calls or financial transactions. [Task workflow and SDK](docs/TASK-DOSSIERS.md) · [Signed revision](evidence/revised-live-receipt.json) · [Source audit](evidence/source-audit.json).
@@ -90,10 +94,11 @@ The sample console's last state is `PLANNED`. Private workspace closure is local
 ## Next integration milestones
 
 1. Recruit independent evaluator operators and cover remaining arbitration outcomes on testnet. Payout, dispute/expiry refunds and failed-transfer recovery already have real evidence. Existing treasuries are Closed; do not fund or replay them.
-2. Exercise the bounded persistent model runner with an explicitly renewed call allowance; then generalize beyond the approved public-source preset and pin task rubric before funding.
-3. Onboard independent evaluators and bind durable review/appeal commitments to settlement.
-4. Confidential execution with independently checked attestation; keep synthetic inputs until then.
-5. Bind a newly approved real task to its own verified mainnet settlement. The separate native-NEAR Intents delivery now has evidence; automatic task linkage, refund verification and the original locked FunctionCall path remain unfinished.
+2. Exercise the model-based semantic/removal evaluator with an explicitly renewed call allowance. The current remaining two calls cannot cover its required four; the cumulative ¥20 cap is unchanged.
+3. Enroll an independent identity authority and real evaluator operators, then exercise the implemented report/review/allocation/invoice pipeline with their signatures. Current plan commitments occur after delivery and before evaluation.
+4. Exercise the confidential quotation client on real private material only under an approved release policy. Actual measured model inference remains unimplemented.
+5. Perform a newly approved task's own mainnet worker payouts and capture a real cross-chain refund. Both-chain verification and exact native-refund verification are implemented; protocol-fee/refund allocations are not automatic transfers.
+6. Configure Cloudflare Access and an authenticated email sender; implement background Web Push. Scheduled offsite backups and isolated cloud recovery now have their own operational path. Preserve the private offline recovery key described in the operations guide.
 
 ## GitHub Pages deployment
 

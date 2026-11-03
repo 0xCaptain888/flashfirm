@@ -9,7 +9,7 @@ import {hash,identity} from '../src/protocol.mjs';
 const revised=JSON.parse(readFileSync(new URL('../evidence/revised-live-receipt.json',import.meta.url),'utf8'));
 const original=JSON.parse(readFileSync(new URL('../evidence/queued-live-receipt.json',import.meta.url),'utf8'));
 class D1 {
- constructor(){this.db=new DatabaseSync(':memory:');this.db.exec('PRAGMA foreign_keys=ON');for(const file of ['0001_workspace.sql','0002_task_cases.sql'])this.db.exec(readFileSync(new URL('../cloudflare/migrations/'+file,import.meta.url),'utf8'));}
+ constructor(){this.db=new DatabaseSync(':memory:');this.db.exec('PRAGMA foreign_keys=ON');for(const file of ['0001_workspace.sql','0002_task_cases.sql','0003_task_flow.sql','0004_organizations.sql','0005_operations.sql'])this.db.exec(readFileSync(new URL('../cloudflare/migrations/'+file,import.meta.url),'utf8'));}
  prepare(sql){const db=this.db;let args=[];return {bind(...values){args=values;return this;},async first(){return db.prepare(sql).get(...args)??null;},async all(){return {results:db.prepare(sql).all(...args)};},async run(){const result=db.prepare(sql).run(...args);return {meta:{changes:result.changes}};}};}
  async batch(statements){this.db.exec('BEGIN');try{const result=[];for(const s of statements)result.push(await s.run());this.db.exec('COMMIT');return result;}catch(e){this.db.exec('ROLLBACK');throw e;}}
 }

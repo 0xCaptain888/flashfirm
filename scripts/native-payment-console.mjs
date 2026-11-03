@@ -5,6 +5,7 @@ import {readBounded} from '../src/live.mjs';
 import {canonical} from '../src/protocol.mjs';
 import {paymentPolicy,quoteRequest,validateQuote,verifySavedQuoteStatus,verifyCrossChain} from '../src/mainnet-payment.mjs';
 import {nativePreflight,validateNativeOutcome,assertUnfundedOriginal} from '../src/native-payment.mjs';
+import {nativePaymentPreview} from '../src/payment-preview.mjs';
 
 if(process.env.FLASHFIRM_USE_SYSTEM_PROXY==='1'){
   const {ProxyAgent,setGlobalDispatcher}=await import('../cloudflare/node_modules/undici/index.js');
@@ -48,7 +49,11 @@ async function checkOriginal(){
     scope:'Original signed-order relay check; independent account history was separately inspected by the operator'};
 }
 const port=43187,origin=`http://127.0.0.1:${port}`,csrf=randomBytes(32).toString('hex');
-const state=()=>({policy:paymentPolicy,journal,preview,taskTreasuryLinked:false,serverCanBroadcast:false});
+const state=()=>({policy:paymentPolicy,journal,preview,taskTreasuryLinked:false,serverCanBroadcast:false,
+ manualPreview:journal?.state==='WALLET_HANDOFF'&&journal.prepared?nativePaymentPreview({
+  source:journal.prepared.source,receiver:journal.prepared.receiverId,amountYocto:journal.prepared.amount,
+  maximumFeeYocto:journal.prepared.maximumExtraNear,minimumUsdcUnits:journal.quote.quote.minAmountOut,
+  recipient:paymentPolicy.recipient,deadline:journal.quote.quote.deadline}):null});
 const send=(res,status,body)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(body));};
 let queue=Promise.resolve();
 const server=http.createServer(async(req,res)=>{
@@ -111,6 +116,9 @@ const server=http.createServer(async(req,res)=>{
         journal.state='QUOTED';await save();return state();
       }
       if(path==='/api/begin'){
+        throw Error('UNPARSED_WALLET_PREVIEW_BLOCKED_USE_NATIVE_SEND_SCREEN');
+      }
+      if(path==='/api/manual-start'){
         if(journal?.state!=='PREPARED'||journal.handoffAt||input.account!==paymentPolicy.signer||
           input.approval!=='NATIVE_NEAR_TO_ARBITRUM_USDC_MAX_5_USD')throw Error('APPROVED_NATIVE_PAYMENT_REQUIRED');
         if(Date.now()-journal.prepared.checkedAt>90000)throw Error('PREPARATION_EXPIRED');
@@ -119,7 +127,9 @@ const server=http.createServer(async(req,res)=>{
         validateQuote(await remote('https://1click.chaindefuser.com/v0/quote',request),request);
         const prepared=await nativePreflight(journal,near);
         journal.handoffAt=Date.now();journal.state='WALLET_HANDOFF';await save();
-        return {transaction:{receiverId:prepared.receiverId,amount:prepared.amount}};
+        return {preview:nativePaymentPreview({source:prepared.source,receiver:prepared.receiverId,amountYocto:prepared.amount,
+          maximumFeeYocto:prepared.maximumExtraNear,minimumUsdcUnits:journal.quote.quote.minAmountOut,
+          recipient:paymentPolicy.recipient,deadline:journal.quote.quote.deadline})};
       }
       if(path==='/api/record'){
         if(journal?.state!=='WALLET_HANDOFF'||journal.sourceHash||

@@ -1,6 +1,10 @@
 import {hash} from '../src/protocol.mjs';
 import {commitPolicy,assessReview,validateAppeal,resolveAppeal} from '../src/governance.mjs';
 import {createCase,assertCaseReview,caseStatus,exportCase,caseNotifications} from '../src/task-case.mjs';
+import {taskFlowOperation} from '../src/task-flow-store.mjs';
+import {pinnedTaskVerifiers} from '../src/read-only-rpc.mjs';
+import {organizationSession,cloudPrincipal,organizationOperation} from './organizations.mjs';
+import {backupResponse,mailSubscription,enqueueMail} from './operations.mjs';
 const json=(v,status=200)=>new Response(JSON.stringify(v),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'}});
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 const q=(db,sql,...args)=>db.prepare(sql).bind(...args);
@@ -19,8 +23,8 @@ async function quota(db,bucket,max){
  if(!row)fail('FREE_TIER_APPLICATION_LIMIT',429);
 }
 async function key(env){if(!/^[a-f0-9]{64}$/.test(env.VAULT_KEY??''))fail('VAULT_NOT_CONFIGURED',503);return crypto.subtle.importKey('raw',Uint8Array.from(env.VAULT_KEY.match(/../g),b=>parseInt(b,16)),'AES-GCM',false,['encrypt','decrypt']);}
-async function encrypt(env,id,value){const iv=crypto.getRandomValues(new Uint8Array(12));const bytes=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:utf8.encode(id)},await key(env),utf8.encode(JSON.stringify(value)));return JSON.stringify({iv:[...iv],bytes:[...new Uint8Array(bytes)]});}
-async function decrypt(env,id,blob){const value=JSON.parse(blob);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(value.iv),additionalData:utf8.encode(id)},await key(env),new Uint8Array(value.bytes));return JSON.parse(new TextDecoder().decode(plain));}
+export async function encrypt(env,id,value){const iv=crypto.getRandomValues(new Uint8Array(12));const bytes=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:utf8.encode(id)},await key(env),utf8.encode(JSON.stringify(value)));return JSON.stringify({iv:[...iv],bytes:[...new Uint8Array(bytes)]});}
+export async function decrypt(env,id,blob){const value=JSON.parse(blob);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(value.iv),additionalData:utf8.encode(id)},await key(env),new Uint8Array(value.bytes));return JSON.parse(new TextDecoder().decode(plain));}
 async function caseContext(env,firm){
  const [row,reviewRow]=await Promise.all([q(env.DB,'SELECT blob FROM task_cases WHERE firm=?',firm.id).first(),q(env.DB,'SELECT body FROM reviews WHERE firm=?',firm.id).first()]);
  return {record:row?await decrypt(env,`${firm.id}:case`,row.blob):null,review:reviewRow?JSON.parse(reviewRow.body):null};
@@ -40,6 +44,12 @@ export async function handle(request,env){
   const url=new URL(request.url),origin=request.headers.get('Origin');
   if(origin&&origin!==url.origin)fail('ORIGIN_DENIED',403);
   if(request.method==='GET'&&url.pathname==='/healthz'){await env.DB.prepare('SELECT 1').first();return json({status:'READY',storage:'D1',paidCallsEnabled:false,teeEnabled:false});}
+  if(request.method==='GET'&&url.pathname==='/api/operations/backup')return backupResponse(request,env);
+  if(url.pathname==='/api/auth/config'&&request.method==='GET')return json({provider:'CLOUDFLARE_ACCESS',configured:!!env.ACCESS_ISSUER&&!!env.ACCESS_AUDIENCE,selfService:'VERIFIED_IDENTITY_REQUIRED'});
+  if(url.pathname==='/api/auth/session'&&request.method==='POST'){
+   await quota(env.DB,`login:${Math.floor(Date.now()/60000)}:${await sha(request.headers.get('CF-Connecting-IP')??'anonymous')}`,10);
+   return json(await organizationSession(env,request.headers.get('Cf-Access-Jwt-Assertion'),await body(request)));
+  }
   if(url.pathname.startsWith('/api/tasks'))fail('FIXTURE_API_DISABLED',403);
   if(!url.pathname.startsWith('/api/workspaces')){
    if(!['GET','HEAD'].includes(request.method))fail('METHOD_DENIED',405);
@@ -47,11 +57,45 @@ export async function handle(request,env){
   }
   const token=request.headers.get('Authorization')?.match(/^Bearer ([A-Za-z0-9_-]{32,200})$/)?.[1];
   if(!token)fail('AUTH_REQUIRED',401);
-  const identity=await q(env.DB,'SELECT owner FROM tokens WHERE hash=? AND revoked=0 AND expires>?',await sha(token),Date.now()).first();
+  const identity=await cloudPrincipal(env.DB,await sha(token));
   if(!identity)fail('AUTH_REQUIRED',401);const owner=identity.owner;
+  if(identity.role==='VIEWER'&&!['GET','HEAD'].includes(request.method)&&
+   !['/api/workspaces/logout','/api/workspaces/email-subscription'].includes(url.pathname))fail('READ_ONLY_MEMBER',403);
   const day=new Date().toISOString().slice(0,10),minute=Math.floor(Date.now()/60000);
   await quota(env.DB,`minute:${owner}:${minute}`,60);
   const path=url.pathname.slice('/api/workspaces'.length);
+  const notifyMatch=path.match(/^\/([a-f0-9-]{36})\/email-notification$/);
+  if(notifyMatch&&request.method==='POST'){
+   const firm=await access(env.DB,owner,notifyMatch[1]),input=await body(request);
+   const item=(await notifications(env,firm,await caseContext(env,firm))).items.find(n=>n.id===input.notificationId);
+   if(!item)fail('UNKNOWN_NOTIFICATION',404);
+   return json(await enqueueMail(env,identity,item,(id,v)=>encrypt(env,id,v)));
+  }
+  if(path==='/email-subscription'&&request.method==='POST')return json(await mailSubscription(env,identity,await body(request)));
+  if(path==='/operations'&&request.method==='GET')return json({identityProviderConfigured:!!env.ACCESS_ISSUER&&!!env.ACCESS_AUDIENCE,
+    offsiteExportConfigured:!!env.BACKUP_PUBLIC_KEY&&!!env.BACKUP_AUTH_HASH,
+    emailConfigured:env.MAIL_SEND_ENABLED==='yes'&&!!env.RESEND_API_KEY,
+    cloudPushConfigured:false,teeInstanceEnabled:false,mainnetAutomaticSigning:false,
+    health:(await q(env.DB,'SELECT * FROM operations_health').all()).results});
+  if(path==='/logout'&&request.method==='POST'){
+   await q(env.DB,'UPDATE tokens SET revoked=1 WHERE hash=?',await sha(token)).run();return json({revoked:true});
+  }
+  const orgMatch=path.match(/^\/organization\/(members|invite|revoke)$/);
+  if(orgMatch){
+   if((orgMatch[1]==='members'&&request.method!=='GET')||(orgMatch[1]!=='members'&&request.method!=='POST'))fail('METHOD_DENIED',405);
+   return json(await organizationOperation(env,identity,orgMatch[1],request.method==='POST'?await body(request):{}));
+  }
+  const flowMatch=path.match(/^\/([a-f0-9-]{36})\/flow(?:\/(plan|quality|privacy|manifest|invoice|quote|verify|refund))?$/);
+  if(flowMatch){
+   const [,id,op]=flowMatch;
+   if((op&&request.method!=='POST')||(!op&&request.method!=='GET'))fail('METHOD_DENIED',405);
+   if(op)await quota(env.DB,`write:${day}`,500);
+   const adapter={db:env.DB,access:(o,f,a)=>access(env.DB,o,f,a),context:f=>caseContext(env,f),
+    encrypt:(f,v)=>encrypt(env,`${f}:flow`,v),decrypt:(f,b)=>decrypt(env,`${f}:flow`,b),
+    security:{authority:env.IDENTITY_AUTHORITY_KEY,releaseAuthority:env.SECRET_RELEASE_AUTHORITY_KEY,revokedSubjects:JSON.parse(env.REVOKED_IDENTITY_SUBJECTS??'[]')},
+    verifiers:pinnedTaskVerifiers()};
+   return json(await taskFlowOperation(adapter,owner,id,op??'status',op?await body(request):{}));
+  }
   if(path==='/model-status')return json({enabled:false,reason:'CLOUD_PAID_RUNS_DISABLED_KEEP_EXISTING_LOCAL_LEDGER',budget:{calls:10,maxCalls:12,reservedFen:1591,capFen:2000},snapshotOnly:true,recordedAt:'2026-11-02'});
   if(path==='/integration-status')return json({deployment:'CLOUDFLARE_FREE',workflows:true,teeConfigured:false,settlementEnabled:false,routeIds:[],independentOperatorsVerified:false});
   const caseMatch=path.match(/^\/([a-f0-9-]{36})\/(case|case-export|notifications)(?:\/([a-f0-9]{64}))?$/);
@@ -146,6 +190,23 @@ export async function handle(request,env){
   }
   if(request.method==='GET'&&action==='review'){const row=await q(env.DB,'SELECT body FROM reviews WHERE firm=?',id).first();if(!row)fail('NOT_FOUND',404);return json(assessment(JSON.parse(row.body)));}
   fail('NOT_FOUND',404);
- }catch(error){return json({error:error.status?error.message:'REQUEST_REJECTED'},error.status??400);}
+ }catch(error){return json({error:error.status||/^[A-Z][A-Z0-9_]{2,100}$/.test(error.message)?error.message:'REQUEST_REJECTED'},error.status??400);}
 }
 export async function decryptReceipt(env,job){const value=JSON.parse(job.input);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(value.iv),additionalData:utf8.encode(`${job.firm}:${job.id}`)},await key(env),new Uint8Array(value.bytes));return JSON.parse(new TextDecoder().decode(plain));}
+export async function operationsTick(env){
+ const {drainMail}=await import('./operations.mjs');
+ if(env.MAIL_SEND_ENABLED==='yes'){
+  const subscriptions=(await q(env.DB,`SELECT s.* FROM mail_subscriptions s JOIN organization_members m
+   ON s.organization=m.organization AND s.principal=m.principal WHERE s.enabled=1 AND m.active=1 LIMIT 20`).all()).results;
+  for(const sub of subscriptions){
+   const owner='org:'+sub.organization,identity={...sub,owner};
+   const firms=(await q(env.DB,"SELECT * FROM firms WHERE owner=? AND state='ACTIVE' ORDER BY created DESC LIMIT 10",owner).all()).results;
+   for(const firm of firms){
+    const inbox=await notifications(env,firm,await caseContext(env,firm));
+    for(const n of inbox.items.filter(n=>!n.acknowledged).slice(0,5))
+     await enqueueMail(env,identity,n,(id,v)=>encrypt(env,id,v));
+   }
+  }
+ }
+ return drainMail(env,(id,blob)=>decrypt(env,id,blob));
+}

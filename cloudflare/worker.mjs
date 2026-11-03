@@ -1,9 +1,9 @@
 import {WorkflowEntrypoint} from 'cloudflare:workers';
-import {handle,decryptReceipt} from './api.mjs';
+import {handle,decryptReceipt,operationsTick} from './api.mjs';
 import {verifyReceipt} from '../src/protocol.mjs';
 import {verifyLiveReceipt} from '../src/live.mjs';
 import {verifyReport} from '../src/report-revision.mjs';
-export default {fetch:handle};
+export default {fetch:handle,scheduled(event,env,ctx){ctx.waitUntil(operationsTick(env));}};
 export class VerificationWorkflow extends WorkflowEntrypoint {
  async run(event,step){
   const jobId=event.payload.jobId;

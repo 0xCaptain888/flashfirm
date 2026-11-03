@@ -16,6 +16,7 @@ allowedSignatures.set('evidence/mainnet-native-payment.json',new Set([mainnet.qu
 const secrets=[];
 try{const config=JSON.parse(await readFile('.runtime/provider-secret.json','utf8'));for(const [key,value]of Object.entries(config))if(/key|token|secret/i.test(key)&&typeof value==='string'&&value.length>12)secrets.push(value);}catch(e){if(e.code!=='ENOENT')throw e;}
 try{for(const name of await readdir('.runtime/cloudflare'))if(/-token\.txt$|^production-vault\.key$/.test(name)){const value=(await readFile('.runtime/cloudflare/'+name,'utf8')).trim();if(value.length>12)secrets.push(value);}}catch(e){if(e.code!=='ENOENT')throw e;}
+try{const config=JSON.parse(await readFile('.runtime/offsite-backup/setup.json','utf8'));for(const key of ['token','privateKey'])if(typeof config[key]==='string'&&config[key].length>12)secrets.push(config[key]);}catch(e){if(e.code!=='ENOENT')throw e;}
 for(const file of files){
  if(file.startsWith('.runtime/')||file==='.env'||/\.sqlite(?:-wal|-shm)?$|vault\.key|operator-token\.txt/.test(file))throw Error('Private file staged');
  const bytes=await readFile(file);const text=bytes.toString('utf8');

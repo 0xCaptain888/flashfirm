@@ -14,6 +14,9 @@ import { verifyReviewerBinding } from './src/reviewer-binding.mjs';
 import { IntegrationLedger } from './src/integration-ledger.mjs';
 import { loadIntegrationConfig } from './src/integration-config.mjs';
 import { verifyReport } from './src/report-revision.mjs';
+import {taskFlowOperation} from './src/task-flow-store.mjs';
+import {sqliteAdapter} from './src/sqlite-adapter.mjs';
+import {pinnedTaskVerifiers} from './src/read-only-rpc.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const policy = serverPolicy();
@@ -21,6 +24,14 @@ const runtime = process.env.FLASHFIRM_RUNTIME || path.join(root, '.runtime');
 await mkdir(runtime, { recursive: true, mode: 0o700 });
 await chmod(runtime, 0o700);
 const store=await openStore(runtime);
+if(!store.db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='task_flows'").get())
+  store.db.exec(await readFile(path.join(root,'cloudflare/migrations/0003_task_flow.sql'),'utf8'));
+const flowAdapter={db:sqliteAdapter(store.db),access:async(o,f,a)=>store.access(o,f,a),
+  context:async f=>({record:store.caseRecord(f.owner,f.id),review:store.caseReview(f.owner,f.id)}),
+  encrypt:async(f,v)=>store.encrypt(f,'flow',v),decrypt:async(f,b)=>store.decrypt(f,'flow',b),
+  security:{authority:process.env.FLASHFIRM_IDENTITY_AUTHORITY_KEY,releaseAuthority:process.env.FLASHFIRM_SECRET_RELEASE_AUTHORITY_KEY,
+    revokedSubjects:JSON.parse(process.env.FLASHFIRM_REVOKED_IDENTITY_SUBJECTS??'[]')},
+  verifiers:pinnedTaskVerifiers()};
 const integrations=new IntegrationLedger(store,await loadIntegrationConfig(process.env.FLASHFIRM_INTEGRATION_CONFIG));
 const limiter=new Map();
 let workerBusy=false;
@@ -57,6 +68,7 @@ const server = http.createServer(async (req, res) => {
     if (!policy.hosts.includes(host)) return send(res, 403, { error: 'Host denied' });
     if (req.headers.origin && !policy.origins.includes(req.headers.origin)) return send(res, 403, { error: 'Origin denied' });
     const url = new URL(req.url, `http://${host}`);
+    if(req.method==='GET'&&url.pathname==='/api/auth/config')return send(res,200,{configured:false,deployment:'LOCAL_TOKEN_LOGIN'});
     if(req.method==='GET'&&url.pathname==='/healthz') {
       const healthy=!shuttingDown&&(workerBusy||Date.now()-workerLastTick<10000);
       try { store.db.prepare('SELECT 1').get(); } catch { return send(res,503,{status:'UNAVAILABLE'}); }
@@ -66,9 +78,16 @@ const server = http.createServer(async (req, res) => {
       const token=req.headers.authorization?.replace(/^Bearer /,'');
       const owner=store.authenticate(token);
       if(!owner)return send(res,401,{error:'Valid operator token required'});
+      if(req.method==='POST'&&url.pathname==='/api/workspaces/logout'){store.revoke(token);return send(res,200,{revoked:true});}
       const now=Date.now(),window=limiter.get(owner);
       if(!window||window.until<=now)limiter.set(owner,{until:now+60000,count:1});
       else if(++window.count>120){res.setHeader('Retry-After','60');return send(res,429,{error:'Request limit reached'});}
+      const flowPath=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)\/flow(?:\/(plan|quality|privacy|manifest|invoice|quote|verify|refund))?$/);
+      if(flowPath){
+        const [,id,op]=flowPath;
+        if((op&&req.method!=='POST')||(!op&&req.method!=='GET'))return send(res,405,{error:'Method denied'});
+        return send(res,200,await taskFlowOperation(flowAdapter,owner,id,op??'status',op?await body(req):{}));
+      }
       if(req.method==='GET'&&url.pathname==='/api/workspaces/model-status')return send(res,200,await modelAvailability(runtime));
       if(req.method==='GET'&&url.pathname==='/api/workspaces/integration-status')return send(res,200,integrations.status());
       const casePath=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)\/(case|case-export|notifications)(?:\/([a-f0-9]{64}))?$/);

@@ -2,6 +2,16 @@
 
 This checklist separates implementation, actual integration evidence and remaining work. Passing local tests does not complete an external integration.
 
+**Latest upgrade:** [Task-bound evaluation and settlement](TASK-SETTLEMENT.md)
+now connects exact reports, semantic/removal evaluation packages, external
+identity certificates, reviewed allocations, buyer invoices and both-chain
+payment verification. Actual public acceptance used synthetic judgments and
+made no payment. [Operations and recovery](OPERATIONS-UPGRADE.md) adds verified
+organization identity support, opt-in notification delivery and encrypted
+offsite backups. A real isolated cloud restoration passed with all 19 business
+tables compared. Real independent review, a paid removal study, private TEE
+execution, trusted inference and a task-bound mainnet payment remain pending.
+
 Task dossier upgrade: an immutable signed-report case, exact quote locations,
 bound review rounds, persistent in-app reminders, SDK endpoints and portable
 exports are implemented in both Node and Workers. Local Workers/D1/Workflows and
@@ -19,8 +29,9 @@ prevention, rejection of a different report, persistent read acknowledgement,
 export re-verification, and closure with retained evidence.
 See `evidence/cloudflare-case-upgrade.json`. It creates no independent reviewers,
 task-bound TEE assertion or payment. D1's export endpoint rejected the existing
-narrow OAuth authorization, so a complete cloud export/restore backup is not
-claimed; the additive migration preserved existing tables and data.
+narrow OAuth authorization. The new authenticated encrypted batch-snapshot
+endpoint subsequently enabled a real isolated restore without widening that
+authorization; see `evidence/cloud-restore-upgrade.json`.
 
 Latest deployment: [a dedicated Phala container](PHALA-TEE.md) completed a real hardware/application-verified public quotation task and was then powered off. The [free public verification workspace](CLOUDFLARE-FREE.md) separately passed a real Workers/D1/Workflows write-and-verification check. A separately approved [real mainnet cross-chain transfer](NATIVE-NEAR-PAYMENT.md) sent 0.5 NEAR and delivered 1.861840 USDC on Arbitrum One, with final source execution and finalized destination receipt verified. The full Node integration modules remain separate: reviewer revocation/account-key rechecks, persistent TEE challenge consumption, destination observation/replay prevention and restore invalidation. See [integration guide](EXTERNAL-INTEGRATIONS.md). Independent people, confidential production TEE assurance and automatic task-bound mainnet payouts remain missing.
 
@@ -28,13 +39,13 @@ Latest deployment: [a dedicated Phala container](PHALA-TEE.md) completed a real 
 | --- | --- | --- |
 | Real AI collaboration | Real four-call queued run completed once; original CHALLENGED report preserved; separately signed operator correction passes nine exact quotations and awaits new review | Broader presets/tools; real review of the revised delivery; no automatic paid retry |
 | Automatic team formation | Capability/price matching, signed offers, budget-constrained selection | Real independent supplier offers and onboarding |
-| Source verification | Pinned OpenZeppelin retrieval and repeat full-hash comparison, exact quotation locations, repeated-evidence flags, critique and correction history | General discovery, semantic entailment evaluation and larger real-data benchmark |
-| Contribution scoring | Fixed rubric, signed coverage, leave-one-out values, duplicate artifact exclusion | Real counterfactual re-execution study and independent anti-Sybil identity assurance |
-| Independent review | Pinned decisions/appeals and native NEAR quorum; dual-signature account binding; authenticated onboarding challenge API, owner-scoped persistent registry and atomic single-use nonce checks | Real independent operators, live signed onboarding and identity/conflict checks |
+| Source verification | Pinned retrieval/full-hash comparison, exact quote locations, signed semantic verdicts for every claim and source context | Real semantic benchmark and independent evaluator judgments; general discovery |
+| Contribution scoring | Separate full/removal evaluator inputs and budgeted model adapter; two pinned signatures; duplicate rejection and conserved allocation | New paid counterfactual study, external identity authority and real independent judgments |
+| Independent review | Pinned decisions/appeals, account binding and external authority certificates with unique subjects and artifact-authorship claims | Recruit actual independent people and enroll their authority; certificates cannot eliminate authority collusion |
 | NEAR settlement | Original buyer payout, challenge/arbitration refund, expiry refund, and real testnet failed-transfer credit restoration followed by successful retry; recovery treasury Closed | One earlier expiry deployment was interrupted by RPC 429 and retained without replay; independent reviewers still absent |
-| Privacy | Encrypted local jobs; experimental Nitro verifier; real Phala TDX public quotation task with official hardware verification, encrypted ingress/result signatures, nonce/task/key binding, exact measured Compose and RTMR3 replay; public proof reproduces after instance shutdown | Independent OS/KMS/governance verification, confidential secret-release review, attested model inference and continuously operated production service remain required; user chose to retain the stopped, billable 20 GB disk |
-| Cross-chain collection | Real 0.5 NEAR native deposit → 1.861840 native USDC on Arbitrum One; signed quote and relay identity/mapping, final source action and finalized destination Transfer verified; portable public evidence and read-only replay tool | Automatic task-bound payouts and independent refund verification; original FunctionCall wallet mismatch remains unresolved and its journal/signing lock preserved |
-| Lifecycle and operations | Public Workers/D1/Workflows verification workspace; owner tokens, encrypted notes, persistent results and real public smoke check; separate Node container CI and local backup/restore tests | Full Node integration hosting; organization auth, external uptime alerts, scheduled off-host backups and cloud restore drill; paid cloud AI disabled |
+| Privacy | Historical real public TDX task; new private quotation client verifies fresh hardware, approved measurements and external release policy before encryption, with task-bound result acceptance | Actual private trial and independent policy approval; trusted measured model inference is unimplemented; instance off, retained 20 GB disk billable |
+| Cross-chain collection | Separate real 0.5 NEAR → 1.861840 USDC proof; task-bound invoices/quotes, independent chain checks, exact native refund verifier and global transaction reuse prevention | Real same-task payments and independent real refund; fee/refund allocations are not automatic transfers; original FunctionCall lock preserved |
+| Lifecycle and operations | Live Workers/D1/Workflows; verified Access JWT/roles/session revocation; encrypted opt-in outbox; foreground notifications; scheduled monitoring and encrypted offsite backup workflow; actual isolated D1 restore | Configure Access application and verified email sender; background Web Push unimplemented; full Node model hosting separate; paid cloud AI disabled |
 
 The separate explicit authorization for one 0.5 NEAR mainnet demonstration, up to 0.1 NEAR extra storage/gas and $5 total fresh valuation, was consumed by the successful native transfer. It does not authorize a second payment, replaying the original ambiguous FunctionCall attempt, loosening action checks, resetting either journal or moving testnet task funds to mainnet. Earlier unchanged-balance and `PENDING_DEPOSIT` observations are preserved as history. See [payment recovery boundaries](MAINNET-PAYMENT.md) and [successful native payment](NATIVE-NEAR-PAYMENT.md). Credentials, seeds and private runtime state are never copied to Pages.
 

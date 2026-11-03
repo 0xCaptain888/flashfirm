@@ -10,5 +10,6 @@
   "d1_databases": [{"binding":"DB","database_name":"flashfirm-free","database_id":"bfc6e6e2-cd68-4b82-9d69-99c3970843a6","migrations_dir":"migrations"}],
   "workflows": [{"name":"flashfirm-verification","binding":"VERIFICATION","class_name":"VerificationWorkflow"}],
   "vars": {"CLOUD_PAID_CALLS":"disabled"},
+  "triggers": {"crons":["*/15 * * * *"]},
   "observability": {"enabled": false}
 }
