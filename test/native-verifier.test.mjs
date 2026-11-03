@@ -13,10 +13,13 @@ function fixture(){
   phase:'Closed',credits_yocto:v.amountsYocto.map(()=>'0'),pending_yocto:v.amountsYocto.map(()=>'0'),approvals:[true,true,false]};
  let count=1;const next=()=>base58(Buffer.alloc(32,++count)),transactions=new Map();
  const tx=(actor,method,args,deposit='0')=>{
-  const hash=next();transactions.set(hash,{final_execution_status:'FINAL',transaction:{hash,signer_id:actor,
+  const hash=next(),receiptId='transfer-'+hash;
+  transactions.set(hash,{final_execution_status:'FINAL',transaction:{hash,signer_id:actor,
    receiver_id:v.plan.contractId,actions:[{FunctionCall:{method_name:method,args:Buffer.from(JSON.stringify(args)).toString('base64'),
-    gas:'100000000000000',deposit}}]},transaction_outcome:{block_hash:'final-block',outcome:{status:{SuccessReceiptId:'test'}}},
-   receipts_outcome:[{outcome:{status:{SuccessValue:''}}}],
+    gas:'100000000000000',deposit}}]},transaction_outcome:{block_hash:'final-block',outcome:{receipt_ids:[receiptId],status:{SuccessReceiptId:receiptId}}},
+   receipts:method==='claim_for'?[{receipt_id:receiptId,predecessor_id:v.plan.contractId,receiver_id:args.recipient,
+    receipt:{Action:{actions:[{Transfer:{deposit:v.amountsYocto[v.plan.init.recipients.indexOf(args.recipient)]}}]}}}]:[],
+   receipts_outcome:[{id:receiptId,outcome:{executor_id:args.recipient??v.plan.contractId,receipt_ids:[],status:{SuccessValue:''}}}],
    status:{SuccessValue:method==='claim_for'?Buffer.from('true').toString('base64'):''}});
   return hash;
  };
@@ -27,7 +30,7 @@ function fixture(){
  const rpc=async(method,params)=>{
   if(method==='status')return {chain_id:'testnet'};
   if(method==='block')return {header:{hash:'final-block',height:100,timestamp_nanosec:String(BigInt(f.nativeNow+1)*1000000n)}};
-  if(method==='tx')return transactions.get(params.tx_hash);
+  if(['tx','EXPERIMENTAL_tx_status'].includes(method))return transactions.get(params.tx_hash);
   if(params.request_type==='view_code')return {block_hash:'final-block',hash:base58(Buffer.from(f.nativePayload.wasmSha256,'hex')),code_base64:wasm.toString('base64')};
   return {block_hash:'final-block',result:[...Buffer.from(JSON.stringify(status))]};
  };
@@ -42,6 +45,10 @@ test('native verifier checks every final action and callback, exact code and the
   f=>f.transactions.get(f.proof.claims[0].hash).transaction.actions[0].FunctionCall.args=Buffer.from('{"recipient":"thief.testnet"}').toString('base64'),
   f=>f.proof.approvals[1].accountId=f.proof.approvals[0].accountId,
   f=>f.status.paid_yocto='0',f=>f.proof.claims.pop()
+  ,f=>f.transactions.get(f.proof.claims[0].hash).receipts[0].receipt.Action.actions[0].Transfer.deposit='1'
+  ,f=>f.transactions.get(f.proof.claims[0].hash).receipts[0].receiver_id='thief.testnet'
+  ,f=>f.transactions.get(f.proof.claims[0].hash).receipts=[]
+  ,f=>f.transactions.get(f.proof.claims[0].hash).transaction_outcome.outcome.receipt_ids=[]
  ]){
   const x=fixture();mutate(x);
   await assert.rejects(verifyNativeTaskSettlement(x.authorization,x.flow,x.proof,x.rpc,x.nativeNow+2));

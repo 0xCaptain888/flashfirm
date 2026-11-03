@@ -8,9 +8,10 @@ const receipt=JSON.parse(await readFile(new URL('evidence/revised-live-receipt.j
 const manifest=settlementManifest(proof.signedTestFlow,createCase(receipt),proof.syntheticReview,
  {authority:proof.syntheticTrustRoots.identityAuthority},proof.signedTestFlow.plan.payload.createdAt+60001);
 if(proof.status!=='PASS'||proof.network!=='LOCAL_SANDBOX'||proof.mainnetPayment!==false||
- proof.publicTestnetPayment!==false||proof.syntheticIdentityAndReviewFixture!==true||
+ proof.publicTestnetPayment!==false||proof.syntheticIdentityAndReviewFixture!==true||proof.exactTransferBodiesVerified!==true||
  proof.manifestHash!==hash(manifest)||proof.resultRoot!==hash(receipt)||
  proof.transactions.filter(t=>t.method==='claim_for').length!==5||
+ proof.transactions.filter(t=>t.transfer?.transferVerified===true).length!==5||
  proof.closedStatus.phase!=='Closed'||proof.closedStatus.paid_yocto!==proof.budgetYocto||
  proof.closedStatus.credits_yocto.some(n=>n!=='0')||proof.closedStatus.pending_yocto.some(n=>n!=='0')||
  createHash('sha256').update(await readFile(new URL('artifacts/flashfirm_treasury.wasm',root))).digest('hex')!==proof.wasmSha256)

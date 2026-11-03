@@ -2,44 +2,45 @@
   "version": "flashfirm-same-task-sandbox/1",
   "status": "PASS",
   "network": "LOCAL_SANDBOX",
-  "at": "2026-11-03T12:44:07.756Z",
+  "at": "2026-11-03T12:56:29.512Z",
   "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
   "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
-  "manifestHash": "1c81f6af0fe71825faf86186928326cc13a236d4267cc9a31e97b09f702ef3a8",
+  "manifestHash": "91875921900b7f066755b73af75f2f7af9b617b82c12fe4b395e9cd50e2fe449",
   "recordedAiReport": true,
   "syntheticIdentityAndReviewFixture": true,
   "independentHumanReview": false,
   "mainnetPayment": false,
   "publicTestnetPayment": false,
+  "exactTransferBodiesVerified": true,
   "wasmSha256": "369c28bab8da8c4ee32222f179c746072e307a4a12c56bcc730b3911553491dd",
   "budgetYocto": "1000000000000000000000",
   "obligations": [
     {
-      "obligationId": "f190355cd1e5e2c2c2e5fa5297685a38eb4f5d589e4b6722f2aeb46871cc248b",
+      "obligationId": "0ae9ae07f74954a69da5d815ff6bfb1dc552d3552d3dd28880da21d6e9aca8f4",
       "kind": "WORKER",
       "accountId": "worker-a.test.near",
       "amountYocto": "130667000000000000000"
     },
     {
-      "obligationId": "9ff0fd87e8128cf6416f584136d088907d4f73283f63bbbd907c519ebf09de81",
+      "obligationId": "669232ad74815afc7a0ee89008c2ccca19bd13cbee2848cfbaa9448215e13f14",
       "kind": "WORKER",
       "accountId": "worker-b.test.near",
       "amountYocto": "261333000000000000000"
     },
     {
-      "obligationId": "75d28c4137fa7871f8a2a805663df5efd6d93d028feb54ac4faea2809aba35a5",
+      "obligationId": "5978daecc8bb7a645548e4a65497d37f0f23ee33bc530feddcf082ff17851839",
       "kind": "WORKER",
       "accountId": "worker-c.test.near",
       "amountYocto": "392000000000000000000"
     },
     {
-      "obligationId": "73a595b157a5713b262ff0f1f7d64199bce3892e4ca1462aeee71022638763b1",
+      "obligationId": "2b940f0ced5b9c6a3c88ba182b38eaae7dd8d5199d4c1bdd5f48df3910527da4",
       "kind": "PROTOCOL_FEE",
       "accountId": "fee.test.near",
       "amountYocto": "16000000000000000000"
     },
     {
-      "obligationId": "bc6f40d801c51c684344b55d50b19935c50e78e08af3267c956b0e7f76f5751d",
+      "obligationId": "5218656d6e6763b76e35209287e3db1be43a2059ab2433f8c0885201a2da34b8",
       "kind": "UNSPENT_REFUND",
       "accountId": "buyer.test.near",
       "amountYocto": "200000000000000000000"
@@ -48,14 +49,14 @@
   "transactions": [
     {
       "method": "fund",
-      "hash": "rckS3kYBZqUtGufE6heSGkRLFLgPPJ59jnD9TPTM4FE",
+      "hash": "9shLQ8Unj1bZP9dfDkKLkJTA3CtU6AT2Kn4cAiFZuhzq",
       "actor": "buyer.test.near",
       "args": {},
       "deposit": "1000000000000000000000"
     },
     {
       "method": "propose",
-      "hash": "Ap37W4bbbC4C6mvYZbbUh1YtbonovDJ7ptaADKLh6BWG",
+      "hash": "62zN5f3HVhpSexW38KFc5wsHmyL33C8wNJgWURcAw2LY",
       "actor": "buyer.test.near",
       "args": {
         "amounts_yocto": [
@@ -65,81 +66,111 @@
           "392000000000000000000",
           "16000000000000000000"
         ],
-        "evidence_root": "cb747865c94f91ec71030980c04bb3ab98ddafc0f572f3681f5cf84bb3a211be"
+        "evidence_root": "55fd51553e6fc24cd0642d400c6911b904e61adff7b8c9028458612b5bb5fefe"
       },
       "deposit": "0"
     },
     {
       "method": "approve",
-      "hash": "DiTTjZPw5w9MWNgAwuKGDsQ4ng1YVNM1bAYx2MWyEJQj",
+      "hash": "9nnyZ5QRiFhMmbL3MCvLevetUEfaHLFGSmhY29D7jhVZ",
       "actor": "review-a.test.near",
       "args": {
-        "plan_hash": "9faf6580bfffe78ddff19621a981a2688d593b777ff48fd024902f4f0c72ffdf"
+        "plan_hash": "3baf4019f35508307791ff57d017f8c379fba7e0515d7aa8c2810a7dbeddd799"
       },
       "deposit": "0"
     },
     {
       "method": "approve",
-      "hash": "BsaKaFMRdeep1oQ2qEtaJaGW1dsk8zpNZjZ7agZ8c5wD",
+      "hash": "5r3GruHqzkYXQtQqRgUNiF27edzzDvzmxRA45PThiJbT",
       "actor": "review-b.test.near",
       "args": {
-        "plan_hash": "9faf6580bfffe78ddff19621a981a2688d593b777ff48fd024902f4f0c72ffdf"
+        "plan_hash": "3baf4019f35508307791ff57d017f8c379fba7e0515d7aa8c2810a7dbeddd799"
       },
       "deposit": "0"
     },
     {
       "method": "claim_for",
-      "hash": "HVBgix5EEX8KRo7tauovh3gTU9F8srn5MDsasJxRnzhh",
+      "hash": "5ZCrGshiJMcv1HkeX1pQo1pucJB7y1vZrdxVfCmmizN8",
       "actor": "sponsor.test.near",
       "args": {
         "recipient": "buyer.test.near"
       },
-      "deposit": "0"
+      "deposit": "0",
+      "transfer": {
+        "receiptId": "Af4r9GzNbtA2pMwhYoJvAVYbyjZMiUDZxLhR2KB26vX1",
+        "recipient": "buyer.test.near",
+        "amountYocto": "200000000000000000000",
+        "transferVerified": true
+      }
     },
     {
       "method": "claim_for",
-      "hash": "DZ3cyi1ALcTVmerciXjsSL6PhUDbby5KL4syzJXRc3pk",
+      "hash": "VSg5yp3aXzok19FkA9s5S73rWgxMxBVWjXjYH8NogMA",
       "actor": "sponsor.test.near",
       "args": {
         "recipient": "worker-a.test.near"
       },
-      "deposit": "0"
+      "deposit": "0",
+      "transfer": {
+        "receiptId": "DsXU5vt12AeBEgUqy2FVgajZoZwccjNPJAYoWuezRmt3",
+        "recipient": "worker-a.test.near",
+        "amountYocto": "130667000000000000000",
+        "transferVerified": true
+      }
     },
     {
       "method": "claim_for",
-      "hash": "HPGJFR6wsMjxfPNQrjpYH2TqWhaJSho7Tyke3oYK33ua",
+      "hash": "2eHoVL2wKw4KtykwtiqQK1xrHsReYScgSoy3rhVgRXzm",
       "actor": "sponsor.test.near",
       "args": {
         "recipient": "worker-b.test.near"
       },
-      "deposit": "0"
+      "deposit": "0",
+      "transfer": {
+        "receiptId": "999rk4NoUuL89AnQfPS5hLLhStUznKdxjKGmrXubysz3",
+        "recipient": "worker-b.test.near",
+        "amountYocto": "261333000000000000000",
+        "transferVerified": true
+      }
     },
     {
       "method": "claim_for",
-      "hash": "J2d1Q8Hc9Nf4sN1oSSnhQpXpht64aXTjRYnrgEtuju2q",
+      "hash": "EUXHSFj8dzYEcNnvb4MExvGCZLg3NSp3surzQYmUawou",
       "actor": "sponsor.test.near",
       "args": {
         "recipient": "worker-c.test.near"
       },
-      "deposit": "0"
+      "deposit": "0",
+      "transfer": {
+        "receiptId": "8iVvggJZpm62WJw1xuS1UVGr57ryZChzDvDSvf8QC66v",
+        "recipient": "worker-c.test.near",
+        "amountYocto": "392000000000000000000",
+        "transferVerified": true
+      }
     },
     {
       "method": "claim_for",
-      "hash": "3Hwmuv7LnPPpq8DVam2CfPavPGCg4qqJojo7bGSBcmb2",
+      "hash": "J7FV6RpC3Bxia6sXWzsLjHEEfm9nwQTresxvvKcCsSed",
       "actor": "sponsor.test.near",
       "args": {
         "recipient": "fee.test.near"
       },
-      "deposit": "0"
+      "deposit": "0",
+      "transfer": {
+        "receiptId": "86CNAsU28GyckQDM8Dt6CodC5LaXnZMwZ6xuouGNECRC",
+        "recipient": "fee.test.near",
+        "amountYocto": "16000000000000000000",
+        "transferVerified": true
+      }
     }
   ],
   "closedStatus": {
     "version": "flashfirm-treasury/0.2",
     "arbiter": "arbiter.test.near",
-    "policy_hash": "29476bb1929a54a117bd27002dd796876e72679271b9dca621a7190b25b5096c",
+    "policy_hash": "d3589c32e07973fa6ffa909766927cd86522058ec06c6f226444734be58d2ada",
     "appeal_window_ns": "60000000000",
-    "arbitration_deadline_ns": "1793713519632750000",
-    "release_at_ns": "1793709876849563000",
+    "arbitration_deadline_ns": "1793714261408101000",
+    "release_at_ns": "1793710618620288000",
     "challenge_root": null,
     "resolution_root": null,
     "resolution_upheld": false,
@@ -158,9 +189,9 @@
       "fee.test.near"
     ],
     "task_root": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
-    "plan_hash": "9faf6580bfffe78ddff19621a981a2688d593b777ff48fd024902f4f0c72ffdf",
-    "evidence_root": "cb747865c94f91ec71030980c04bb3ab98ddafc0f572f3681f5cf84bb3a211be",
-    "deadline_ns": "1793713399632750000",
+    "plan_hash": "3baf4019f35508307791ff57d017f8c379fba7e0515d7aa8c2810a7dbeddd799",
+    "evidence_root": "55fd51553e6fc24cd0642d400c6911b904e61adff7b8c9028458612b5bb5fefe",
+    "deadline_ns": "1793714141408101000",
     "phase": "Closed",
     "funded_yocto": "1000000000000000000000",
     "credits_yocto": [
@@ -186,7 +217,7 @@
   },
   "scope": "Recorded AI report and synthetic signed semantic/identity fixtures bind one manifest to actual local sandbox transfers: three workers, protocol fee and buyer unused budget. No new AI call or external money movement.",
   "syntheticTrustRoots": {
-    "identityAuthority": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx1JFBRx4gqQSNseXBj4vBPUJP5L5vA+n80Dc9XUhY6s=\n-----END PUBLIC KEY-----\n"
+    "identityAuthority": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATDOW+v+LIEHPVkKdyjqZ4Vu2px5Yd1avxrPz12EviOc=\n-----END PUBLIC KEY-----\n"
   },
   "signedTestFlow": {
     "plan": {
@@ -194,15 +225,15 @@
         "version": "flashfirm-task-plan/1",
         "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
         "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
-        "buyerKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAePU1gdp2KRSkzCfgbc+vEJqFVdLOiROt6AbhS6cwqTU=\n-----END PUBLIC KEY-----\n",
-        "reviewPolicyHash": "29476bb1929a54a117bd27002dd796876e72679271b9dca621a7190b25b5096c",
+        "buyerKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAV1F0A+GRkH5nvsSO/+rkSxT9beMip4sZ9QtRq6B3IPI=\n-----END PUBLIC KEY-----\n",
+        "reviewPolicyHash": "d3589c32e07973fa6ffa909766927cd86522058ec06c6f226444734be58d2ada",
         "reviewerKeys": [
-          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAlzel24JLFj8FngWTKN4Q6j00KrpXOgVYjRgyQk5LtOs=\n-----END PUBLIC KEY-----\n",
-          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4v1MsYcLkwAhuZKVeUWm4CLg4X/SBS87Cc4qBDtoSlE=\n-----END PUBLIC KEY-----\n",
-          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAZkrbkBr1+ItAzp1Mv4t311begnoYsfI3+kWIrWzRZT8=\n-----END PUBLIC KEY-----\n"
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAeNNJl7HyR/eqDqlvhd5ZgJOjbjQ0uFRrIFI5bEAann0=\n-----END PUBLIC KEY-----\n",
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAGAkf9DqgqB78WasT/qaL1BT4svH0Sf9VLwaPH9crQk=\n-----END PUBLIC KEY-----\n",
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAMnqETagng3O9K4szQhacua6TDmRa3noQj24jyDNotXA=\n-----END PUBLIC KEY-----\n"
         ],
-        "createdAt": 1793709781340,
-        "expiresAt": 1793713381340,
+        "createdAt": 1793710523160,
+        "expiresAt": 1793714123160,
         "budgetUnits": 1000000,
         "allocationAsset": "ARBITRUM_NATIVE_USDC",
         "settlementPolicy": {
@@ -221,37 +252,37 @@
         "workers": [
           {
             "id": "sentinel-live",
-            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmblVNew4+GV9zIj0EeUB9wfyMXjD8NG6BCsAUmyYUTo=\n-----END PUBLIC KEY-----\n",
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/fss22HrriyEHKbMn2MhVq1clgWmgWI5ZtO0u9GegV4=\n-----END PUBLIC KEY-----\n",
             "subject": "15e67356aaa6cb7713617db8ffc0c1c2eeea7af7c6dd03566c3e721fd365f1a1",
             "artifactHash": "0f8d18c68e0e63d2fd1e0e9532c70ba2e522836f691b6e50b3718035cd81d10a",
             "recipient": "0x1111111111111111111111111111111111111111"
           },
           {
             "id": "continuity-live",
-            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAhV2PjX+Mv0VwfeEtsDYOcWtvOXBH8Qnv4HJm/S4AqgA=\n-----END PUBLIC KEY-----\n",
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsNtveXyvnkJjzy3v1VFHlUdFPqGu8l+LjH8rrlF6Fow=\n-----END PUBLIC KEY-----\n",
             "subject": "e50fbe76491523bde76bfa56b0787f22343a91cede914adee72fef56e9ff11bd",
             "artifactHash": "b111d5d404c1123cb63697c64a41f84a6311df19098fba74a40fe5592ccc0ba1",
             "recipient": "0x2222222222222222222222222222222222222222"
           },
           {
             "id": "evidence-live",
-            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEACwAcS4oKJZiK5F04/cMspQKuVNR6QziPyQQwEzanMH4=\n-----END PUBLIC KEY-----\n",
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAHTgwLAjJ/QEPqhROj52WIRQ20B1bRn9RtdtWe2ny/xE=\n-----END PUBLIC KEY-----\n",
             "subject": "c72a47507f30bb8f91f550e256d1fdb300d3494f39d055c7781ddb901229bcce",
             "artifactHash": "9c07f35f7297f89f4bc8e69a591580ee1e35d3e38540d4603cb26eba154b910f",
             "recipient": "0x3333333333333333333333333333333333333333"
           }
         ]
       },
-      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAePU1gdp2KRSkzCfgbc+vEJqFVdLOiROt6AbhS6cwqTU=\n-----END PUBLIC KEY-----\n",
-      "signature": "4DKS4W+O5QjLMsDctDdrIwpNYgR6bYeazDL1kYwQiMxxCRxmkWZEO79SvA/nMt6oKF9dwCCzbHXU4Ua/7RzVAQ=="
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAV1F0A+GRkH5nvsSO/+rkSxT9beMip4sZ9QtRq6B3IPI=\n-----END PUBLIC KEY-----\n",
+      "signature": "v8n8D0MiM1uW8jN50IAVYkAb9HGBMAQxkvF6O4LIBQt47BG2GXXBc9n7lZXTxCoaMbXfRw4BiB+Nz77Yis04DQ=="
     },
     "evaluations": [
       {
         "payload": {
           "version": "flashfirm-quality-evaluation/1",
-          "planHash": "e6f6ca14b541549769cb04f23bbe5c31e87130725ace2b808fdbd31cb8e5c038",
+          "planHash": "a28a06769a9f45f104c0f4ac7990e83517dccf4108101b570de2196dd689faf6",
           "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
-          "issuedAt": 1793709781341,
+          "issuedAt": 1793710523161,
           "method": "HUMAN_BLINDED",
           "claims": [
             {
@@ -370,15 +401,15 @@
             }
           ]
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAlzel24JLFj8FngWTKN4Q6j00KrpXOgVYjRgyQk5LtOs=\n-----END PUBLIC KEY-----\n",
-        "signature": "i4aUjm8Sd/7RtY/HvpfG3cbcDbdXTAo7rKU4eNlljmnvlLEQwDuZjXjlJHVAe/O+loKmyQyGtRTN0WLXgk15Cg=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAeNNJl7HyR/eqDqlvhd5ZgJOjbjQ0uFRrIFI5bEAann0=\n-----END PUBLIC KEY-----\n",
+        "signature": "p/E+HdgBU3ZXaB8rle2lbuFD8PsdktNOtsG2X23ne/Or1sPkr9LsZtNdX5jQZX6+5H0dy+S+pMumFRBNdKv7Cg=="
       },
       {
         "payload": {
           "version": "flashfirm-quality-evaluation/1",
-          "planHash": "e6f6ca14b541549769cb04f23bbe5c31e87130725ace2b808fdbd31cb8e5c038",
+          "planHash": "a28a06769a9f45f104c0f4ac7990e83517dccf4108101b570de2196dd689faf6",
           "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
-          "issuedAt": 1793709781341,
+          "issuedAt": 1793710523161,
           "method": "HUMAN_BLINDED",
           "claims": [
             {
@@ -497,8 +528,8 @@
             }
           ]
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4v1MsYcLkwAhuZKVeUWm4CLg4X/SBS87Cc4qBDtoSlE=\n-----END PUBLIC KEY-----\n",
-        "signature": "6pL4CGe7rX+SKGVHj72gdaQA5uINgskn/Bz6oGkiLeF9WPU7B0dbxzp8WS7wYjyo4Q7dHuHaY1e2Z+PyOdBRDA=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAGAkf9DqgqB78WasT/qaL1BT4svH0Sf9VLwaPH9crQk=\n-----END PUBLIC KEY-----\n",
+        "signature": "NlG3KlPTbE6BelXpSV+ErbsYzdTDRei9w2/NSWKVeATIa9jVUajPWf5FLr5FDXYNV8sbx60mNeD5UD9Yim+qAQ=="
       }
     ],
     "certificates": [
@@ -506,146 +537,146 @@
         "payload": {
           "version": "flashfirm-identity/1",
           "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
-          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmblVNew4+GV9zIj0EeUB9wfyMXjD8NG6BCsAUmyYUTo=\n-----END PUBLIC KEY-----\n",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/fss22HrriyEHKbMn2MhVq1clgWmgWI5ZtO0u9GegV4=\n-----END PUBLIC KEY-----\n",
           "subject": "15e67356aaa6cb7713617db8ffc0c1c2eeea7af7c6dd03566c3e721fd365f1a1",
           "role": "WORKER",
-          "issuedAt": 1793709780340,
-          "expiresAt": 1793713381340,
+          "issuedAt": 1793710522160,
+          "expiresAt": 1793714123160,
           "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709",
           "authorshipReviewed": true,
           "artifactHash": "0f8d18c68e0e63d2fd1e0e9532c70ba2e522836f691b6e50b3718035cd81d10a"
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx1JFBRx4gqQSNseXBj4vBPUJP5L5vA+n80Dc9XUhY6s=\n-----END PUBLIC KEY-----\n",
-        "signature": "aJol8xUv8WUsFmYfmt5M25Bdj4eVFZf9zreKjrb77N/HnTfkU5vce3H7Po9Ai78FJmRGLsD/9dG76NRFpHm/BA=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATDOW+v+LIEHPVkKdyjqZ4Vu2px5Yd1avxrPz12EviOc=\n-----END PUBLIC KEY-----\n",
+        "signature": "pmuCJ3ugz4XLiDP/Yzw6/effgVe3eZEKkXBIcUmgaVyZfz3u8amnu3pVTt+p9EjC9eJ5jydtq3rwvWKeDoUsBw=="
       },
       {
         "payload": {
           "version": "flashfirm-identity/1",
           "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
-          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAhV2PjX+Mv0VwfeEtsDYOcWtvOXBH8Qnv4HJm/S4AqgA=\n-----END PUBLIC KEY-----\n",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsNtveXyvnkJjzy3v1VFHlUdFPqGu8l+LjH8rrlF6Fow=\n-----END PUBLIC KEY-----\n",
           "subject": "e50fbe76491523bde76bfa56b0787f22343a91cede914adee72fef56e9ff11bd",
           "role": "WORKER",
-          "issuedAt": 1793709780340,
-          "expiresAt": 1793713381340,
+          "issuedAt": 1793710522160,
+          "expiresAt": 1793714123160,
           "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709",
           "authorshipReviewed": true,
           "artifactHash": "b111d5d404c1123cb63697c64a41f84a6311df19098fba74a40fe5592ccc0ba1"
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx1JFBRx4gqQSNseXBj4vBPUJP5L5vA+n80Dc9XUhY6s=\n-----END PUBLIC KEY-----\n",
-        "signature": "PUv5Azd2R6A1eDe0rnHGOgBnkEL1o4rzhswPhLcIhHZxNB6Tahz2vsUF9MgF2FPSM3EWeZzKeRabg20t0evZCA=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATDOW+v+LIEHPVkKdyjqZ4Vu2px5Yd1avxrPz12EviOc=\n-----END PUBLIC KEY-----\n",
+        "signature": "576ZEqxpZ8U0aBBUv0USWDxALuv6S+OOihQyQfq6IfcZ+XK0UMAdtYI/Ah8E894BY77afkNwpKdpjL3UZbxKDg=="
       },
       {
         "payload": {
           "version": "flashfirm-identity/1",
           "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
-          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEACwAcS4oKJZiK5F04/cMspQKuVNR6QziPyQQwEzanMH4=\n-----END PUBLIC KEY-----\n",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAHTgwLAjJ/QEPqhROj52WIRQ20B1bRn9RtdtWe2ny/xE=\n-----END PUBLIC KEY-----\n",
           "subject": "c72a47507f30bb8f91f550e256d1fdb300d3494f39d055c7781ddb901229bcce",
           "role": "WORKER",
-          "issuedAt": 1793709780340,
-          "expiresAt": 1793713381340,
+          "issuedAt": 1793710522160,
+          "expiresAt": 1793714123160,
           "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709",
           "authorshipReviewed": true,
           "artifactHash": "9c07f35f7297f89f4bc8e69a591580ee1e35d3e38540d4603cb26eba154b910f"
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx1JFBRx4gqQSNseXBj4vBPUJP5L5vA+n80Dc9XUhY6s=\n-----END PUBLIC KEY-----\n",
-        "signature": "M/5xgfhORZUsbRf4dRnUualzyP8w3naw1XTzpksmvzgVqImfgitmXipXmXxuD9sT36rD5C+WaUsxH2vQpSXVBA=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATDOW+v+LIEHPVkKdyjqZ4Vu2px5Yd1avxrPz12EviOc=\n-----END PUBLIC KEY-----\n",
+        "signature": "THwceNQDNy4LRAA0g/qXDLTtEyaakhdIalUEE7Z7mU8pRXez7VGbWxDaNZ0mCWclPYY8IfoDbjQNi14JdpoWDA=="
       },
       {
         "payload": {
           "version": "flashfirm-identity/1",
           "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
-          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAlzel24JLFj8FngWTKN4Q6j00KrpXOgVYjRgyQk5LtOs=\n-----END PUBLIC KEY-----\n",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAeNNJl7HyR/eqDqlvhd5ZgJOjbjQ0uFRrIFI5bEAann0=\n-----END PUBLIC KEY-----\n",
           "subject": "4c354d3a922cb10d7d0cc15289408e10ca0217e89582d18d3323ec69fc701778",
           "role": "REVIEWER",
-          "issuedAt": 1793709780340,
-          "expiresAt": 1793713381340,
+          "issuedAt": 1793710522160,
+          "expiresAt": 1793714123160,
           "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709"
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx1JFBRx4gqQSNseXBj4vBPUJP5L5vA+n80Dc9XUhY6s=\n-----END PUBLIC KEY-----\n",
-        "signature": "c7V8TWm9lLAA9DyQ34qUzjvoYuDWbvFS3FjUJV/YsN+OmXcYdx8zI6BYsnyVHvUitflX9IimJsg/HV9PI9YpCA=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATDOW+v+LIEHPVkKdyjqZ4Vu2px5Yd1avxrPz12EviOc=\n-----END PUBLIC KEY-----\n",
+        "signature": "uI8us3GLqGcMQLZgxYNUQ5qwca7yhUws26YH5xMEHvk4A6SBHzcbqrXWGmgMLCJhFZUquVG813gAC5yPa0e4BQ=="
       },
       {
         "payload": {
           "version": "flashfirm-identity/1",
           "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
-          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4v1MsYcLkwAhuZKVeUWm4CLg4X/SBS87Cc4qBDtoSlE=\n-----END PUBLIC KEY-----\n",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAGAkf9DqgqB78WasT/qaL1BT4svH0Sf9VLwaPH9crQk=\n-----END PUBLIC KEY-----\n",
           "subject": "f037cec3e281fe9e0bc5dfddbf347c8d48ec54acce4bf539e56be8ab35728293",
           "role": "REVIEWER",
-          "issuedAt": 1793709780340,
-          "expiresAt": 1793713381340,
+          "issuedAt": 1793710522160,
+          "expiresAt": 1793714123160,
           "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709"
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx1JFBRx4gqQSNseXBj4vBPUJP5L5vA+n80Dc9XUhY6s=\n-----END PUBLIC KEY-----\n",
-        "signature": "AM0JZz10XpCRAHTCFiMhpqffAXz++tP2/V5/ea1KW9jcdjGXKJMxR2vLv3ITTkPfYsKOO/KGUbEhnFSBAf6FBQ=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATDOW+v+LIEHPVkKdyjqZ4Vu2px5Yd1avxrPz12EviOc=\n-----END PUBLIC KEY-----\n",
+        "signature": "shWiCJQjA0oMscgUzofN+RlWhI0ucoMcK1echs1+bed66usu7iMOhrPd/l5p3z9FKiYBSIRrgzaXf+I/Fl/xAg=="
       },
       {
         "payload": {
           "version": "flashfirm-identity/1",
           "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
-          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAZkrbkBr1+ItAzp1Mv4t311begnoYsfI3+kWIrWzRZT8=\n-----END PUBLIC KEY-----\n",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAMnqETagng3O9K4szQhacua6TDmRa3noQj24jyDNotXA=\n-----END PUBLIC KEY-----\n",
           "subject": "66bd99714452d9c94b0e99897b3dda9212e14b4b6956ae0751d0624ed9fb7223",
           "role": "REVIEWER",
-          "issuedAt": 1793709780340,
-          "expiresAt": 1793713381340,
+          "issuedAt": 1793710522160,
+          "expiresAt": 1793714123160,
           "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709"
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx1JFBRx4gqQSNseXBj4vBPUJP5L5vA+n80Dc9XUhY6s=\n-----END PUBLIC KEY-----\n",
-        "signature": "dQf27+0eYEgjzX/FRWCimWE4UL7U2YM0Dw+162wk+xmOgVnEtVUoY6DySNTgirHCaPBz+KZnuZ5agZrwlcH8Dg=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATDOW+v+LIEHPVkKdyjqZ4Vu2px5Yd1avxrPz12EviOc=\n-----END PUBLIC KEY-----\n",
+        "signature": "Xf8KBk1+JcOWnFWTxSHAP8aI0Uw7ZKEno2Yvuj8I7wtg2gBBOViTxep2ifj22tvRxQ7wRVPA/pKwniJRNuNFCQ=="
       },
       {
         "payload": {
           "version": "flashfirm-identity/1",
           "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
-          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAePU1gdp2KRSkzCfgbc+vEJqFVdLOiROt6AbhS6cwqTU=\n-----END PUBLIC KEY-----\n",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAV1F0A+GRkH5nvsSO/+rkSxT9beMip4sZ9QtRq6B3IPI=\n-----END PUBLIC KEY-----\n",
           "subject": "3e30859eedcd32106c597d38708b534b9c8fb19e9e9bc923d263a5a35d7cb69a",
           "role": "BUYER",
-          "issuedAt": 1793709780340,
-          "expiresAt": 1793713381340,
+          "issuedAt": 1793710522160,
+          "expiresAt": 1793714123160,
           "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709"
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx1JFBRx4gqQSNseXBj4vBPUJP5L5vA+n80Dc9XUhY6s=\n-----END PUBLIC KEY-----\n",
-        "signature": "6+H+Kw2sGNgeWUEb5dObk7SVgwSuVmOgeRLoek7lgfi+GAmU6Nzw4YNtsQhzYK0xjQBJd8eJk1FqtK0EGteKBA=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATDOW+v+LIEHPVkKdyjqZ4Vu2px5Yd1avxrPz12EviOc=\n-----END PUBLIC KEY-----\n",
+        "signature": "uwJ80AOp3QI84D4AOdWBP2Oai4/zgE7xQ5uANkvqkgOglmd0IG7CPynQePfkbtSm0AhNRtA8p0Ctw7ByaUZpDw=="
       }
     ],
     "contributions": [
       {
         "payload": {
           "version": "flashfirm-contribution-claim/1",
-          "planHash": "e6f6ca14b541549769cb04f23bbe5c31e87130725ace2b808fdbd31cb8e5c038",
+          "planHash": "a28a06769a9f45f104c0f4ac7990e83517dccf4108101b570de2196dd689faf6",
           "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
           "artifactHash": "0f8d18c68e0e63d2fd1e0e9532c70ba2e522836f691b6e50b3718035cd81d10a",
           "subject": "15e67356aaa6cb7713617db8ffc0c1c2eeea7af7c6dd03566c3e721fd365f1a1",
           "role": "AUTHOR",
-          "issuedAt": 1793709781341
+          "issuedAt": 1793710523161
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmblVNew4+GV9zIj0EeUB9wfyMXjD8NG6BCsAUmyYUTo=\n-----END PUBLIC KEY-----\n",
-        "signature": "2/J6AWdwGkwUXUa+g2G4nroRkP8XJxPBlYl5KUiGyHtKeg6kEtaJb7Q29SFvrAinwFg2y3Q8eEOB+BS9KF69DA=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/fss22HrriyEHKbMn2MhVq1clgWmgWI5ZtO0u9GegV4=\n-----END PUBLIC KEY-----\n",
+        "signature": "8EridEXeyHQaVolpsygDnqjp2S2WKe4++7oFSsLO+VJF/UZYCj0MZBR7rhixb0RfL5Z7NvvFArnw6vCjqSG0AQ=="
       },
       {
         "payload": {
           "version": "flashfirm-contribution-claim/1",
-          "planHash": "e6f6ca14b541549769cb04f23bbe5c31e87130725ace2b808fdbd31cb8e5c038",
+          "planHash": "a28a06769a9f45f104c0f4ac7990e83517dccf4108101b570de2196dd689faf6",
           "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
           "artifactHash": "b111d5d404c1123cb63697c64a41f84a6311df19098fba74a40fe5592ccc0ba1",
           "subject": "e50fbe76491523bde76bfa56b0787f22343a91cede914adee72fef56e9ff11bd",
           "role": "AUTHOR",
-          "issuedAt": 1793709781341
+          "issuedAt": 1793710523161
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAhV2PjX+Mv0VwfeEtsDYOcWtvOXBH8Qnv4HJm/S4AqgA=\n-----END PUBLIC KEY-----\n",
-        "signature": "kv+fjQM2pBXGqLbyTdkDP6Uqox2lERQViBwgmrB1GVNTCdflyh9znPh73kSPi2q7y7YfFhCN89bU2JasH8qaDg=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsNtveXyvnkJjzy3v1VFHlUdFPqGu8l+LjH8rrlF6Fow=\n-----END PUBLIC KEY-----\n",
+        "signature": "MLPl1LIsaxkXwmtK2a44StUwAExJcFeaTHLKvOc0+CmWTppOhqp1yB+uxu/d1D5U52cvHMdp/0km4GjZS2dyCA=="
       },
       {
         "payload": {
           "version": "flashfirm-contribution-claim/1",
-          "planHash": "e6f6ca14b541549769cb04f23bbe5c31e87130725ace2b808fdbd31cb8e5c038",
+          "planHash": "a28a06769a9f45f104c0f4ac7990e83517dccf4108101b570de2196dd689faf6",
           "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
           "artifactHash": "9c07f35f7297f89f4bc8e69a591580ee1e35d3e38540d4603cb26eba154b910f",
           "subject": "c72a47507f30bb8f91f550e256d1fdb300d3494f39d055c7781ddb901229bcce",
           "role": "AUTHOR",
-          "issuedAt": 1793709781341
+          "issuedAt": 1793710523161
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEACwAcS4oKJZiK5F04/cMspQKuVNR6QziPyQQwEzanMH4=\n-----END PUBLIC KEY-----\n",
-        "signature": "8BD/7EGx8Asps7hP5aysag4lkEtItYfAASfyelz32UXc4IvoycieruZiJf6+gntN5W6QYE/c9ZrGCrDXGFcdCg=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAHTgwLAjJ/QEPqhROj52WIRQ20B1bRn9RtdtWe2ny/xE=\n-----END PUBLIC KEY-----\n",
+        "signature": "tN5ZdUZeE0yIjnNduKkrEYo5AELogmIjXVyzPJgLFgSFYZuD5Ke/kbldM8TAu/kylmOw4TavZ7wnpsADKWszAg=="
       }
     ],
     "invoices": [],
@@ -653,11 +684,11 @@
       "version": "flashfirm-settlement-manifest/2",
       "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
       "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
-      "planHash": "e6f6ca14b541549769cb04f23bbe5c31e87130725ace2b808fdbd31cb8e5c038",
-      "reviewHash": "16747faeabbd6b40e4a917a2879a7099d1a5caf43e36f794b8b532a5d288d942",
-      "qualityHash": "9616cb8a37c8bbcb4765bb2fa9713e3ef58d2b7805115d4a8fe09480d36978f6",
-      "rosterHash": "05acefa84ccc0c615dd8eac0cdccbe7809b48f76be757fff1181149080b5f98d",
-      "contributionHash": "7af2821b66d028e611809f2cc0e6af031173e855b3aa088f479d74afb277621a",
+      "planHash": "a28a06769a9f45f104c0f4ac7990e83517dccf4108101b570de2196dd689faf6",
+      "reviewHash": "8f4522de98edf22a42c9de4e07cdae24a500e7a9fba1e6fb7dcbc475196c29e8",
+      "qualityHash": "dbfad0d853bbd0c9912692431915c04535094cedca5758515c08b3e704e2337a",
+      "rosterHash": "9224fb9c496c1efa0d4f3be8e9123e7061c0b3586f155bd79e9895ad7964f395",
+      "contributionHash": "0569d73a3d9ca8a9ecc00358643cf977c035ea941cefe66334e069657414823c",
       "privacyProofHash": null,
       "allocationAsset": "ARBITRUM_NATIVE_USDC",
       "budgetUnits": 1000000,
@@ -680,38 +711,38 @@
           "recipient": "0x3333333333333333333333333333333333333333"
         }
       ],
-      "identityAuthority": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx1JFBRx4gqQSNseXBj4vBPUJP5L5vA+n80Dc9XUhY6s=\n-----END PUBLIC KEY-----\n",
+      "identityAuthority": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATDOW+v+LIEHPVkKdyjqZ4Vu2px5Yd1avxrPz12EviOc=\n-----END PUBLIC KEY-----\n",
       "obligations": [
         {
-          "id": "f190355cd1e5e2c2c2e5fa5297685a38eb4f5d589e4b6722f2aeb46871cc248b",
+          "id": "0ae9ae07f74954a69da5d815ff6bfb1dc552d3552d3dd28880da21d6e9aca8f4",
           "kind": "WORKER",
           "workerId": "sentinel-live",
           "recipient": "0x1111111111111111111111111111111111111111",
           "amount": 130667
         },
         {
-          "id": "9ff0fd87e8128cf6416f584136d088907d4f73283f63bbbd907c519ebf09de81",
+          "id": "669232ad74815afc7a0ee89008c2ccca19bd13cbee2848cfbaa9448215e13f14",
           "kind": "WORKER",
           "workerId": "continuity-live",
           "recipient": "0x2222222222222222222222222222222222222222",
           "amount": 261333
         },
         {
-          "id": "75d28c4137fa7871f8a2a805663df5efd6d93d028feb54ac4faea2809aba35a5",
+          "id": "5978daecc8bb7a645548e4a65497d37f0f23ee33bc530feddcf082ff17851839",
           "kind": "WORKER",
           "workerId": "evidence-live",
           "recipient": "0x3333333333333333333333333333333333333333",
           "amount": 392000
         },
         {
-          "id": "73a595b157a5713b262ff0f1f7d64199bce3892e4ca1462aeee71022638763b1",
+          "id": "2b940f0ced5b9c6a3c88ba182b38eaae7dd8d5199d4c1bdd5f48df3910527da4",
           "kind": "PROTOCOL_FEE",
           "workerId": null,
           "recipient": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "amount": 16000
         },
         {
-          "id": "bc6f40d801c51c684344b55d50b19935c50e78e08af3267c956b0e7f76f5751d",
+          "id": "5218656d6e6763b76e35209287e3db1be43a2059ab2433f8c0885201a2da34b8",
           "kind": "UNSPENT_REFUND",
           "workerId": null,
           "recipient": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -724,59 +755,59 @@
     "commitment": {
       "policy": {
         "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
-        "buyerKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAePU1gdp2KRSkzCfgbc+vEJqFVdLOiROt6AbhS6cwqTU=\n-----END PUBLIC KEY-----\n",
-        "appealKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAD1w5plMQ7sQjX6Qpy44ghqLob18x/BMTvHp+kXaByNI=\n-----END PUBLIC KEY-----\n",
+        "buyerKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAV1F0A+GRkH5nvsSO/+rkSxT9beMip4sZ9QtRq6B3IPI=\n-----END PUBLIC KEY-----\n",
+        "appealKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmPyypB1vTFYqnazsO32bPliiqr695NC8E1ITX7cCb2A=\n-----END PUBLIC KEY-----\n",
         "workerKeys": [
-          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmblVNew4+GV9zIj0EeUB9wfyMXjD8NG6BCsAUmyYUTo=\n-----END PUBLIC KEY-----\n",
-          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAhV2PjX+Mv0VwfeEtsDYOcWtvOXBH8Qnv4HJm/S4AqgA=\n-----END PUBLIC KEY-----\n",
-          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEACwAcS4oKJZiK5F04/cMspQKuVNR6QziPyQQwEzanMH4=\n-----END PUBLIC KEY-----\n"
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/fss22HrriyEHKbMn2MhVq1clgWmgWI5ZtO0u9GegV4=\n-----END PUBLIC KEY-----\n",
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsNtveXyvnkJjzy3v1VFHlUdFPqGu8l+LjH8rrlF6Fow=\n-----END PUBLIC KEY-----\n",
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAHTgwLAjJ/QEPqhROj52WIRQ20B1bRn9RtdtWe2ny/xE=\n-----END PUBLIC KEY-----\n"
         ],
         "reviewers": [
           {
-            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAlzel24JLFj8FngWTKN4Q6j00KrpXOgVYjRgyQk5LtOs=\n-----END PUBLIC KEY-----\n",
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAeNNJl7HyR/eqDqlvhd5ZgJOjbjQ0uFRrIFI5bEAann0=\n-----END PUBLIC KEY-----\n",
             "operator": "unit-test-reviewer-0"
           },
           {
-            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4v1MsYcLkwAhuZKVeUWm4CLg4X/SBS87Cc4qBDtoSlE=\n-----END PUBLIC KEY-----\n",
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAGAkf9DqgqB78WasT/qaL1BT4svH0Sf9VLwaPH9crQk=\n-----END PUBLIC KEY-----\n",
             "operator": "unit-test-reviewer-1"
           },
           {
-            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAZkrbkBr1+ItAzp1Mv4t311begnoYsfI3+kWIrWzRZT8=\n-----END PUBLIC KEY-----\n",
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAMnqETagng3O9K4szQhacua6TDmRa3noQj24jyDNotXA=\n-----END PUBLIC KEY-----\n",
             "operator": "unit-test-reviewer-2"
           }
         ],
-        "expiresAt": 1793713381340,
+        "expiresAt": 1793714123160,
         "appealWindowMs": 60000
       },
-      "digest": "29476bb1929a54a117bd27002dd796876e72679271b9dca621a7190b25b5096c"
+      "digest": "d3589c32e07973fa6ffa909766927cd86522058ec06c6f226444734be58d2ada"
     },
     "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
     "decisions": [
       {
         "payload": {
           "version": "flashfirm-decision/1",
-          "policyHash": "29476bb1929a54a117bd27002dd796876e72679271b9dca621a7190b25b5096c",
+          "policyHash": "d3589c32e07973fa6ffa909766927cd86522058ec06c6f226444734be58d2ada",
           "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
           "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
           "verdict": "APPROVE",
           "reason": "Synthetic testing only; not a real independent reviewer.",
-          "issuedAt": 1793709781340
+          "issuedAt": 1793710523160
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAlzel24JLFj8FngWTKN4Q6j00KrpXOgVYjRgyQk5LtOs=\n-----END PUBLIC KEY-----\n",
-        "signature": "m6Eo6RUiSUpTf8NOjUdlRyhl3HJtc2VvyA2GTQ4FJdPZtQBnVa+HhgYUAPrlDO0Q4hobCC7dv6vzaVucsr6yDg=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAeNNJl7HyR/eqDqlvhd5ZgJOjbjQ0uFRrIFI5bEAann0=\n-----END PUBLIC KEY-----\n",
+        "signature": "X+oAyfC/Qs+KVVuJdW4odz8ejvZZu5fu1PVPFbUZ0SdNhfSLsFcbz6lPwRt9PdXar/D8/i4zFBJIC5Tk5jnXDQ=="
       },
       {
         "payload": {
           "version": "flashfirm-decision/1",
-          "policyHash": "29476bb1929a54a117bd27002dd796876e72679271b9dca621a7190b25b5096c",
+          "policyHash": "d3589c32e07973fa6ffa909766927cd86522058ec06c6f226444734be58d2ada",
           "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
           "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
           "verdict": "APPROVE",
           "reason": "Synthetic testing only; not a real independent reviewer.",
-          "issuedAt": 1793709781340
+          "issuedAt": 1793710523160
         },
-        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4v1MsYcLkwAhuZKVeUWm4CLg4X/SBS87Cc4qBDtoSlE=\n-----END PUBLIC KEY-----\n",
-        "signature": "aj5DJJsLX/+JsXBz0Ku0PcvWU68RY8ywglWwwlgaTXODs/3ofYGjoyvKfXe+6wS0i8UxAkgVDf5YB+EYuK67DA=="
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAGAkf9DqgqB78WasT/qaL1BT4svH0Sf9VLwaPH9crQk=\n-----END PUBLIC KEY-----\n",
+        "signature": "DokUZB5EcLgOFHLLDMfgluhKS2zS4UQmSWRD7ecnzQRKfn5Lvnh+3/+nwSJPLYLi34c0ukIEdhNassN5R1d8Bg=="
       }
     ],
     "appeal": null,

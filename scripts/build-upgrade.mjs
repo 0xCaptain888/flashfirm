@@ -7,6 +7,7 @@ const push=JSON.parse(await readFile(new URL('evidence/push-channel-upgrade.json
 const operations=JSON.parse(await readFile(new URL('evidence/public-operations-upgrade.json',root),'utf8'));
 const settlement=JSON.parse(await readFile(new URL('evidence/same-task-settlement-sandbox.json',root),'utf8'));
 if(settlement.status!=='PASS'||settlement.network!=='LOCAL_SANDBOX'||settlement.mainnetPayment!==false||
+ !settlement.exactTransferBodiesVerified||
  !settlement.syntheticIdentityAndReviewFixture||settlement.obligations.length!==5||
  settlement.closedStatus.phase!=='Closed')throw Error('LABELED_SAME_TASK_SANDBOX_EVIDENCE_REQUIRED');
 await copyFile(new URL('evidence/same-task-settlement-sandbox.json',root),new URL('same-task-settlement-sandbox.json',out));

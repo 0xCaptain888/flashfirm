@@ -6,7 +6,7 @@ Updated November 3, 2026.
 
 The authenticated local service, Workers/D1 API and SDK accept one immutable report, buyer-signed evaluation plan, signed contribution claims, externally certified identities, reviewer decisions, semantic/removal evaluations and a locked allocation manifest. Mainnet worker payments, protocol fees and unused-budget returns are separate signed obligations. The task is not marked fully settled until **every** obligation has independently verified payment evidence.
 
-A new local NEAR sandbox test used the recorded corrected AI report and explicitly synthetic reviewer/identity certificates. It funded one treasury and actually transferred test balances to three workers, a fee collector and the buyer. Funding, proposal, two approvals and five successful transfer callbacks were checked against final RPC results. Before-review and repeated claims were rejected. This is local blockchain execution; it is **not** a public testnet or mainnet transaction, or independent human review.
+A new local NEAR sandbox test used the recorded corrected AI report and explicitly synthetic reviewer/identity certificates. It funded one treasury and actually transferred test balances to three workers, a fee collector and the buyer. Funding, proposal, two approvals and five successful transfer callbacks were checked against final RPC results. Every payout additionally required a reachable, successful protocol `Transfer` receipt from the treasury to the exact recipient for the exact amount. Before-review and repeated claims were rejected. This is local blockchain execution; it is **not** a public testnet or mainnet transaction, or independent human review.
 
 The production service remains behind its existing identity and signature gates. No new mainnet money, paid model call, Phala restart or confidential live submission was made for this upgrade. The historical bridge transaction remains a separate demonstration.
 
@@ -38,7 +38,7 @@ Only the capped spend is fee-bearing. A worker with no eligible contribution rec
 
 `flow/manifest` creates `flashfirm-settlement-manifest/2`. `flow/invoice` then requires `flashfirm-task-invoice/2`, adding `obligationId`, `kind` and `workerId` (`null` for fees/refunds) to the original invoice fields. Exact amount, recipient, expiry, source, quote signature and chain evidence still apply. A fee invoice and a refund invoice cannot collide through a shared null worker ID.
 
-Each mainnet obligation currently requires its own exact funding/quote authorization. This release does not add a mainnet escrow or authorize an unattended mainnet wallet. Bridge route minimums and gas costs can make small individual obligations uneconomic; do not relabel the native testnet adapter as a batched mainnet solution.
+Each mainnet obligation currently requires its own exact funding/quote authorization. This release does not add a mainnet escrow or authorize an unattended mainnet wallet. A verified mainnet budget-return invoice proves that particular payment, not that it came from one previously escrowed budget. Bridge route minimums and gas costs can make small individual obligations uneconomic; do not relabel the native testnet adapter as a batched mainnet solution.
 
 ## Native NEAR execution adapter
 
@@ -52,7 +52,7 @@ Each mainnet obligation currently requires its own exact funding/quote authoriza
 
 Largest-remainder integer allocation converts the **signed weights** into the independently approved native budget. This is not a USDC/NEAR FX quote. The exact yocto amounts, report-bound evidence root and Rust-compatible plan hash are available from `validateNativeSettlement`.
 
-A task locks either native execution or mainnet invoices. The treasury account is globally reserved to prevent reuse across tasks. No HTTP body may choose a different RPC URL. Readback is anchored to a finalized block and the pinned tested bytecode; successful final claim callbacks are required for every recipient.
+A task locks either native execution or mainnet invoices. The treasury account is globally reserved to prevent reuse across tasks. No HTTP body may choose a different RPC URL. Readback is anchored to a finalized block and the pinned tested bytecode; successful final claim callbacks **and exact protocol Transfer receipt bodies** are required for every recipient. Bodies must be reachable through that transaction's receipt tree, with the treasury as predecessor, the fixed destination and its exact yocto amount. Storage values and a `true` callback alone are insufficient, including if the account operator temporarily replaced its code. If the fixed RPC does not expose historical full bodies through `EXPERIMENTAL_tx_status`, verification fails closed.
 
 After buyer funding/proposal, two on-chain approvals and the appeal interval:
 

@@ -73,6 +73,32 @@ export function nativeDispatchPreview(envelope,flow,status,nowNs,now=Date.now())
     treasuryAction(v.plan,status,v.relayer,'claim_for',{recipient},nowNs)
   ]);
 }
+// Read actual protocol Transfer actions, not just contract storage or a true
+// callback. Even a treasury account capable of changing its own deployed code
+// cannot substitute a different amount/recipient in an accepted payment proof.
+export function verifyNativeTransferBody(outcome,{contractId,recipient,amountYocto}){
+  const rows=outcome?.receipts_outcome,bodies=outcome?.receipts;
+  if(!Array.isArray(rows)||!Array.isArray(bodies)||new Set(rows.map(r=>r.id)).size!==rows.length||
+    new Set(bodies.map(r=>r.receipt_id)).size!==bodies.length)throw Error('FULL_NATIVE_TRANSFER_RECEIPTS_REQUIRED');
+  const outcomes=new Map(rows.map(r=>[r.id,r.outcome])),receipts=new Map(bodies.map(r=>[r.receipt_id,r]));
+  const reachable=new Set(),queue=[...(outcome.transaction_outcome?.outcome?.receipt_ids??[])];
+  while(queue.length){
+    const id=queue.shift();if(reachable.has(id))continue;reachable.add(id);
+    for(const child of outcomes.get(id)?.receipt_ids??[])queue.push(child);
+  }
+  const matches=[];
+  for(const id of reachable){
+    const body=receipts.get(id),row=outcomes.get(id),actions=body?.receipt?.Action?.actions;
+    if(body?.predecessor_id!==contractId||body.receiver_id!==recipient||
+      row?.executor_id!==recipient||!Object.hasOwn(row.status??{},'SuccessValue'))continue;
+    if(Array.isArray(actions)&&actions.length===1&&actions[0].Transfer){
+      if(actions[0].Transfer.deposit!==amountYocto)throw Error('EXACT_NATIVE_TRANSFER_AMOUNT_REQUIRED');
+      matches.push(id);
+    }
+  }
+  if(matches.length!==1)throw Error('EXACT_NATIVE_TRANSFER_RECEIPT_REQUIRED');
+  return {receiptId:matches[0],recipient,amountYocto,transferVerified:true};
+}
 export async function verifyNativeTaskSettlement(envelope,flow,proof,rpc,now=Date.now()){
   const v=validateNativeSettlement(envelope,flow,Math.min(now,envelope.payload.expiresAt-1));
   if((await rpc('status',[])).chain_id!=='testnet')throw Error('NATIVE_TASK_TESTNET_ONLY');
@@ -117,7 +143,8 @@ export async function verifyNativeTaskSettlement(envelope,flow,proof,rpc,now=Dat
     new Set(expected.map(e=>e.hash)).size!==expected.length)throw Error('DISTINCT_NATIVE_TRANSACTION_HASHES_REQUIRED');
   const transactions=[];
   for(const e of expected){
-    const outcome=await rpc('tx',{tx_hash:e.hash,sender_account_id:e.actor,wait_until:'FINAL'});
+    const outcome=await rpc(e.label==='claim'?'EXPERIMENTAL_tx_status':'tx',
+      {tx_hash:e.hash,sender_account_id:e.actor,wait_until:'FINAL'});
     if(outcome.transaction?.hash!==e.hash)throw Error('NATIVE_TRANSACTION_HASH_MISMATCH');
     checkTransaction(outcome,{signerId:e.actor,receiverId:v.plan.contractId,actions:[{type:'FunctionCall',params:{
       methodName:e.method,args:e.args,gas:'100000000000000',deposit:e.deposit}}]});
@@ -132,7 +159,9 @@ export async function verifyNativeTaskSettlement(envelope,flow,proof,rpc,now=Dat
     if(historicalCode.block_hash!==block.header.hash||
       sha(Buffer.from(historicalCode.code_base64??'','base64'))!==NATIVE_TREASURY_SHA256)
       throw Error('UNPINNED_EXECUTED_NATIVE_CODE');
-    transactions.push({label:e.label,hash:e.hash,actor:e.actor,args:e.args});
+    const transfer=e.label==='claim'?verifyNativeTransferBody(outcome,{contractId:v.plan.contractId,
+      recipient:e.args.recipient,amountYocto:v.amountsYocto[v.plan.init.recipients.indexOf(e.args.recipient)]}):null;
+    transactions.push({label:e.label,hash:e.hash,actor:e.actor,args:e.args,...(transfer?{transfer}:{} )});
   }
   return {version:'flashfirm-native-settlement-proof/1',verified:true,network:'testnet',
     taskRoot:flow.manifest.taskRoot,resultRoot:flow.manifest.resultRoot,manifestHash:hash(flow.manifest),
@@ -140,5 +169,5 @@ export async function verifyNativeTaskSettlement(envelope,flow,proof,rpc,now=Dat
     budgetYocto:v.budgetYocto,allocations:v.parts,transactions,phase:status.phase,
     workerPaymentVerified:true,protocolFeePaymentVerified:true,unspentRefundVerified:true,
     mainnetPayment:false,independentOperatorsCertifiedByChain:false,
-    scope:'Pinned tested contract, exact funding/proposal/reviewer calls and successful transfer callbacks for every native obligation. Independence comes from the separate identity roster.'};
+    scope:'Pinned tested contract, exact funding/proposal/reviewer calls, successful callbacks and exact protocol Transfer receipt bodies for every obligation. Independence comes from the separate identity roster.'};
 }

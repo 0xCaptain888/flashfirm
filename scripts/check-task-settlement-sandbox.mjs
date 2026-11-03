@@ -2,7 +2,7 @@ import {Worker} from 'near-workspaces';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import {nativeFixture} from '../test-support/native-task.mjs';
-import {nativeAllocation,NATIVE_TREASURY_SHA256} from '../src/native-task-settlement.mjs';
+import {nativeAllocation,NATIVE_TREASURY_SHA256,verifyNativeTransferBody} from '../src/native-task-settlement.mjs';
 import {hash} from '../src/protocol.mjs';
 import {checkTransaction} from '../src/treasury-policy.mjs';
 import {createHash} from 'node:crypto';
@@ -30,10 +30,12 @@ try{
   const result=await actor.callRaw(contract,method,args,{gas,attachedDeposit:BigInt(deposit)});
   const expected={signerId:actor.accountId,receiverId:contract.accountId,actions:[{type:'FunctionCall',params:{
    methodName:method,args,gas:String(gas),deposit}}]};
-  const final=await worker.provider.sendJsonRpc('tx',{tx_hash:result.result.transaction.hash,
+  const final=await worker.provider.sendJsonRpc(method==='claim_for'?'EXPERIMENTAL_tx_status':'tx',{tx_hash:result.result.transaction.hash,
    sender_account_id:actor.accountId,wait_until:'FINAL'});
   checkTransaction(final,expected);
-  records.push({method,hash:result.result.transaction.hash,actor:actor.accountId,args,deposit});
+  const transfer=method==='claim_for'?verifyNativeTransferBody(final,{contractId:contract.accountId,recipient:args.recipient,
+   amountYocto:amounts[recipients.indexOf(args.recipient)]}):null;
+  records.push({method,hash:result.result.transaction.hash,actor:actor.accountId,args,deposit,...(transfer?{transfer}:{})});
   return result.parseResult();
  }
  const budget='1000000000000000000000';
@@ -51,7 +53,7 @@ try{
  const evidence={version:'flashfirm-same-task-sandbox/1',status:'PASS',network:'LOCAL_SANDBOX',
   at:new Date().toISOString(),resultRoot:manifest.resultRoot,taskRoot:manifest.taskRoot,manifestHash:hash(manifest),
   recordedAiReport:true,syntheticIdentityAndReviewFixture:true,independentHumanReview:false,
-  mainnetPayment:false,publicTestnetPayment:false,wasmSha256:NATIVE_TREASURY_SHA256,
+  mainnetPayment:false,publicTestnetPayment:false,exactTransferBodiesVerified:true,wasmSha256:NATIVE_TREASURY_SHA256,
   budgetYocto:budget,obligations:mappings.map(m=>({...m,...parts.find(p=>p.obligationId===m.obligationId)})),
   transactions:records,closedStatus:status,
   scope:'Recorded AI report and synthetic signed semantic/identity fixtures bind one manifest to actual local sandbox transfers: three workers, protocol fee and buyer unused budget. No new AI call or external money movement.'};
