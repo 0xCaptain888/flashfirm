@@ -43,6 +43,15 @@ attempts to submit before returning signed bytes. Therefore post-signature
 validation is insufficient to prevent extension-side submission. **Signing is
 disabled in both the local service and UI pending a wallet compatibility fix.**
 Do not retry, reset the journal or send a second deposit.
+
+An offline regression on 2026-11-03 used the official `@okxweb3/coin-near` 2.4.9,
+`coin-base` 2.0.6 and `crypto-lib` 2.0.5 in an isolated ignored directory. All four
+standard flat FunctionCall actions roundtripped through its encoder and the
+unchanged exact validator, with a newly generated random test key and no
+broadcast. `scripts/check-okx-serialization.mjs` reproduces that fixture check.
+The app's dependency graph does not include those experimental tools.
+This result does not prove browser compatibility or identify the original
+missing response's changed field; it provides no basis to weaken the validator.
 The read-only saved-order check verifies the official quote signature and
 identity, then reads the finalized source balance. It never claims delivery.
 Subsequent signed-response diagnostics retain decoded actions and their

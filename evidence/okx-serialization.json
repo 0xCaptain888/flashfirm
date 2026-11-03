@@ -1,0 +1,17 @@
+{
+  "version": "flashfirm-okx-serialization/v1",
+  "recordedAt": "2026-11-03T04:16:15Z",
+  "status": "OFFLINE_SDK_ROUNDTRIP_PASS",
+  "versions": {
+    "coinNear": "2.4.9",
+    "coinBase": "2.0.6",
+    "cryptoLib": "2.0.5"
+  },
+  "actions": 4,
+  "randomTestKeyOnly": true,
+  "networkBroadcast": false,
+  "actualBrowserWalletCompatibilityProven": false,
+  "originalResponseMismatchResolved": false,
+  "mainnetSigningEnabled": false,
+  "scope": "Official OKX SDK flat FunctionCall actions roundtrip through exact NEAR validation; not browser-wallet or payment evidence."
+}

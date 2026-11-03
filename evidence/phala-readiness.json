@@ -1,0 +1,18 @@
+{
+  "version": "flashfirm-phala-readiness/v1",
+  "recordedAt": "2026-11-03T04:16:15Z",
+  "status": "IMPLEMENTED_PROVIDER_DEPLOYMENT_REJECTED",
+  "workerSourceSha256": "59ff61c85e1797c46c22fc7d83a82dd6600042a674d561440419127ff4bf980c",
+  "image": "node@sha256:025b8e975a61d94e33abeafaad1255ef44e4898cf1a1b6446860009c72e6d284",
+  "deploymentName": "flashfirm-quotation-proof",
+  "providerMessage": "You are not allowed to deploy the target applications since it violates our terms of use.",
+  "providerRequestId": "97d611347f271bb2674907bca3275445",
+  "resourcesListAfterFailure": "Nothing deployed yet",
+  "displayedBalanceUsdAfterFailure": 5,
+  "autoTopupEnabled": false,
+  "realHardwareEvidenceObtained": false,
+  "encryptedTaskExecutedInRealTee": false,
+  "secretReleaseAllowed": false,
+  "paidModelCalls": 0,
+  "scope": "Local implementation and tests; provider UI observations. No positive hardware, OS, KMS, production privacy or model inference proof."
+}

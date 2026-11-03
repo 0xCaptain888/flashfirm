@@ -1,5 +1,7 @@
 # FlashFirm
 
+**Phala TEE implementation prepared; live deployment blocked:** the new dependency-free quotation worker encrypts task ingress/results, binds nonce/task/ephemeral keys to TDX evidence, and checks measured Compose plus RTMR3 event payloads. Local tests pass. Phala rejected the actual deployment with a terms-of-use message; no instance or hardware proof was obtained. Resources remained empty and balance $5. [Implementation, trust boundaries and next step](docs/PHALA-TEE.md).
+
 **Free public backend is live:** [Open cloud workspace](https://flashfirm-api.fluoridated-rhinoceros.workers.dev/) · [Deployment evidence](evidence/cloudflare-deployment.json). Workers + D1 + Workflows passed a real public write → signed-report verification → duplicate prevention → persistent read → workspace closure check on 2026-11-03. Access requires a privately issued, expiring token. Paid model calls remain disabled. [Access instructions and feature boundaries](docs/CLOUDFLARE-FREE.md).
 
 **2026-11-03 (Asia/Shanghai): real testnet failed-transfer recovery verified.** A 0.001 NEAR claim failed because its named recipient did not exist; the callback restored the entire credit. After creating that recipient, retry succeeded and the isolated treasury closed with zero remaining credit/pending balance. No account was deleted. [All transaction evidence](evidence/testnet-recovery.json). Reviewers remain development identities under one operator.
@@ -17,6 +19,8 @@ Temporary agent teams. Reproducible contribution allocation. Proof before payout
 Development status: real model output + local durable backend + free public verification workspace + verified NEAR testnet settlement. **Not a production service; independent operators, TEE and Intents payments are not live.**
 
 **Mainnet payment attempt — blocked:** a separate local NEAR → Arbitrum USDC console pins one 0.5 NEAR payment and a $5 ceiling. Signed quote verification and live balance/storage/gas preflight passed. The user-approved OKX response failed the exact-action check; the local service did not broadcast. An independent check found an unchanged source balance and an order awaiting deposit. Installed OKX may submit inside its signing method, so signing is disabled pending investigation; the saved-order check is read only. Payment is **not verified**. [Runbook and recovery boundaries](docs/MAINNET-PAYMENT.md) · [Historical signed dry quote](evidence/mainnet-route-preview.json).
+
+An isolated official OKX SDK roundtrip of all four FunctionCall actions passes the unchanged validator using a random test key, without broadcasting. That narrows the investigation but does not establish browser-wallet compatibility or recover the original rejected response.
 
 Wallet console: choose **Meteor Wallet** or **MyNearWallet**. For the Meteor extension, open the demo in the browser where it is installed. The connection targets NEAR testnet; no delegated key is requested and Meteor transactions explicitly disable function-call-key execution. Meteor buyer funding and allocation signatures have been verified; MyNearWallet signing is not verified.
 
@@ -87,7 +91,7 @@ The sample console's last state is `PLANNED`. Private workspace closure is local
 
 `npm run build:pages` creates `dist/`: an explicitly labeled read-only sample, recorded real AI report, signed receipts, sandbox/deployment evidence and the testnet wallet console. Asset URLs are relative. The console bundles public treasury configuration and only asks for signing after an explicit preview and user action. `.github/workflows/pages.yml` builds and deploys with GitHub Actions. The workflow requires no model credential. Pages does not host the authenticated Node backend and viewing the site invokes no paid models. Only public evidence is copied; `.runtime/` is never published.
 
-The user-selected gateway is `https://api.apikey.fan/v1`. Authenticated discovery and real JSON completions have passed using `deepseek-flash`. The private local policy records the approved CNY 20 development cap. `.env.example` documents settings, while the CLI and authenticated public-review job runner read ignored `.runtime` JSON configuration and share the cumulative reservation ledger. The queued runner requires room for all four calls; the existing six-of-eight call count blocks a fresh complete run. Viewing the report never incurs model calls. Do not upload the runtime directory or credentials to GitHub.
+The user-selected gateway is `https://api.apikey.fan/v1`. Authenticated discovery and real JSON completions have passed using `deepseek-flash`. The private local policy records the approved CNY 20 development cap and 12-call limit. `.env.example` documents settings, while the CLI and authenticated public-review job runner read ignored `.runtime` JSON configuration and share the cumulative reservation ledger. The queued runner requires room for all four calls; the current 10/12 calls and CNY 15.91/20 conservative reservations block a fresh complete run. Viewing the report never incurs model calls. Do not upload the runtime directory or credentials to GitHub.
 
 ## Local API
 
