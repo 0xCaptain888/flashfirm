@@ -12,6 +12,11 @@
 <p class="muted">The corrected report restores a source-comment character. It is an operator revision, awaits a new review, and preserves the original model output. One immutable report per workspace.</p>
 <div id="case-status" aria-live="polite"></div>
 <section class="panel"><div class="panel-heading"><h3>Task settlement pipeline</h3><button class="button secondary" id="export-flow">Download evaluation package</button></div><p class="muted">Lock the exact report, reviewer keys, identity certificates, actual removal evaluations and USDC recipients into one buyer-signed plan. An evaluated report and signed invoice are required before a quote can be attached. The old mainnet transfer is reserved as a separate demonstration.</p><div id="flow-status" aria-live="polite"></div>
+<div class="case-heading"><h3>What this task still needs</h3><button class="button secondary" id="export-readiness">Download checklist</button></div>
+<p class="muted">Each release requirement is checked again against the current report and trust configuration. Previously verified payments remain in the history when a plan expires.</p>
+<div id="task-readiness" aria-live="polite"></div>
+<div class="toolbar"><button class="button secondary" id="export-review-package">Prepare external reviewer handoff</button><button class="button secondary" id="export-native">Preview exact escrow transactions</button></div>
+<p class="muted">The reviewer handoff contains the public report, full source context and separate removal samples. It includes no prefilled judgments or signatures. Private reports cannot be exported through this route. An escrow preview never opens a wallet or sends a transaction.</p>
 <details><summary>Advance this task with signed evidence</summary>
 <p class="muted">Each step verifies the exact commitments. Download the evaluation package for claim hashes and separate full/removal inputs. Model re-evaluation requires its own budget; manual judgments must be signed by the pinned reviewers. No worker, reviewer or authority is generated here.</p>
 <label for="flow-operation">Step</label><select id="flow-operation">
@@ -24,11 +29,11 @@
 <option value="quote">Mainnet · Bind official signed quote</option>
 <option value="verify">Mainnet · Verify both chains from source TX hash</option>
 <option value="refund">Mainnet · Verify relay-linked native refund</option>
-<option value="native">Testnet · Authorize fixed native NEAR splits</option>
-<option value="native-verify">Testnet · Verify all funding, review and payout transactions</option>
+<option value="native">Native escrow · Buyer authorization (mainnet disabled by default)</option>
+<option value="native-verify">Native escrow · Verify funding, review, all splits and unused-budget return</option>
 </select><label for="flow-input">Signed envelope / step input JSON</label>
 <textarea id="flow-input" rows="5" maxlength="95000"></textarea><button class="button secondary" id="submit-flow">Validate and save this step</button>
-<p class="muted">Validation saves evidence and never opens a wallet. Testnet execution uses the separately configured zero-deposit claim keeper, after buyer funding and reviewer approval. A task locks one payment path. No mainnet signature or private key is requested here. The original FunctionCall signing path remains locked.</p></details></section>
+<p class="muted">Validation saves evidence and never opens a wallet. The native keeper makes zero-deposit claims only after buyer funding and reviewer approval. Mainnet requires an explicitly enabled operator policy, exact buyer approval and a treasury without access keys. One task locks one payment path. Private keys never belong in this page. The original bridge FunctionCall path remains locked.</p></details></section>
 <details id="review-tools"><summary>Review policy and signed decisions</summary><p class="muted">Pin a policy with three agreed reviewer keys for this review round. A policy added after delivery is not proof of pre-work agreement. This page never generates reviewers or signs on their behalf. Account binding and real-world independence require separate onboarding.</p>
 <label for="review-policy">Review policy JSON</label><textarea id="review-policy" rows="4" maxlength="20000" placeholder='{"taskRoot":"…","reviewers":[…],"buyerKey":"…","appealKey":"…","workerKeys":[…],"expiresAt":0,"appealWindowMs":60000}'></textarea><button class="button secondary" id="pin-review">Pin policy to this report</button>
 <label for="review-operation">Signed envelope type</label><select id="review-operation"><option value="decision">Reviewer decision</option><option value="appeal">Participant appeal</option><option value="resolution">Arbiter resolution</option></select><label for="review-envelope">Signed envelope JSON</label><textarea id="review-envelope" rows="4" maxlength="20000"></textarea><button class="button secondary" id="submit-review">Verify and submit signature</button></details>

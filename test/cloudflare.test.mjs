@@ -6,6 +6,8 @@ import {randomBytes} from 'node:crypto';
 import {handle,sha,decryptReceipt,operationsTick} from '../cloudflare/api.mjs';
 import {verifyCaseExport} from '../src/task-case.mjs';
 import {hash,identity} from '../src/protocol.mjs';
+import {taskFixture} from '../test-support/task-flow.mjs';
+import {validateReviewPackage} from '../src/review-package.mjs';
 const revised=JSON.parse(readFileSync(new URL('../evidence/revised-live-receipt.json',import.meta.url),'utf8'));
 const original=JSON.parse(readFileSync(new URL('../evidence/queued-live-receipt.json',import.meta.url),'utf8'));
 class D1 {
@@ -33,6 +35,24 @@ test('cloud API isolates owners, rejects origins and exposes no paid runner',asy
  assert.equal((await f.request(`/${f.firm.id}/jobs`,'POST',{kind:'LIVE_PUBLIC_REVIEW'},{},{})).status,401);
  assert.equal((await f.request(`/${f.firm.id}/jobs`,'POST',{kind:'LIVE_PUBLIC_REVIEW',receipt:{}},f.a,{'Idempotency-Key':'paid-attempt'})).status,409);
  assert.equal(f.created.size,0);
+ }finally{f.DB.db.close();}
+});
+test('readiness and reviewer handoff are authenticated read-only routes with exact report binding',async()=>{
+ const f=await fixture(),task=taskFixture(),path=`/${f.firm.id}/flow`;
+ try{
+  const blank=await(await f.request(path+'/readiness')).json();
+  assert.equal(blank.releaseReady,false);assert.equal(blank.next.id,'report');
+  assert.equal((await f.request(path+'/readiness','GET',undefined,f.b)).status,404);
+  await f.request(`/${f.firm.id}/case`,'POST',{receipt:task.receipt});
+  await f.request(`/${f.firm.id}/review`,'POST',{policy:task.review.commitment.policy,resultRoot:task.record.receiptHash});
+  assert.equal((await f.request(path+'/plan','POST',task.plan)).status,200);
+  const before=f.DB.db.prepare('SELECT count(*) n FROM events').get().n;
+  const response=await f.request(path+'/review-package');assert.equal(response.status,200);
+  assert.equal(validateReviewPackage(await response.json()).resultRoot,task.record.receiptHash);
+  const readiness=await(await f.request(path+'/readiness')).json();assert.equal(readiness.next.id,'identity');
+  assert.equal(readiness.mainnetEscrowEnabled,false);assert.equal(readiness.paidCalls,0);
+  assert.equal((await f.request(path+'/readiness','POST',{})).status,405);
+  assert.equal(f.DB.db.prepare('SELECT count(*) n FROM events').get().n,before);
  }finally{f.DB.db.close();}
 });
 test('cloud jobs encrypt input, deduplicate retry and reject changed input or closed workspace',async()=>{

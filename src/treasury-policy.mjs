@@ -6,12 +6,21 @@ function integer(value, max = U64) {
   if (typeof value !== 'string' || !/^(0|[1-9][0-9]{0,38})$/.test(value) || BigInt(value) > max) throw Error('Expected canonical unsigned decimal string');
   return BigInt(value);
 }
-function account(value) {
-  if (typeof value !== 'string' || value.length > 64 || !/^(?:[a-z0-9]+(?:[-_][a-z0-9]+)*\.)+testnet$/.test(value)) throw Error('Named .testnet account required');
+export function nativeAccount(value, network = 'testnet') {
+  if (typeof value !== 'string' || value.length > 64 || value.length < 2 ||
+    !(network === 'testnet' ? /^(?:[a-z0-9]+(?:[-_][a-z0-9]+)*\.)+testnet$/.test(value) :
+      network === 'mainnet' && (/^(?:[a-z0-9]+(?:[-_][a-z0-9]+)*\.)+near$/.test(value) || /^[a-f0-9]{64}$/.test(value))))
+    throw Error(network === 'testnet' ? 'Named .testnet account required' : 'Native mainnet .near or implicit account required');
 }
 function hash(value) { if (typeof value !== 'string' || !/^[a-f0-9]{64}$/.test(value)) throw Error('SHA256 commitment required'); return value; }
 export function prepareTestnet(config, nowNs = BigInt(Date.now()) * 1_000_000n) {
   if (!config || config.network !== 'testnet') throw Error('Testnet only');
+  return prepareNativeTreasury(config, nowNs);
+}
+// Pure preview/validation. Accepting mainnet here never enables a broadcaster.
+export function prepareNativeTreasury(config, nowNs = BigInt(Date.now()) * 1_000_000n) {
+  if (!config || !['testnet', 'mainnet'].includes(config.network)) throw Error('Explicit native network required');
+  const account = value => nativeAccount(value, config.network);
   account(config.contractId);
   const args = config.init;
   if (!args || Object.keys(args).some(key => !fields.includes(key)) || fields.some(key => !(key in args))) throw Error('Exact treasury v0.2 initialization fields required');
@@ -23,7 +32,7 @@ export function prepareTestnet(config, nowNs = BigInt(Date.now()) * 1_000_000n) 
   hash(args.task_root); hash(args.policy_hash);
   const deadline = integer(args.deadline_ns), appeal = integer(args.appeal_window_ns), arbitration = integer(args.arbitration_window_ns);
   if (deadline <= nowNs || appeal < MIN_WINDOW || appeal > MAX_WINDOW || arbitration < MIN_WINDOW || arbitration > MAX_WINDOW || deadline + appeal + arbitration > U64) throw Error('Invalid deadline or review windows');
-  return { network: 'testnet', contractId: config.contractId, init: structuredClone(args), arbitrationDeadlineNs: String(deadline + appeal + arbitration), signed: false, broadcast: false };
+  return { network: config.network, contractId: config.contractId, init: structuredClone(args), arbitrationDeadlineNs: String(deadline + appeal + arbitration), signed: false, broadcast: false };
 }
 export function pinnedMismatches(plan, status) {
   const errors = [];
@@ -35,7 +44,7 @@ export function pinnedMismatches(plan, status) {
   return errors;
 }
 export function treasuryAction(plan, status, actor, method, input, nowNs) {
-  account(actor);
+  nativeAccount(actor, plan.network);
   if (pinnedMismatches(plan, status).length) throw Error('Treasury configuration mismatch');
   if (typeof nowNs !== 'bigint' || nowNs < 0n) throw Error('Verified chain timestamp required');
   const phase = status.phase, buyer = actor === status.buyer;
@@ -45,7 +54,7 @@ export function treasuryAction(plan, status, actor, method, input, nowNs) {
     case 'fund': {
       require(buyer && phase === 'Empty' && nowNs < BigInt(status.deadline_ns), 'Only buyer may fund an unexpired empty treasury');
       const amount = integer(input.amount_yocto, U128);
-      require(amount > 0n && amount <= 10n ** 22n, 'Browser test deposit must be between 1 yocto and 0.01 NEAR');
+      require(amount > 0n && amount <= 10n ** 22n, 'Native deposit must be between 1 yocto and 0.01 NEAR');
       deposit = String(amount); break;
     }
     case 'propose': {

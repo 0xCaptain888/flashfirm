@@ -16,6 +16,8 @@ jobs:
       - run: node cloudflare/node_modules/wrangler/bin/wrangler.js d1 migrations apply flashfirm-free --local --config cloudflare/wrangler.jsonc
       - run: node scripts/prepare-cloud-local.mjs
       - run: node cloudflare/node_modules/wrangler/bin/wrangler.js d1 execute flashfirm-free --local --config cloudflare/wrangler.jsonc --file .runtime/cloudflare/local-test-token.sql
+      - run: node scripts/cloud-token.mjs flow-qa-ci
+      - run: node cloudflare/node_modules/wrangler/bin/wrangler.js d1 execute flashfirm-free --local --config cloudflare/wrangler.jsonc --file .runtime/cloudflare/flow-qa-ci-token.sql
       - name: Verify local Workers, D1 and Workflows together
         run: |
           npm --prefix cloudflare run dev > /tmp/flashfirm-cloud-local.log 2>&1 &
@@ -26,11 +28,21 @@ jobs:
             sleep 1
           done
           node scripts/check-cloud-local.mjs
+          node scripts/check-release-upgrade.mjs http://127.0.0.1:43184 flow-qa-ci
   managed-container:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t flashfirm-smoke .
+      - name: Verify packaged offline tools load without sending requests
+        run: |
+          for tool in human-review prepare-native-settlement run-confidential-inference run-confidential-team; do
+            if docker run --rm --network none flashfirm-smoke node "scripts/$tool.mjs" > /tmp/flashfirm-tool.log 2>&1; then
+              echo "Expected missing-argument refusal for $tool"
+              exit 1
+            fi
+            if grep -E 'ERR_MODULE_NOT_FOUND|Cannot find module' /tmp/flashfirm-tool.log; then exit 1; fi
+          done
       - name: Start isolated managed service
         run: docker run -d --name flashfirm-smoke --read-only --tmpfs /tmp --mount type=volume,target=/data -p 127.0.0.1:43183:43180 -e FLASHFIRM_PUBLIC_ORIGIN=https://service.example flashfirm-smoke
       - name: Verify health and access boundary
@@ -66,6 +78,7 @@ jobs:
       - run: npm ci
       - run: npm run test:sandbox
       - run: npm run test:task-settlement
+      - run: npm run test:locked-escrow
       - run: rustc --edition 2021 --test contracts/treasury/src/ledger.rs -o /tmp/flashfirm-ledger-tests
       - run: /tmp/flashfirm-ledger-tests
       - run: rustc --edition 2021 --test contracts/treasury/src/review.rs -o /tmp/flashfirm-review-tests

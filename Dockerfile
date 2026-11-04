@@ -20,6 +20,7 @@ COPY cloudflare/migrations ./cloudflare/migrations
 COPY tee/phala-worker.mjs ./tee/phala-worker.mjs
 COPY server.mjs package.json ./
 COPY scripts/operator-token.mjs scripts/backup.mjs ./scripts/
+COPY scripts/human-review.mjs scripts/prepare-native-settlement.mjs scripts/run-confidential-inference.mjs scripts/run-confidential-team.mjs ./scripts/
 RUN mkdir /data && chown node:node /data
 USER node
 ENV PORT=43180 FLASHFIRM_BIND=0.0.0.0 FLASHFIRM_RUNTIME=/data

@@ -31,6 +31,7 @@ const flowAdapter={db:sqliteAdapter(store.db),access:async(o,f,a)=>store.access(
   encrypt:async(f,v)=>store.encrypt(f,'flow',v),decrypt:async(f,b)=>store.decrypt(f,'flow',b),
   security:{authority:process.env.FLASHFIRM_IDENTITY_AUTHORITY_KEY,releaseAuthority:process.env.FLASHFIRM_SECRET_RELEASE_AUTHORITY_KEY,
     inferenceAuthority:process.env.FLASHFIRM_INFERENCE_VERIFIER_KEY,
+    nativeMainnetEnabled:process.env.FLASHFIRM_NATIVE_MAINNET_ENABLED==='yes',
     revokedSubjects:JSON.parse(process.env.FLASHFIRM_REVOKED_IDENTITY_SUBJECTS??'[]')},
   verifiers:pinnedTaskVerifiers()};
 const integrations=new IntegrationLedger(store,await loadIntegrationConfig(process.env.FLASHFIRM_INTEGRATION_CONFIG));
@@ -83,11 +84,12 @@ const server = http.createServer(async (req, res) => {
       const now=Date.now(),window=limiter.get(owner);
       if(!window||window.until<=now)limiter.set(owner,{until:now+60000,count:1});
       else if(++window.count>120){res.setHeader('Retry-After','60');return send(res,429,{error:'Request limit reached'});}
-      const flowPath=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)\/flow(?:\/(plan|quality|privacy|inference|manifest|invoice|quote|verify|refund|native|native-verify))?$/);
+      const flowPath=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)\/flow(?:\/(plan|quality|privacy|inference|manifest|invoice|quote|verify|refund|native|native-verify|readiness|review-package|execution-package))?$/);
       if(flowPath){
         const [,id,op]=flowPath;
-        if((op&&req.method!=='POST')||(!op&&req.method!=='GET'))return send(res,405,{error:'Method denied'});
-        return send(res,200,await taskFlowOperation(flowAdapter,owner,id,op??'status',op?await body(req):{}));
+        const reading=!op||['readiness','review-package','execution-package'].includes(op);
+        if(req.method!==(reading?'GET':'POST'))return send(res,405,{error:'Method denied'});
+        return send(res,200,await taskFlowOperation(flowAdapter,owner,id,op??'status',reading?{}:await body(req)));
       }
       if(req.method==='GET'&&url.pathname==='/api/workspaces/model-status')return send(res,200,await modelAvailability(runtime));
       if(req.method==='GET'&&url.pathname==='/api/workspaces/integration-status')return send(res,200,integrations.status());

@@ -8,7 +8,7 @@ export class FlashFirmClient {
     this.base=baseUrl.replace(/\/$/,'');this.token=token;this.fetch=fetchImpl;
   }
   async request(path,method='GET',input,key) {
-    const response=await this.fetch(this.base+'/api/workspaces'+path,{method,redirect:'error',signal:AbortSignal.timeout(/\/flow\/(?:privacy|verify|refund)$/.test(path)?90000:15000),headers:{Authorization:`Bearer ${this.token}`,'Content-Type':'application/json',...(key?{'Idempotency-Key':key}:{})},...(input===undefined?{}:{body:JSON.stringify(input)})});
+    const response=await this.fetch(this.base+'/api/workspaces'+path,{method,redirect:'error',signal:AbortSignal.timeout(/\/flow\/(?:privacy|verify|refund|native-verify)$/.test(path)?90000:15000),headers:{Authorization:`Bearer ${this.token}`,'Content-Type':'application/json',...(key?{'Idempotency-Key':key}:{})},...(input===undefined?{}:{body:JSON.stringify(input)})});
     const body=await response.json();if(!response.ok){const error=new Error(body.error??'Request failed');error.status=response.status;throw error;}return body;
   }
   list(){return this.request('');}
@@ -21,6 +21,9 @@ export class FlashFirmClient {
   attachCase(firmId,receipt){return this.request(`/${encodeURIComponent(firmId)}/case`,'POST',{receipt});}
   taskCase(firmId){return this.request(`/${encodeURIComponent(firmId)}/case`);}
   taskFlow(firmId){return this.request(`/${encodeURIComponent(firmId)}/flow`);}
+  taskReadiness(firmId){return this.request(`/${encodeURIComponent(firmId)}/flow/readiness`);}
+  reviewPackage(firmId){return this.request(`/${encodeURIComponent(firmId)}/flow/review-package`);}
+  executionPackage(firmId){return this.request(`/${encodeURIComponent(firmId)}/flow/execution-package`);}
   advanceTask(firmId,operation,envelope){
     if(!['plan','quality','privacy','inference','manifest','invoice','quote','verify','refund','native','native-verify'].includes(operation))throw Error('Unknown task-flow action');
     return this.request(`/${encodeURIComponent(firmId)}/flow/${operation}`,'POST',envelope);

@@ -76,3 +76,25 @@ test('native budget, each recipient and tested bytecode are separately buyer aut
  assert.equal(createHash('sha256').update(wasm).digest('hex'),NATIVE_TREASURY_SHA256);
  assert.equal(taskFlowStatus({...f.flow,nativeSettlement:{evidence:{verified:true}}}).taskSettlementComplete,false);
 });
+test('mainnet authorization stays default-off and cannot reuse a testnet-only envelope',async()=>{
+ const f=nativeFixture('mainnet'),db=new DatabaseSync(':memory:');
+ for(const name of ['0001_workspace.sql','0002_task_cases.sql','0003_task_flow.sql'])
+  db.exec(readFileSync(new URL('../cloudflare/migrations/'+name,import.meta.url),'utf8'));
+ const firm={id:'mainnet-off-test',owner:'alice',state:'ACTIVE'};
+ db.prepare('INSERT INTO firms VALUES(?,?,?,?,?)').run(firm.id,firm.owner,'Disabled mainnet','ACTIVE',f.now);
+ const adapter={db:sqliteAdapter(db),access:async()=>firm,context:async()=>({record:f.record,review:f.review}),
+  encrypt:async(id,v)=>JSON.stringify(v),decrypt:async(id,v)=>JSON.parse(v),security:{authority:f.authority.publicKey}};
+ try{
+  const call=(op,input={},time=f.now)=>taskFlowOperation(adapter,'alice',firm.id,op,input,time);
+  await call('plan',f.plan);
+  await call('quality',{evaluations:f.evaluations,certificates:f.certificates,contributions:f.contributions});
+  await call('manifest',{},f.now+60001);
+  await assert.rejects(call('native',f.authorization,f.nativeNow),/NOT_ENABLED_BY_OPERATOR/);
+  assert.equal(db.prepare("SELECT count(*) n FROM task_payment_claims WHERE chain LIKE 'native-treasury:%'").get().n,0);
+  adapter.security.nativeMainnetEnabled=true;
+  await call('native',f.authorization,f.nativeNow);
+  const preview=await call('execution-package',{},f.nativeNow);
+  assert.equal(preview.network,'mainnet');assert.equal(preview.executionPolicy.enabled,false);
+  await assert.rejects(call('invoice',{},f.nativeNow),/PATH_ALREADY_LOCKED/);
+ }finally{db.close();}
+});

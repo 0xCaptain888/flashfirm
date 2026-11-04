@@ -3,7 +3,8 @@ import {createHash} from 'node:crypto';
 import {settlementManifest} from '../src/task-settlement.mjs';
 import {createCase} from '../src/task-case.mjs';
 import {hash} from '../src/protocol.mjs';
-const root=new URL('../',import.meta.url),proof=JSON.parse(await readFile(new URL('.runtime/same-task-sandbox.json',root),'utf8'));
+const locked=process.argv.includes('--locked');
+const root=new URL('../',import.meta.url),proof=JSON.parse(await readFile(new URL(locked?'.runtime/locked-escrow-sandbox.json':'.runtime/same-task-sandbox.json',root),'utf8'));
 const receipt=JSON.parse(await readFile(new URL('evidence/revised-live-receipt.json',root),'utf8'));
 const manifest=settlementManifest(proof.signedTestFlow,createCase(receipt),proof.syntheticReview,
  {authority:proof.syntheticTrustRoots.identityAuthority},proof.signedTestFlow.plan.payload.createdAt+60001);
@@ -16,5 +17,7 @@ if(proof.status!=='PASS'||proof.network!=='LOCAL_SANDBOX'||proof.mainnetPayment!
  proof.closedStatus.credits_yocto.some(n=>n!=='0')||proof.closedStatus.pending_yocto.some(n=>n!=='0')||
  createHash('sha256').update(await readFile(new URL('artifacts/flashfirm_treasury.wasm',root))).digest('hex')!==proof.wasmSha256)
  throw Error('SAME_TASK_SANDBOX_EVIDENCE_INTEGRITY_FAILED');
-await writeFile(new URL('evidence/same-task-settlement-sandbox.json',root),JSON.stringify(proof,null,2)+'\n');
+if(locked&&(proof.lockedContractVerified!==true||!/^[1-9A-HJ-NP-Za-km-z]{40,44}$/.test(proof.lockTransactionHash??'')))
+ throw Error('ACTUAL_SANDBOX_KEY_REMOVAL_REQUIRED');
+await writeFile(new URL(locked?'evidence/locked-escrow-sandbox.json':'evidence/same-task-settlement-sandbox.json',root),JSON.stringify(proof,null,2)+'\n');
 console.log(JSON.stringify({status:'SANDBOX_ONLY_EVIDENCE_PUBLISHED',manifestHash:proof.manifestHash,mainnetPayment:false,paidModelCalls:0}));

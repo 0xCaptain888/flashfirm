@@ -1,9 +1,9 @@
 import {createHash} from 'node:crypto';
 import {hash,validSeal} from './protocol.mjs';
-import {prepareTestnet,pinnedMismatches,checkTransaction,treasuryAction} from './treasury-policy.mjs';
+import {prepareNativeTreasury,nativeAccount,pinnedMismatches,checkTransaction,treasuryAction} from './treasury-policy.mjs';
 import {base58} from './near-deployment.mjs';
 const positive=v=>typeof v==='string'&&/^[1-9]\d{0,24}$/.test(v);
-const named=v=>typeof v==='string'&&v.length<=64&&/^(?:[a-z0-9]+(?:[-_][a-z0-9]+)*\.)+testnet$/.test(v);
+const named=(v,network)=>{try{nativeAccount(v,network);return true;}catch{return false;}};
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 // Operator-pinned artifact tested by the existing treasury sandbox suite.
 // A buyer cannot substitute a different contract that merely reports "paid".
@@ -26,13 +26,18 @@ export function nativeAllocation(manifest,amount){
 // weights do not constitute a market FX quote or mainnet payment.
 export function validateNativeSettlement(envelope,flow,now=Date.now()){
   const p=envelope?.payload,m=flow.manifest;
-  if(!m||!validSeal(envelope,flow.plan.payload.buyerKey)||p?.version!=='flashfirm-native-settlement/1'||
-    p.network!=='testnet'||p.manifestHash!==hash(m)||p.taskRoot!==m.taskRoot||p.resultRoot!==m.resultRoot||
-    p.wasmSha256!==NATIVE_TREASURY_SHA256||!named(p.relayer)||
+  if(!m||!validSeal(envelope,flow.plan.payload.buyerKey)||
+    !(p?.version==='flashfirm-native-settlement/1'&&p.network==='testnet'||
+      p?.version==='flashfirm-native-settlement/2'&&p.network==='mainnet'&&p.asset==='NATIVE_NEAR'&&
+      p.requireLockedContract===true&&p.noFxConversion===true&&p.commonEscrowBudget===true)||
+    p.config?.network!==p.network||p.manifestHash!==hash(m)||p.taskRoot!==m.taskRoot||p.resultRoot!==m.resultRoot||
+    p.wasmSha256!==NATIVE_TREASURY_SHA256||!named(p.relayer,p.network)||
     !Number.isSafeInteger(p.issuedAt)||p.issuedAt>now||p.issuedAt<flow.plan.payload.createdAt||
     !Number.isSafeInteger(p.expiresAt)||p.expiresAt<=now||p.expiresAt>flow.plan.payload.expiresAt)
     throw Error('EXACT_BUYER_NATIVE_AUTHORIZATION_REQUIRED');
-  const plan=prepareTestnet(p.config,BigInt(p.issuedAt)*1000000n);
+  const plan=prepareNativeTreasury(p.config,BigInt(p.issuedAt)*1000000n);
+  if([plan.contractId,plan.init.buyer,plan.init.arbiter,...plan.init.evaluators,...plan.init.recipients].includes(p.relayer))
+    throw Error('DISTINCT_GAS_SPONSOR_REQUIRED');
   if(plan.init.task_root!==m.taskRoot||plan.init.policy_hash!==flow.plan.payload.reviewPolicyHash||
     BigInt(plan.init.deadline_ns)<BigInt(p.expiresAt)*1000000n||
     !Array.isArray(p.accounts)||p.accounts.length!==m.obligations.length||
@@ -42,7 +47,7 @@ export function validateNativeSettlement(envelope,flow,now=Date.now()){
   const amounts=plan.init.recipients.map(()=>0n);
   for(const o of m.obligations){
     const row=p.accounts.find(a=>a.obligationId===o.id),index=plan.init.recipients.indexOf(row?.accountId);
-    if(index<0||!named(row.accountId)||(o.kind==='UNSPENT_REFUND'&&row.accountId!==plan.init.buyer)||
+    if(index<0||!named(row.accountId,p.network)||(o.kind==='UNSPENT_REFUND'&&row.accountId!==plan.init.buyer)||
       (o.kind!=='UNSPENT_REFUND'&&row.accountId===plan.init.buyer))
       throw Error('EXACT_NATIVE_RECIPIENT_MAPPING_REQUIRED');
     if(amounts[index]!==0n)throw Error('DISTINCT_NATIVE_OBLIGATION_RECIPIENTS_REQUIRED');
@@ -59,7 +64,13 @@ export function validateNativeSettlement(envelope,flow,now=Date.now()){
   return {plan,authorizationHash:hash(envelope),manifestHash:hash(m),amountsYocto:amounts.map(String),
     parts,evidenceRoot,planHash:sha(encoded),
     budgetYocto:p.nativeBudgetYocto,relayer:p.relayer,expiresAt:p.expiresAt,
-    scope:'Buyer-approved native NEAR testnet budget allocated by signed contribution weights; no USDC conversion or cross-chain payment claim.'};
+    network:p.network,
+    scope:'Buyer-approved native NEAR '+p.network+' common escrow budget allocated by signed contribution weights; no USDC conversion or cross-chain payment claim.'};
+}
+export async function requireLockedNativeTreasury(rpc,contractId,blockId){
+  const view=await rpc('query',{request_type:'view_access_key_list',block_id:blockId,account_id:contractId});
+  if(view.block_hash!==blockId||!Array.isArray(view.keys)||view.keys.length!==0)
+    throw Error('MAINNET_ESCROW_MUST_HAVE_NO_ACCESS_KEYS');
 }
 export function nativeDispatchPreview(envelope,flow,status,nowNs,now=Date.now()){
   const v=validateNativeSettlement(envelope,flow,now);
@@ -101,8 +112,9 @@ export function verifyNativeTransferBody(outcome,{contractId,recipient,amountYoc
 }
 export async function verifyNativeTaskSettlement(envelope,flow,proof,rpc,now=Date.now()){
   const v=validateNativeSettlement(envelope,flow,Math.min(now,envelope.payload.expiresAt-1));
-  if((await rpc('status',[])).chain_id!=='testnet')throw Error('NATIVE_TASK_TESTNET_ONLY');
+  if((await rpc('status',[])).chain_id!==v.network)throw Error('NATIVE_TASK_NETWORK_MISMATCH');
   const head=await rpc('block',{finality:'final'}),blockId=head.header.hash;
+  if(v.network==='mainnet')await requireLockedNativeTreasury(rpc,v.plan.contractId,blockId);
   const [code,view]=await Promise.all([
     rpc('query',{request_type:'view_code',block_id:blockId,account_id:v.plan.contractId}),
     rpc('query',{request_type:'call_function',block_id:blockId,account_id:v.plan.contractId,
@@ -159,15 +171,17 @@ export async function verifyNativeTaskSettlement(envelope,flow,proof,rpc,now=Dat
     if(historicalCode.block_hash!==block.header.hash||
       sha(Buffer.from(historicalCode.code_base64??'','base64'))!==NATIVE_TREASURY_SHA256)
       throw Error('UNPINNED_EXECUTED_NATIVE_CODE');
+    if(v.network==='mainnet')await requireLockedNativeTreasury(rpc,v.plan.contractId,block.header.hash);
     const transfer=e.label==='claim'?verifyNativeTransferBody(outcome,{contractId:v.plan.contractId,
       recipient:e.args.recipient,amountYocto:v.amountsYocto[v.plan.init.recipients.indexOf(e.args.recipient)]}):null;
     transactions.push({label:e.label,hash:e.hash,actor:e.actor,args:e.args,...(transfer?{transfer}:{} )});
   }
-  return {version:'flashfirm-native-settlement-proof/1',verified:true,network:'testnet',
+  return {version:'flashfirm-native-settlement-proof/1',verified:true,network:v.network,
     taskRoot:flow.manifest.taskRoot,resultRoot:flow.manifest.resultRoot,manifestHash:hash(flow.manifest),
     authorizationHash:hash(envelope),contractId:v.plan.contractId,blockHash:blockId,blockHeight:head.header.height,
     budgetYocto:v.budgetYocto,allocations:v.parts,transactions,phase:status.phase,
     workerPaymentVerified:true,protocolFeePaymentVerified:true,unspentRefundVerified:true,
-    mainnetPayment:false,independentOperatorsCertifiedByChain:false,
+    mainnetPayment:v.network==='mainnet',commonEscrowBudgetVerified:true,
+    lockedContractVerified:v.network==='mainnet',crossChainPayment:false,independentOperatorsCertifiedByChain:false,
     scope:'Pinned tested contract, exact funding/proposal/reviewer calls, successful callbacks and exact protocol Transfer receipt bodies for every obligation. Independence comes from the separate identity roster.'};
 }

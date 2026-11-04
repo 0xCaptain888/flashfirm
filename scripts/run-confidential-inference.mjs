@@ -3,6 +3,7 @@ import path from 'node:path';
 import {runConfidentialInference} from '../src/aci-inference.mjs';
 import {reserveAciSpend} from '../src/aci-budget.mjs';
 import {seal} from '../src/protocol.mjs';
+import {aciAuditor} from '../src/aci-auditor.mjs';
 const [inputFile,runtimeDir,outputDir]=process.argv.slice(2);
 if(!inputFile||!runtimeDir||!outputDir)throw Error('Usage: node scripts/run-confidential-inference.mjs PRIVATE_INPUT_JSON SHARED_RUNTIME PRIVATE_NEW_OUTPUT_DIR');
 const input=JSON.parse(await readFile(inputFile,'utf8'));
@@ -16,18 +17,7 @@ await writeFile(path.join(outputDir,'intent.json'),JSON.stringify({taskRoot:inpu
  {flag:'wx',mode:0o600});
 let runtimeAudit=input.runtimeAudit;
 if(process.env.FLASHFIRM_ACI_AUDITOR_URL){
- const url=new URL(process.env.FLASHFIRM_ACI_AUDITOR_URL);
- if(url.protocol!=='https:'||url.username||url.password||url.search||url.hash)throw Error('HTTPS_AUDITOR_SERVICE_REQUIRED');
- runtimeAudit=async(identity,policy)=>{
-  const response=await fetch(url,{method:'POST',redirect:'error',signal:AbortSignal.timeout(30000),
-   headers:{'Content-Type':'application/json',...(process.env.FLASHFIRM_ACI_AUDITOR_TOKEN?
-    {Authorization:'Bearer '+process.env.FLASHFIRM_ACI_AUDITOR_TOKEN}:{})},
-   body:JSON.stringify({report:identity.report,composeHash:identity.composeHash,
-    workloadKeysetDigest:identity.workloadKeysetDigest,model:policy.model,sessionIds:policy.sessionIds})});
-  if(!response.ok)throw Error('INDEPENDENT_ACI_AUDITOR_UNAVAILABLE');
-  const text=await response.text();if(text.length>2000000)throw Error('AUDITOR_RESPONSE_TOO_LARGE');
-  return JSON.parse(text);
- };
+ runtimeAudit=aciAuditor(process.env.FLASHFIRM_ACI_AUDITOR_URL,process.env.FLASHFIRM_ACI_AUDITOR_TOKEN);
 }
 const result=await runConfidentialInference({...input,runtimeAudit,releaseAuthority:authority,
  apiKey:process.env.PHALA_ACI_API_KEY,proxy:process.env.HTTPS_PROXY,

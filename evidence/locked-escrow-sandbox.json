@@ -1,0 +1,818 @@
+{
+  "version": "flashfirm-same-task-sandbox/1",
+  "status": "PASS",
+  "network": "LOCAL_SANDBOX",
+  "at": "2026-11-04T01:46:55.068Z",
+  "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+  "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+  "manifestHash": "f38a029310a2106abafe0caf1add193b24e1d26a16dfb1cb841e111028de6bf6",
+  "recordedAiReport": true,
+  "syntheticIdentityAndReviewFixture": true,
+  "independentHumanReview": false,
+  "mainnetPayment": false,
+  "publicTestnetPayment": false,
+  "exactTransferBodiesVerified": true,
+  "wasmSha256": "369c28bab8da8c4ee32222f179c746072e307a4a12c56bcc730b3911553491dd",
+  "lockedContractVerified": true,
+  "lockTransactionHash": "3n377qMoLg1bixTEuXLJ9tB9Rm9DTcBhaqHTDom21g9R",
+  "budgetYocto": "1000000000000000000000",
+  "obligations": [
+    {
+      "obligationId": "a5242317729ddc9acda404bc92f52fd3ace9bcf8bd5be85060b93b9d7de339fc",
+      "kind": "WORKER",
+      "accountId": "worker-a.test.near",
+      "amountYocto": "130667000000000000000"
+    },
+    {
+      "obligationId": "b77ffcf875c5dbb391c5caf1159620c21e452fea6e8b4faff6b914bdb27fe1a0",
+      "kind": "WORKER",
+      "accountId": "worker-b.test.near",
+      "amountYocto": "261333000000000000000"
+    },
+    {
+      "obligationId": "58064c0e243d478e85f5d7c2168c7f4e56f3a6abd64360e9498cdee81233df56",
+      "kind": "WORKER",
+      "accountId": "worker-c.test.near",
+      "amountYocto": "392000000000000000000"
+    },
+    {
+      "obligationId": "f8c92303395926ec3bd0033f3f00d6dc29c0f87b206e88cac91d4228d20962c3",
+      "kind": "PROTOCOL_FEE",
+      "accountId": "fee.test.near",
+      "amountYocto": "16000000000000000000"
+    },
+    {
+      "obligationId": "b69189b9a8cc5846e43bf7a4582f2f8bbfa878ce1d036e7a0f255829d6524b5c",
+      "kind": "UNSPENT_REFUND",
+      "accountId": "buyer.test.near",
+      "amountYocto": "200000000000000000000"
+    }
+  ],
+  "transactions": [
+    {
+      "method": "fund",
+      "hash": "1j8bkom2KFxKcXBt9Zxoegjj51emfy16GDKoCfpXCF4",
+      "actor": "buyer.test.near",
+      "args": {},
+      "deposit": "1000000000000000000000"
+    },
+    {
+      "method": "propose",
+      "hash": "4jSJh3dsLo9MNSwNw1Xg5dryRfUmQUGGHNicFEm73MBS",
+      "actor": "buyer.test.near",
+      "args": {
+        "amounts_yocto": [
+          "200000000000000000000",
+          "130667000000000000000",
+          "261333000000000000000",
+          "392000000000000000000",
+          "16000000000000000000"
+        ],
+        "evidence_root": "738429308ec62063b1d63d0ddf74e94f66d8cfeb2978643737978595198fcc48"
+      },
+      "deposit": "0"
+    },
+    {
+      "method": "approve",
+      "hash": "VZPQYQKeA4xXn34PdyM9iB181tGXh24H9XfsJgCdpas",
+      "actor": "review-a.test.near",
+      "args": {
+        "plan_hash": "ed2cbf036833ba3adb3b1ab4679adc5daa03746d4b28fe1b739eda5b5b0c314a"
+      },
+      "deposit": "0"
+    },
+    {
+      "method": "approve",
+      "hash": "CwT5prns8Y3cnN4mFkEjZNbgANCgABQSrqAqydijVj4W",
+      "actor": "review-b.test.near",
+      "args": {
+        "plan_hash": "ed2cbf036833ba3adb3b1ab4679adc5daa03746d4b28fe1b739eda5b5b0c314a"
+      },
+      "deposit": "0"
+    },
+    {
+      "method": "claim_for",
+      "hash": "CYgBX414TxCpfeAepBQ1GyUagE7YcxoCFmhVp73DjEM4",
+      "actor": "sponsor.test.near",
+      "args": {
+        "recipient": "buyer.test.near"
+      },
+      "deposit": "0",
+      "transfer": {
+        "receiptId": "DzEGEZAWcpqZ4kkw8EYqTdanqeg8oK4TuwZXWdsASHR",
+        "recipient": "buyer.test.near",
+        "amountYocto": "200000000000000000000",
+        "transferVerified": true
+      }
+    },
+    {
+      "method": "claim_for",
+      "hash": "DdmAq2mQhDmmH77d6zz4kvRfHv317bxCQDK448TUuFh7",
+      "actor": "sponsor.test.near",
+      "args": {
+        "recipient": "worker-a.test.near"
+      },
+      "deposit": "0",
+      "transfer": {
+        "receiptId": "6jZEgQpDv7LHSBv8ohZGZEvVHrdhAMFLVs7UzcRyiA5A",
+        "recipient": "worker-a.test.near",
+        "amountYocto": "130667000000000000000",
+        "transferVerified": true
+      }
+    },
+    {
+      "method": "claim_for",
+      "hash": "7VijxpSVKBJx6BvAo1W7mzChWah2F2YczY59NZNdj8h6",
+      "actor": "sponsor.test.near",
+      "args": {
+        "recipient": "worker-b.test.near"
+      },
+      "deposit": "0",
+      "transfer": {
+        "receiptId": "EZhRQoioFj6yt4nkdFAmkHPi7p8HfoFuXyGJDQ3b6Mgn",
+        "recipient": "worker-b.test.near",
+        "amountYocto": "261333000000000000000",
+        "transferVerified": true
+      }
+    },
+    {
+      "method": "claim_for",
+      "hash": "ET5qfuU2gYBB3cv6ConE7sppTRwi41eF8Jm9NxVechVS",
+      "actor": "sponsor.test.near",
+      "args": {
+        "recipient": "worker-c.test.near"
+      },
+      "deposit": "0",
+      "transfer": {
+        "receiptId": "FvgY6WwABkfKwpcayYGTUe2NZovrWuDeMCGE4TVPmn6p",
+        "recipient": "worker-c.test.near",
+        "amountYocto": "392000000000000000000",
+        "transferVerified": true
+      }
+    },
+    {
+      "method": "claim_for",
+      "hash": "AYnSoTC6mTxRDKVkej7AuuiPZegnUXzcuRjb3QQm5LRw",
+      "actor": "sponsor.test.near",
+      "args": {
+        "recipient": "fee.test.near"
+      },
+      "deposit": "0",
+      "transfer": {
+        "receiptId": "7P8UyhMTTD1qNFqvcBvZJqfRnUqjdX4YwmPDyaGHqG79",
+        "recipient": "fee.test.near",
+        "amountYocto": "16000000000000000000",
+        "transferVerified": true
+      }
+    }
+  ],
+  "closedStatus": {
+    "version": "flashfirm-treasury/0.2",
+    "arbiter": "arbiter.test.near",
+    "policy_hash": "e7ab0022252783dcb1f1e01912de451b1bde16c0123da1c69a6b34a54f1ab6b5",
+    "appeal_window_ns": "60000000000",
+    "arbitration_deadline_ns": "1793760484860208000",
+    "release_at_ns": "1793756844446121000",
+    "challenge_root": null,
+    "resolution_root": null,
+    "resolution_upheld": false,
+    "release_allowed": false,
+    "buyer": "buyer.test.near",
+    "evaluators": [
+      "review-a.test.near",
+      "review-b.test.near",
+      "review-c.test.near"
+    ],
+    "recipients": [
+      "buyer.test.near",
+      "worker-a.test.near",
+      "worker-b.test.near",
+      "worker-c.test.near",
+      "fee.test.near"
+    ],
+    "task_root": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+    "plan_hash": "ed2cbf036833ba3adb3b1ab4679adc5daa03746d4b28fe1b739eda5b5b0c314a",
+    "evidence_root": "738429308ec62063b1d63d0ddf74e94f66d8cfeb2978643737978595198fcc48",
+    "deadline_ns": "1793760364860208000",
+    "phase": "Closed",
+    "funded_yocto": "1000000000000000000000",
+    "credits_yocto": [
+      "0",
+      "0",
+      "0",
+      "0",
+      "0"
+    ],
+    "pending_yocto": [
+      "0",
+      "0",
+      "0",
+      "0",
+      "0"
+    ],
+    "paid_yocto": "1000000000000000000000",
+    "approvals": [
+      true,
+      true,
+      false
+    ]
+  },
+  "scope": "Recorded AI report and synthetic signed semantic/identity fixtures bind one manifest to actual local sandbox transfers: three workers, protocol fee and buyer unused budget. No new AI call or external money movement.",
+  "syntheticTrustRoots": {
+    "identityAuthority": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA83sOh68kzAzvsY9yFAYXPAqOkAJ7GHDZDVOXL6tm8T0=\n-----END PUBLIC KEY-----\n"
+  },
+  "signedTestFlow": {
+    "plan": {
+      "payload": {
+        "version": "flashfirm-task-plan/1",
+        "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+        "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+        "buyerKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/WZw35NO/cQhqtEag6LPdN/ubZ5pMQ/OD07F8aSwe6k=\n-----END PUBLIC KEY-----\n",
+        "reviewPolicyHash": "e7ab0022252783dcb1f1e01912de451b1bde16c0123da1c69a6b34a54f1ab6b5",
+        "reviewerKeys": [
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmEWhgimRauENmnd/10RBI8I8ozEBXYrd0+HMM8wYSMU=\n-----END PUBLIC KEY-----\n",
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAH2C25DEEJWShmoQVlcX3wRHYQVQvWG/7XzFHhlnKQTw=\n-----END PUBLIC KEY-----\n",
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAS2MT3IwAobCxIU9Ur5OKwssEUJrKdX7m8qwOygG+PHg=\n-----END PUBLIC KEY-----\n"
+        ],
+        "createdAt": 1793756746696,
+        "expiresAt": 1793760346696,
+        "budgetUnits": 1000000,
+        "allocationAsset": "ARBITRUM_NATIVE_USDC",
+        "settlementPolicy": {
+          "version": "flashfirm-allocation-policy/2",
+          "spendUnits": 800000,
+          "feeBps": 200,
+          "feeRecipient": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "refundRecipient": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "rubric": [
+          {
+            "id": "source-support",
+            "weight": 100
+          }
+        ],
+        "workers": [
+          {
+            "id": "sentinel-live",
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEABv2jbL9jm2GwYAo23MW0THt4qXdK+qDoaiEMobH0xFI=\n-----END PUBLIC KEY-----\n",
+            "subject": "15e67356aaa6cb7713617db8ffc0c1c2eeea7af7c6dd03566c3e721fd365f1a1",
+            "artifactHash": "0f8d18c68e0e63d2fd1e0e9532c70ba2e522836f691b6e50b3718035cd81d10a",
+            "recipient": "0x1111111111111111111111111111111111111111"
+          },
+          {
+            "id": "continuity-live",
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAclQuBX0m5A793dqVAryBlyLpUEcU6jYsHzZKS4IQhjA=\n-----END PUBLIC KEY-----\n",
+            "subject": "e50fbe76491523bde76bfa56b0787f22343a91cede914adee72fef56e9ff11bd",
+            "artifactHash": "b111d5d404c1123cb63697c64a41f84a6311df19098fba74a40fe5592ccc0ba1",
+            "recipient": "0x2222222222222222222222222222222222222222"
+          },
+          {
+            "id": "evidence-live",
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAHgO8vY/p6hWRtSrSNv5fTZnDl+glH10QomYLdzkdZ/U=\n-----END PUBLIC KEY-----\n",
+            "subject": "c72a47507f30bb8f91f550e256d1fdb300d3494f39d055c7781ddb901229bcce",
+            "artifactHash": "9c07f35f7297f89f4bc8e69a591580ee1e35d3e38540d4603cb26eba154b910f",
+            "recipient": "0x3333333333333333333333333333333333333333"
+          }
+        ]
+      },
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/WZw35NO/cQhqtEag6LPdN/ubZ5pMQ/OD07F8aSwe6k=\n-----END PUBLIC KEY-----\n",
+      "signature": "tGK68E4JsuMyG588ok3Vd5xg0J4LlGzZmlqX8JUZ3mZ8EFginWAlr/gvbTmO9VCFjYnDQFQqEwftIO4PaivxAA=="
+    },
+    "evaluations": [
+      {
+        "payload": {
+          "version": "flashfirm-quality-evaluation/1",
+          "planHash": "1cd858cd90cf71323de847053c9f4a004cdd6f77683edc410b61e3318c8cfb12",
+          "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+          "issuedAt": 1793756746697,
+          "method": "HUMAN_BLINDED",
+          "claims": [
+            {
+              "workerId": "sentinel-live",
+              "claimIndex": 0,
+              "claimHash": "9600024f428328100deb3085639fdc3a550538dcb298875731e98ea3e739473e",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "It will make available the modifier\n * `onlyOwner`, which can be applied to your functions to restrict their use to\n * the owner."
+            },
+            {
+              "workerId": "sentinel-live",
+              "claimIndex": 1,
+              "claimHash": "20348c384fb76493bdd1ccdcb27966bc35cdfa7e5f7575af6fe31aa5442fda76",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "function renounceOwnership() public virtual onlyOwner {\n        _transferOwnership(address(0));\n    }"
+            },
+            {
+              "workerId": "sentinel-live",
+              "claimIndex": 2,
+              "claimHash": "679562c46f67f26a471ed3efea680f3d9ce0e2f10a4d59d0eca75038d33fef38",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "NOTE: Renouncing ownership will leave the contract without an owner,\n     * thereby disabling any functionality that is only available to the owner."
+            },
+            {
+              "workerId": "continuity-live",
+              "claimIndex": 0,
+              "claimHash": "10127c7b2e4a713ae7a2c0754a29fa00deecb32154c25ea43d1b3c398f1fcf58",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "It will make available the\n * modifiers `whenNotPaused` and `whenPaused`, which can be applied to\n * the functions of your contract."
+            },
+            {
+              "workerId": "continuity-live",
+              "claimIndex": 1,
+              "claimHash": "10e1d7d53be318c4fd238866a28a71ce6e19136c2bfde538f04e2ef146544bac",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "Note that they will not be pausable by\n * simply including this module, only once the modifiers are put in place."
+            },
+            {
+              "workerId": "continuity-live",
+              "claimIndex": 2,
+              "claimHash": "dd88849e51268ac2211fc39af95aabfb7fc5a17c6ad057ec4a8d85fe0b987b46",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "function _pause() internal virtual whenNotPaused {"
+            },
+            {
+              "workerId": "evidence-live",
+              "claimIndex": 0,
+              "claimHash": "c63fe87eebc78ff2bc817c98b3b48d7815a22a8896ae0dfdb7d2922e88ca11f5",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "modifier onlyOwner() {\n        _checkOwner();\n        _;\n    }"
+            },
+            {
+              "workerId": "evidence-live",
+              "claimIndex": 1,
+              "claimHash": "ef6baccc1285846df8c08bdb0231070fdfd5ca4bf8f4bf307a7724e7b78d8f08",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "Note that they will not be pausable by\n * simply including this module, only once the modifiers are put in place."
+            },
+            {
+              "workerId": "evidence-live",
+              "claimIndex": 2,
+              "claimHash": "a67745b7eceec07fa1fb8ed7a1c597a3593c24467b1abdfad6cfa2962f485417",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "To keep your system secure, you should **always** use the installed code as-is, and neither copy-paste it from online sources nor modify it yourself."
+            }
+          ],
+          "samples": [
+            {
+              "sampleHash": "9f0169f84fddc6f5f28cd6c8682d2041a9ef4d75fbb2f1cb0b3b22be5f040331",
+              "criteria": [
+                {
+                  "id": "source-support",
+                  "score": 100
+                }
+              ],
+              "traceHash": "3afdb03adbfe30a9001316d485ae8dcb7ba2d842da265d3d86e4a49c35074af3"
+            },
+            {
+              "sampleHash": "14e6d586c1c1e4e24c73faa0ba380a4499a8232a928a00d820f1391139f599f8",
+              "criteria": [
+                {
+                  "id": "source-support",
+                  "score": 90
+                }
+              ],
+              "traceHash": "e398848a61f020158676ca16bba062c68140e4d068a39df12497f477a20c4f73"
+            },
+            {
+              "sampleHash": "4ddfd12be19f07c4638b1c737e9e5381ec9975501889d0d814d5eaa39f6c2fd7",
+              "criteria": [
+                {
+                  "id": "source-support",
+                  "score": 80
+                }
+              ],
+              "traceHash": "57f9a16ec01fca7e00ef59d081f545d82aa56da1da9e3bf6b00e8f6e543730cc"
+            },
+            {
+              "sampleHash": "b7aa32e40caa5b5521c126672b36cd565022d52b587146afe0716c35c88bde0f",
+              "criteria": [
+                {
+                  "id": "source-support",
+                  "score": 70
+                }
+              ],
+              "traceHash": "8b7acde78c83b5d82f59e971fbb96b4a6169d488703f2eb3eb991e7531a299fe"
+            }
+          ]
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmEWhgimRauENmnd/10RBI8I8ozEBXYrd0+HMM8wYSMU=\n-----END PUBLIC KEY-----\n",
+        "signature": "NK70cbDuPHWB37ugOo7u648Gvd9hqyX33R1D+m5j3Dc5zNxP6w5gWSl9NfYKx6Mkjf8T3vd16lfNXVc4MVhIDg=="
+      },
+      {
+        "payload": {
+          "version": "flashfirm-quality-evaluation/1",
+          "planHash": "1cd858cd90cf71323de847053c9f4a004cdd6f77683edc410b61e3318c8cfb12",
+          "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+          "issuedAt": 1793756746697,
+          "method": "HUMAN_BLINDED",
+          "claims": [
+            {
+              "workerId": "sentinel-live",
+              "claimIndex": 0,
+              "claimHash": "9600024f428328100deb3085639fdc3a550538dcb298875731e98ea3e739473e",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "It will make available the modifier\n * `onlyOwner`, which can be applied to your functions to restrict their use to\n * the owner."
+            },
+            {
+              "workerId": "sentinel-live",
+              "claimIndex": 1,
+              "claimHash": "20348c384fb76493bdd1ccdcb27966bc35cdfa7e5f7575af6fe31aa5442fda76",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "function renounceOwnership() public virtual onlyOwner {\n        _transferOwnership(address(0));\n    }"
+            },
+            {
+              "workerId": "sentinel-live",
+              "claimIndex": 2,
+              "claimHash": "679562c46f67f26a471ed3efea680f3d9ce0e2f10a4d59d0eca75038d33fef38",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "NOTE: Renouncing ownership will leave the contract without an owner,\n     * thereby disabling any functionality that is only available to the owner."
+            },
+            {
+              "workerId": "continuity-live",
+              "claimIndex": 0,
+              "claimHash": "10127c7b2e4a713ae7a2c0754a29fa00deecb32154c25ea43d1b3c398f1fcf58",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "It will make available the\n * modifiers `whenNotPaused` and `whenPaused`, which can be applied to\n * the functions of your contract."
+            },
+            {
+              "workerId": "continuity-live",
+              "claimIndex": 1,
+              "claimHash": "10e1d7d53be318c4fd238866a28a71ce6e19136c2bfde538f04e2ef146544bac",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "Note that they will not be pausable by\n * simply including this module, only once the modifiers are put in place."
+            },
+            {
+              "workerId": "continuity-live",
+              "claimIndex": 2,
+              "claimHash": "dd88849e51268ac2211fc39af95aabfb7fc5a17c6ad057ec4a8d85fe0b987b46",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "function _pause() internal virtual whenNotPaused {"
+            },
+            {
+              "workerId": "evidence-live",
+              "claimIndex": 0,
+              "claimHash": "c63fe87eebc78ff2bc817c98b3b48d7815a22a8896ae0dfdb7d2922e88ca11f5",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "modifier onlyOwner() {\n        _checkOwner();\n        _;\n    }"
+            },
+            {
+              "workerId": "evidence-live",
+              "claimIndex": 1,
+              "claimHash": "ef6baccc1285846df8c08bdb0231070fdfd5ca4bf8f4bf307a7724e7b78d8f08",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "Note that they will not be pausable by\n * simply including this module, only once the modifiers are put in place."
+            },
+            {
+              "workerId": "evidence-live",
+              "claimIndex": 2,
+              "claimHash": "a67745b7eceec07fa1fb8ed7a1c597a3593c24467b1abdfad6cfa2962f485417",
+              "verdict": "SUPPORTED",
+              "reason": "Synthetic signed semantic judgment for protocol tests only.",
+              "sourceContext": "To keep your system secure, you should **always** use the installed code as-is, and neither copy-paste it from online sources nor modify it yourself."
+            }
+          ],
+          "samples": [
+            {
+              "sampleHash": "9f0169f84fddc6f5f28cd6c8682d2041a9ef4d75fbb2f1cb0b3b22be5f040331",
+              "criteria": [
+                {
+                  "id": "source-support",
+                  "score": 100
+                }
+              ],
+              "traceHash": "3afdb03adbfe30a9001316d485ae8dcb7ba2d842da265d3d86e4a49c35074af3"
+            },
+            {
+              "sampleHash": "14e6d586c1c1e4e24c73faa0ba380a4499a8232a928a00d820f1391139f599f8",
+              "criteria": [
+                {
+                  "id": "source-support",
+                  "score": 90
+                }
+              ],
+              "traceHash": "e398848a61f020158676ca16bba062c68140e4d068a39df12497f477a20c4f73"
+            },
+            {
+              "sampleHash": "4ddfd12be19f07c4638b1c737e9e5381ec9975501889d0d814d5eaa39f6c2fd7",
+              "criteria": [
+                {
+                  "id": "source-support",
+                  "score": 80
+                }
+              ],
+              "traceHash": "57f9a16ec01fca7e00ef59d081f545d82aa56da1da9e3bf6b00e8f6e543730cc"
+            },
+            {
+              "sampleHash": "b7aa32e40caa5b5521c126672b36cd565022d52b587146afe0716c35c88bde0f",
+              "criteria": [
+                {
+                  "id": "source-support",
+                  "score": 70
+                }
+              ],
+              "traceHash": "8b7acde78c83b5d82f59e971fbb96b4a6169d488703f2eb3eb991e7531a299fe"
+            }
+          ]
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAH2C25DEEJWShmoQVlcX3wRHYQVQvWG/7XzFHhlnKQTw=\n-----END PUBLIC KEY-----\n",
+        "signature": "Vie8IBLmFPYkrAmirwj6EwNU3RsdEn4cMaO8zVJTA58HCpF5XEynURLd8hVqWyP+0RGJEic4QiIS4qLXU1edDA=="
+      }
+    ],
+    "certificates": [
+      {
+        "payload": {
+          "version": "flashfirm-identity/1",
+          "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEABv2jbL9jm2GwYAo23MW0THt4qXdK+qDoaiEMobH0xFI=\n-----END PUBLIC KEY-----\n",
+          "subject": "15e67356aaa6cb7713617db8ffc0c1c2eeea7af7c6dd03566c3e721fd365f1a1",
+          "role": "WORKER",
+          "issuedAt": 1793756745696,
+          "expiresAt": 1793760346696,
+          "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709",
+          "authorshipReviewed": true,
+          "artifactHash": "0f8d18c68e0e63d2fd1e0e9532c70ba2e522836f691b6e50b3718035cd81d10a"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA83sOh68kzAzvsY9yFAYXPAqOkAJ7GHDZDVOXL6tm8T0=\n-----END PUBLIC KEY-----\n",
+        "signature": "8K/T2ScdamHexhMKjUf5vQVGHsGGKlrbAeZ4uoF4GBxuShArzUVjiiWQDjBTrEj+8dWdcKRZ5fHFSi1WdQe3Ag=="
+      },
+      {
+        "payload": {
+          "version": "flashfirm-identity/1",
+          "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAclQuBX0m5A793dqVAryBlyLpUEcU6jYsHzZKS4IQhjA=\n-----END PUBLIC KEY-----\n",
+          "subject": "e50fbe76491523bde76bfa56b0787f22343a91cede914adee72fef56e9ff11bd",
+          "role": "WORKER",
+          "issuedAt": 1793756745696,
+          "expiresAt": 1793760346696,
+          "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709",
+          "authorshipReviewed": true,
+          "artifactHash": "b111d5d404c1123cb63697c64a41f84a6311df19098fba74a40fe5592ccc0ba1"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA83sOh68kzAzvsY9yFAYXPAqOkAJ7GHDZDVOXL6tm8T0=\n-----END PUBLIC KEY-----\n",
+        "signature": "87R3Q9szYnca9F94otqs+1NhHq6PW2ZSSNsnie60mtwepOV4S3KZSMGghyc7PEtcf6p5/OWp5GFtdH3/92WaBA=="
+      },
+      {
+        "payload": {
+          "version": "flashfirm-identity/1",
+          "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAHgO8vY/p6hWRtSrSNv5fTZnDl+glH10QomYLdzkdZ/U=\n-----END PUBLIC KEY-----\n",
+          "subject": "c72a47507f30bb8f91f550e256d1fdb300d3494f39d055c7781ddb901229bcce",
+          "role": "WORKER",
+          "issuedAt": 1793756745696,
+          "expiresAt": 1793760346696,
+          "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709",
+          "authorshipReviewed": true,
+          "artifactHash": "9c07f35f7297f89f4bc8e69a591580ee1e35d3e38540d4603cb26eba154b910f"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA83sOh68kzAzvsY9yFAYXPAqOkAJ7GHDZDVOXL6tm8T0=\n-----END PUBLIC KEY-----\n",
+        "signature": "lZNZDLEABSyqc4qKI3g13MllrL/ZXWJbDgownV/asVPaEltFrvvWTvsmshKLZtjyIfFX60xkOXjr8+5dvC0gDw=="
+      },
+      {
+        "payload": {
+          "version": "flashfirm-identity/1",
+          "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmEWhgimRauENmnd/10RBI8I8ozEBXYrd0+HMM8wYSMU=\n-----END PUBLIC KEY-----\n",
+          "subject": "4c354d3a922cb10d7d0cc15289408e10ca0217e89582d18d3323ec69fc701778",
+          "role": "REVIEWER",
+          "issuedAt": 1793756745696,
+          "expiresAt": 1793760346696,
+          "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA83sOh68kzAzvsY9yFAYXPAqOkAJ7GHDZDVOXL6tm8T0=\n-----END PUBLIC KEY-----\n",
+        "signature": "QitvynUBRI/V8vQhxtL69/3qW+9vkgEKDMTYZqQJDnv8CwPYGqKYrh4K7hlU1GKc97vj7lbOuexsNn7ys7W3Dw=="
+      },
+      {
+        "payload": {
+          "version": "flashfirm-identity/1",
+          "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAH2C25DEEJWShmoQVlcX3wRHYQVQvWG/7XzFHhlnKQTw=\n-----END PUBLIC KEY-----\n",
+          "subject": "f037cec3e281fe9e0bc5dfddbf347c8d48ec54acce4bf539e56be8ab35728293",
+          "role": "REVIEWER",
+          "issuedAt": 1793756745696,
+          "expiresAt": 1793760346696,
+          "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA83sOh68kzAzvsY9yFAYXPAqOkAJ7GHDZDVOXL6tm8T0=\n-----END PUBLIC KEY-----\n",
+        "signature": "WdPc0T2UTXIzeHUO+KDIJaETt/BXzbJ+Cf0kodAaqAdb/QWdfzFCELzgc+QGQsbwxI1EqImBwJJ4j6cwRQULDw=="
+      },
+      {
+        "payload": {
+          "version": "flashfirm-identity/1",
+          "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAS2MT3IwAobCxIU9Ur5OKwssEUJrKdX7m8qwOygG+PHg=\n-----END PUBLIC KEY-----\n",
+          "subject": "66bd99714452d9c94b0e99897b3dda9212e14b4b6956ae0751d0624ed9fb7223",
+          "role": "REVIEWER",
+          "issuedAt": 1793756745696,
+          "expiresAt": 1793760346696,
+          "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA83sOh68kzAzvsY9yFAYXPAqOkAJ7GHDZDVOXL6tm8T0=\n-----END PUBLIC KEY-----\n",
+        "signature": "a5jwdTIR696DhLsDOxDmORHKy7LRtI7KfzpZpzbYuNnJvuZ1UE6w/VQN1OlTfVqjlVCOspTHOcDg6v6rQLJPCA=="
+      },
+      {
+        "payload": {
+          "version": "flashfirm-identity/1",
+          "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+          "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/WZw35NO/cQhqtEag6LPdN/ubZ5pMQ/OD07F8aSwe6k=\n-----END PUBLIC KEY-----\n",
+          "subject": "3e30859eedcd32106c597d38708b534b9c8fb19e9e9bc923d263a5a35d7cb69a",
+          "role": "BUYER",
+          "issuedAt": 1793756745696,
+          "expiresAt": 1793760346696,
+          "evidenceHash": "776030ab75a9d408bdb1f6781120635408759cdaec521f2743dd8f3eb8808709"
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA83sOh68kzAzvsY9yFAYXPAqOkAJ7GHDZDVOXL6tm8T0=\n-----END PUBLIC KEY-----\n",
+        "signature": "ENSrImzUR+o5kY6QbrrfZSCdBnFf2ghGFCHCYgO/wfXV7fUeqrj9cHij1D3oKhtFIbpvWiS8U/Kl0Aq9uGCBAg=="
+      }
+    ],
+    "contributions": [
+      {
+        "payload": {
+          "version": "flashfirm-contribution-claim/1",
+          "planHash": "1cd858cd90cf71323de847053c9f4a004cdd6f77683edc410b61e3318c8cfb12",
+          "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+          "artifactHash": "0f8d18c68e0e63d2fd1e0e9532c70ba2e522836f691b6e50b3718035cd81d10a",
+          "subject": "15e67356aaa6cb7713617db8ffc0c1c2eeea7af7c6dd03566c3e721fd365f1a1",
+          "role": "AUTHOR",
+          "issuedAt": 1793756746697
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEABv2jbL9jm2GwYAo23MW0THt4qXdK+qDoaiEMobH0xFI=\n-----END PUBLIC KEY-----\n",
+        "signature": "26hl+9qR9uLLpeHX5Q2nl3IcJj71GxJVlPoaVToWr921ufUf7tG8eY2y8gXs6kqXe6jG0zUMHDc88ZMi8kHvAA=="
+      },
+      {
+        "payload": {
+          "version": "flashfirm-contribution-claim/1",
+          "planHash": "1cd858cd90cf71323de847053c9f4a004cdd6f77683edc410b61e3318c8cfb12",
+          "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+          "artifactHash": "b111d5d404c1123cb63697c64a41f84a6311df19098fba74a40fe5592ccc0ba1",
+          "subject": "e50fbe76491523bde76bfa56b0787f22343a91cede914adee72fef56e9ff11bd",
+          "role": "AUTHOR",
+          "issuedAt": 1793756746697
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAclQuBX0m5A793dqVAryBlyLpUEcU6jYsHzZKS4IQhjA=\n-----END PUBLIC KEY-----\n",
+        "signature": "gR2kDEvGwxSkltPpqUK5zuhh/MQdWSgx0/Sa7Vd8qSCX3AdXnkNGdMMjB02YfIdXTphNitCllafdSBo/tC4+BQ=="
+      },
+      {
+        "payload": {
+          "version": "flashfirm-contribution-claim/1",
+          "planHash": "1cd858cd90cf71323de847053c9f4a004cdd6f77683edc410b61e3318c8cfb12",
+          "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+          "artifactHash": "9c07f35f7297f89f4bc8e69a591580ee1e35d3e38540d4603cb26eba154b910f",
+          "subject": "c72a47507f30bb8f91f550e256d1fdb300d3494f39d055c7781ddb901229bcce",
+          "role": "AUTHOR",
+          "issuedAt": 1793756746697
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAHgO8vY/p6hWRtSrSNv5fTZnDl+glH10QomYLdzkdZ/U=\n-----END PUBLIC KEY-----\n",
+        "signature": "G6MtB1FLyuHHZiCyGR99tOj66LoDfgxvlyFJuQl1+HGQ86xPoxYnH/bgGZGy+qJZPbSZXVLXBufnAYTypHJcDw=="
+      }
+    ],
+    "invoices": [],
+    "manifest": {
+      "version": "flashfirm-settlement-manifest/2",
+      "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+      "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+      "planHash": "1cd858cd90cf71323de847053c9f4a004cdd6f77683edc410b61e3318c8cfb12",
+      "reviewHash": "8ec89e951791f2cdf0ac22936f5ee44c5ca0b5bc5f27b64e300c335ce9795b94",
+      "qualityHash": "b8d01bab44c6dce96c6cb8e481c8b415180efa1f6f81bb030d89ca99d0d5d6e8",
+      "rosterHash": "ea0b3f5883248e657698a84043d65e1bf507d2fc8bd3f70ec7ceafc9e13a0e23",
+      "contributionHash": "5aa332241e901b6e766bd15020f0f7dec986b45ae46cb848065687f7fd395d03",
+      "privacyProofHash": null,
+      "allocationAsset": "ARBITRUM_NATIVE_USDC",
+      "budgetUnits": 1000000,
+      "feeUnits": 16000,
+      "refundUnits": 200000,
+      "payouts": [
+        {
+          "id": "sentinel-live",
+          "amount": 130667,
+          "recipient": "0x1111111111111111111111111111111111111111"
+        },
+        {
+          "id": "continuity-live",
+          "amount": 261333,
+          "recipient": "0x2222222222222222222222222222222222222222"
+        },
+        {
+          "id": "evidence-live",
+          "amount": 392000,
+          "recipient": "0x3333333333333333333333333333333333333333"
+        }
+      ],
+      "identityAuthority": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA83sOh68kzAzvsY9yFAYXPAqOkAJ7GHDZDVOXL6tm8T0=\n-----END PUBLIC KEY-----\n",
+      "obligations": [
+        {
+          "id": "a5242317729ddc9acda404bc92f52fd3ace9bcf8bd5be85060b93b9d7de339fc",
+          "kind": "WORKER",
+          "workerId": "sentinel-live",
+          "recipient": "0x1111111111111111111111111111111111111111",
+          "amount": 130667
+        },
+        {
+          "id": "b77ffcf875c5dbb391c5caf1159620c21e452fea6e8b4faff6b914bdb27fe1a0",
+          "kind": "WORKER",
+          "workerId": "continuity-live",
+          "recipient": "0x2222222222222222222222222222222222222222",
+          "amount": 261333
+        },
+        {
+          "id": "58064c0e243d478e85f5d7c2168c7f4e56f3a6abd64360e9498cdee81233df56",
+          "kind": "WORKER",
+          "workerId": "evidence-live",
+          "recipient": "0x3333333333333333333333333333333333333333",
+          "amount": 392000
+        },
+        {
+          "id": "f8c92303395926ec3bd0033f3f00d6dc29c0f87b206e88cac91d4228d20962c3",
+          "kind": "PROTOCOL_FEE",
+          "workerId": null,
+          "recipient": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "amount": 16000
+        },
+        {
+          "id": "b69189b9a8cc5846e43bf7a4582f2f8bbfa878ce1d036e7a0f255829d6524b5c",
+          "kind": "UNSPENT_REFUND",
+          "workerId": null,
+          "recipient": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "amount": 200000
+        }
+      ]
+    }
+  },
+  "syntheticReview": {
+    "commitment": {
+      "policy": {
+        "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+        "buyerKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/WZw35NO/cQhqtEag6LPdN/ubZ5pMQ/OD07F8aSwe6k=\n-----END PUBLIC KEY-----\n",
+        "appealKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEANjcErB9Hxs+ZsY+JKt0uavWeYgbto3Akvy73eS2avwU=\n-----END PUBLIC KEY-----\n",
+        "workerKeys": [
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEABv2jbL9jm2GwYAo23MW0THt4qXdK+qDoaiEMobH0xFI=\n-----END PUBLIC KEY-----\n",
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAclQuBX0m5A793dqVAryBlyLpUEcU6jYsHzZKS4IQhjA=\n-----END PUBLIC KEY-----\n",
+          "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAHgO8vY/p6hWRtSrSNv5fTZnDl+glH10QomYLdzkdZ/U=\n-----END PUBLIC KEY-----\n"
+        ],
+        "reviewers": [
+          {
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmEWhgimRauENmnd/10RBI8I8ozEBXYrd0+HMM8wYSMU=\n-----END PUBLIC KEY-----\n",
+            "operator": "unit-test-reviewer-0"
+          },
+          {
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAH2C25DEEJWShmoQVlcX3wRHYQVQvWG/7XzFHhlnKQTw=\n-----END PUBLIC KEY-----\n",
+            "operator": "unit-test-reviewer-1"
+          },
+          {
+            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAS2MT3IwAobCxIU9Ur5OKwssEUJrKdX7m8qwOygG+PHg=\n-----END PUBLIC KEY-----\n",
+            "operator": "unit-test-reviewer-2"
+          }
+        ],
+        "expiresAt": 1793760346696,
+        "appealWindowMs": 60000
+      },
+      "digest": "e7ab0022252783dcb1f1e01912de451b1bde16c0123da1c69a6b34a54f1ab6b5"
+    },
+    "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+    "decisions": [
+      {
+        "payload": {
+          "version": "flashfirm-decision/1",
+          "policyHash": "e7ab0022252783dcb1f1e01912de451b1bde16c0123da1c69a6b34a54f1ab6b5",
+          "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+          "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+          "verdict": "APPROVE",
+          "reason": "Synthetic testing only; not a real independent reviewer.",
+          "issuedAt": 1793756746696
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmEWhgimRauENmnd/10RBI8I8ozEBXYrd0+HMM8wYSMU=\n-----END PUBLIC KEY-----\n",
+        "signature": "jSXr46f1hYUrDpAREt4EWGPPre3Up6zK/A0gpEmtT/08OlcJmbaST9/1vlNwwdLqSHNpP6l2dgFRDQVRhpeDCw=="
+      },
+      {
+        "payload": {
+          "version": "flashfirm-decision/1",
+          "policyHash": "e7ab0022252783dcb1f1e01912de451b1bde16c0123da1c69a6b34a54f1ab6b5",
+          "taskRoot": "290de85788d86fb5fdde8d348044dcdbac44c6d83b6139e84e54be23f79b5ead",
+          "resultRoot": "e0fd784f915acfb930c3e21cbf88d20c46d3e11e820a56e8bc10d58a76a84389",
+          "verdict": "APPROVE",
+          "reason": "Synthetic testing only; not a real independent reviewer.",
+          "issuedAt": 1793756746696
+        },
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAH2C25DEEJWShmoQVlcX3wRHYQVQvWG/7XzFHhlnKQTw=\n-----END PUBLIC KEY-----\n",
+        "signature": "T4fJ6eWJFTDEGzexp8+TChPFx/1q9aocILuPRcIS4QUUHGL4YaX/NLhq/lGNUvuxjfCNsBBYrNodmLhT5YaqBQ=="
+      }
+    ],
+    "appeal": null,
+    "resolution": null
+  }
+}

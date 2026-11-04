@@ -1,6 +1,6 @@
 const $ = s => document.querySelector(s);
 let token = '', firm = null, poll = null, epoch = 0, busy = false, availability = null, uncertain = null, taskCase = null;
-let pushSettings=null;
+let pushSettings=null, currentFlow=null;
 const intentKey='flashfirm:job-intent:v1';
 try{uncertain=JSON.parse(sessionStorage.getItem(intentKey)||'null');}catch{sessionStorage.removeItem(intentKey);}
 function clearIntent(){uncertain=null;sessionStorage.removeItem(intentKey);}
@@ -17,18 +17,22 @@ function controls() {
   for(const id of ['pin-review','submit-review']) $('#'+id).disabled=busy||firm?.state!=='ACTIVE'||!taskCase?.status?.attached;
   $('#export-case').disabled=busy||!taskCase?.status?.attached;
   for(const id of ['submit-flow','export-flow']) $('#'+id).disabled=busy||!taskCase?.status?.attached||(id==='submit-flow'&&firm?.state!=='ACTIVE');
+  $('#export-readiness').disabled=busy||!firm;
+  $('#export-review-package').disabled=busy||!currentFlow?.flow?.plan||
+    ['CONFIDENTIAL_INFERENCE','CONFIDENTIAL_QUOTATIONS'].includes(currentFlow?.flow?.plan?.payload.privacyMode);
+  $('#export-native').disabled=busy||!currentFlow?.flow?.nativeSettlement;
   $('#refresh-jobs').disabled = busy || !firm; $('#create button').disabled = busy;
 }
 function lock() {
-  token = ''; firm = null; availability = null; taskCase = null; pushSettings=null; epoch++; clearTimeout(poll);
+  token = ''; firm = null; availability = null; taskCase = null; pushSettings=null; currentFlow=null; epoch++; clearTimeout(poll);
   $('#push-enable').disabled=true;
   $('#workspace-content').hidden = true; $('#selected').hidden = true; $('#login-panel').hidden = false;
   for (const id of ['document','title','receipt','token','review-policy','review-envelope','flow-input','org-invite']) $('#'+id).value = '';
-  for (const id of ['firms','events','jobs','result','budget','case-status','notifications','flow-status','org-status']) $('#'+id).textContent = '';
+  for (const id of ['firms','events','jobs','result','budget','case-status','notifications','flow-status','task-readiness','org-status']) $('#'+id).textContent = '';
   controls();
 }
 async function api(path, method='GET', data, key) {
-  const slowProof=/\/flow\/(?:privacy|verify|refund)$/.test(path);
+  const slowProof=/\/flow\/(?:privacy|verify|refund|native-verify)$/.test(path);
   const r = await fetch('/api/workspaces'+path, { method, signal: AbortSignal.timeout(slowProof?90000:15000), headers: { Authorization:`Bearer ${token}`, 'Content-Type':'application/json', ...(key ? {'Idempotency-Key':key}: {}) }, ...(data !== undefined ? {body:JSON.stringify(data)}: {}) });
   const out = await r.json();
   if (!r.ok) { if (r.status === 401) lock(); const error=Error(out.error);error.status=r.status;throw error; } return out;
@@ -59,19 +63,24 @@ async function history() {
   $('#events').innerHTML = events.reverse().map(e=>`<div class="event"><strong>${escape(e.kind.replaceAll('_',' '))}</strong><p class="muted">${escape(new Date(e.created).toLocaleString())}</p></div>`).join('');
   taskCase=dossier;renderCase();controls();
   const flow=await api(`/${id}/flow`);if(current!==epoch)return;
+  currentFlow=flow;controls();
+  const ready=flow.readiness,first=ready?.next;
+  $('#task-readiness').innerHTML=ready?`${first?`<div class="next-action"><strong>Next · ${escape(first.title)}</strong><p>${escape(first.next)}</p></div>`:'<p>Every listed release and payment check currently passes. External authority quality is still a trust assumption.</p>'}<ol class="readiness-list">${ready.checks.map(c=>`<li class="${c.state==='PASS'?'ready':'blocked'}"><div><strong>${escape(c.title)}</strong><span class="pill">${c.state==='PASS'?'Checked':'Action needed'}</span></div>${c.state==='PASS'?'<p>Current evidence passes this check.</p>':`<p>${escape(c.next)}</p><small>${escape(c.code)}</small>`}</li>`).join('')}</ol><p class="muted">Mainnet native escrow is ${ready.mainnetEscrowEnabled?'enabled by the operator; buyer approval and final proofs are still required':'disabled in this deployment'}. This checklist makes no paid calls or payments.</p>`:'<p class="muted">Readiness details unavailable. Refresh to check the current deployment.</p>';
   const quality=flow.flow?.quality;
   const scoring=quality?`<h4>Signed semantic and removal evaluations · ${escape(quality.state)}</h4><p class="muted">${escape(quality.methods.join(', '))} · ${flow.flow.evaluations.length} pinned signatures. Independent people still require external identity certification.</p><table><thead><tr><th>Worker</th><th>Full quality</th><th>Without worker</th><th>Quality lost</th><th>Planned USDC</th></tr></thead><tbody>${quality.scores.map(s=>`<tr><td>${escape(s.id)}${s.duplicate?' · duplicate':''}</td><td>${(s.full/100).toFixed(2)}</td><td>${(s.without/100).toFixed(2)}</td><td>${(s.marginal/100).toFixed(2)}</td><td>${(quality.allocation.payouts.find(a=>a.id===s.id).amount/1000000).toFixed(6)}</td></tr>`).join('')}</tbody></table><p class="muted">These are signed evaluator scores, not objective truth. Planned contributions are not payments.</p>`:'<p class="muted">Semantic and removal evaluations have not been attached.</p>';
   const manifest=flow.status.manifest,obligations=manifest?.obligations??[];
   const kind=k=>({'WORKER':'Worker','PROTOCOL_FEE':'Protocol fee','UNSPENT_REFUND':'Unused budget refund'}[k]??k);
-  const nativeDone=flow.status.nativeTestnetSettlementVerified===true;
+  const nativeDone=flow.status.nativeTestnetSettlementVerified===true||flow.status.nativeMainnetSettlementVerified===true;
+  const nativeNetwork=flow.status.nativeMainnetSettlementVerified?'mainnet':'testnet';
   const obligationRows=obligations.map(o=>{
    const invoice=flow.status.invoices?.find(i=>i.obligationId===o.id);
-   return `<tr><td>${escape(o.workerId??kind(o.kind))}</td><td>${escape((o.amount/1000000).toFixed(6))} USDC allocation</td><td>${nativeDone?'Paid in buyer-approved testnet NEAR':escape(invoice?.state??(flow.status.nativeSettlement?'Native payment evidence pending':'Not funded'))}</td></tr>`;
+   const nativeAmount=flow.status.nativeSettlement?.evidence?.allocations?.find(p=>p.obligationId===o.id)?.amountYocto;
+   return `<tr><td>${escape(o.workerId??kind(o.kind))}</td><td>${escape((o.amount/1000000).toFixed(6))} USDC allocation${nativeAmount?`<br>${escape(formatNear(nativeAmount))} NEAR actual`:''}</td><td>${nativeDone?'Paid in buyer-approved '+nativeNetwork+' NEAR':escape(invoice?.state??(flow.status.nativeSettlement?'Native payment evidence pending':'Not funded'))}</td></tr>`;
   }).join('');
   const privacy=flow.status.confidentialInferenceVerified?
    'Task artifacts have ACI verifier certificates under the configured external OS/KMS/model audit policy.':
    flow.flow?.privacy?.privateQuotationVerified?'Attested private quotation verified. Model inference has no proof.':'No task-bound confidential inference proof.';
-  $('#flow-status').innerHTML=`<span class="pill">${escape(flow.status.state.replaceAll('_',' '))}</span><p class="muted">${flow.identityAuthorityConfigured?'External identity authority configured. Certificates still require validation.':'Payment blocked until an external identity authority is configured and the roster is certified.'}</p>${scoring}<p>${privacy}</p>${manifest?`<p>Allocation locked · ${manifest.payouts.length} payable workers · ${(manifest.feeUnits/1000000).toFixed(6)} USDC fee · ${(manifest.refundUnits/1000000).toFixed(6)} USDC unused budget.</p>`:''}${obligationRows?`<table><thead><tr><th>Obligation</th><th>Planned amount</th><th>Payment evidence</th></tr></thead><tbody>${obligationRows}</tbody></table>`:''}<div>${(flow.status.invoices??[]).map(i=>`<article class="event"><strong>${escape(i.workerId??kind(i.kind??'WORKER'))} · ${escape(i.state)}</strong><p>${escape(i.recipient)} · minimum ${escape((Number(i.minimumUsdcUnits)/1000000).toFixed(6))} USDC</p></article>`).join('')}</div><p class="muted">Mainnet task settlement: ${flow.status.taskSettlementComplete?'all worker, fee and unused-budget obligations verified':'incomplete'}. Native testnet settlement: ${nativeDone?'all fixed obligations verified':'not verified'}. Native NEAR amounts require a separate buyer signature and are not a USDC conversion.</p>`;
+  $('#flow-status').innerHTML=`<span class="pill">${escape(flow.status.state.replaceAll('_',' '))}</span><p class="muted">${flow.identityAuthorityConfigured?'External identity authority configured. Certificates still require validation.':'Payment blocked until an external identity authority is configured and the roster is certified.'}</p>${scoring}<p>${privacy}</p>${manifest?`<p>Allocation locked · ${manifest.payouts.length} payable workers · ${(manifest.feeUnits/1000000).toFixed(6)} USDC fee · ${(manifest.refundUnits/1000000).toFixed(6)} USDC unused budget.</p>`:''}${obligationRows?`<div class="table-scroll"><table><thead><tr><th>Obligation</th><th>Allocation / actual amount</th><th>Payment evidence</th></tr></thead><tbody>${obligationRows}</tbody></table></div>`:''}<div>${(flow.status.invoices??[]).map(i=>`<article class="event"><strong>${escape(i.workerId??kind(i.kind??'WORKER'))} · ${escape(i.state)}</strong><p>${escape(i.recipient)} · minimum ${escape((Number(i.minimumUsdcUnits)/1000000).toFixed(6))} USDC</p></article>`).join('')}</div><p class="muted">Mainnet task settlement: ${flow.status.taskSettlementComplete?'all worker, fee and unused-budget obligations verified':'incomplete'}. Native testnet: ${flow.status.nativeTestnetSettlementVerified?'verified':'not verified'}. Common mainnet escrow: ${flow.status.commonEscrowBudgetVerified?'verified':'not verified'}. Cross-chain task settlement: ${flow.status.crossChainSettlementVerified?'verified':'not verified'}. Native NEAR amounts require a separate buyer signature and are not a USDC conversion.</p>`;
   $('#notification-count').textContent=`${inbox.unread} unread`;
   $('#notifications').innerHTML=inbox.items.length?inbox.items.map(n=>`<article class="inbox-item ${n.acknowledged?'acknowledged':''}"><strong>${escape(n.title)}</strong><p>${escape(n.detail)}</p>${n.acknowledged?'<span class="muted">Acknowledged</span>':`<button class="button secondary" data-ack="${escape(n.id)}">Mark read</button>`}</article>`).join(''):'<p class="muted">No reminders. Import a report to start its evidence trail.</p>';
   if('Notification' in window&&Notification.permission==='granted'&&sessionStorage.getItem('flashfirm:notify')==='yes'){
@@ -85,7 +94,7 @@ async function history() {
   if(waiting)poll=setTimeout(async()=>{if(busy){poll=setTimeout(()=>history().catch(e=>message(e.message)),6000);return;}try{await history();}catch(e){message(e.status===429?'Refresh paused at the request limit. Wait a minute, then use Refresh.':e.message);}},10000);
 }
 async function select(id) {
-  clearTimeout(poll); const current = ++epoch; availability = null; taskCase=null; firm=null; controls();
+  clearTimeout(poll); const current = ++epoch; availability = null; taskCase=null; currentFlow=null; firm=null; controls();
   const selected = await api('/'+id); if (current !== epoch) return;
   firm = selected; $('#selected').hidden = false; $('#firm-title').textContent = firm.title; $('#firm-state').textContent = firm.state; $('#result').textContent = ''; $('#document').value = '';
   sessionStorage.setItem('flashfirm:selected-workspace',firm.id);
@@ -97,6 +106,7 @@ function renderCase(){
  $('#case-status').innerHTML=`<div class="case-summary"><span class="pill">${escape(status.state.replaceAll('_',' '))}</span><p>${escape(status.nextAction)}</p><small>Task ${escape(status.sourceTaskId)}</small></div><div class="gate-grid">${status.gates.filter(g=>!['privacy','settlement'].includes(g.id)).map(g=>`<article class="gate"><span class="mini-label">${escape(g.id)}</span><strong>${escape(g.state.replaceAll('_',' '))}</strong><p>${escape(g.detail)}</p></article>`).join('')}</div><p class="muted">This dossier covers the report and review. Current privacy and payment evidence appears in the task settlement pipeline below.</p><details><summary>Source locations and claims (${status.claims.length})</summary>${status.claims.map(c=>`<article class="claim"><strong>${escape(c.workerId)} · ${escape(c.kind)}</strong><p>${escape(c.statement)}</p><blockquote>${escape(c.quote)}</blockquote><small>${escape(c.sourceId)} · ${c.exact?'exact quotation, excerpt line '+c.excerptLine:'quotation rejected'} · conclusion requires review</small></article>`).join('')}</details><details><summary>Exact task and report commitments</summary><pre>${escape(JSON.stringify({workspaceId:status.workspaceId,taskRoot:status.taskRoot,receiptHash:status.receiptHash,parentHash:status.parentHash,review:taskCase.review},null,2))}</pre></details>`;
 }
 function download(value,filename){const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function formatNear(value){const n=BigInt(value),whole=n/10n**24n,frac=String(n%10n**24n).padStart(24,'0').replace(/0+$/,'');return String(whole)+(frac?'.'+frac:'');}
 async function perform(fn) { if (busy) return; busy = true; controls(); try { await fn(); } catch (e) { message(e.message); } finally { busy = false; controls(); } }
 function action(id, fn) { $(id).addEventListener('click', e=>{e.preventDefault();perform(fn);}); }
 $('#login').addEventListener('submit', async e=>{e.preventDefault();if(busy)return;await perform(async()=>{const current=epoch;token=$('#token').value.trim();$('#token').value='';const firms=await refresh();if(current!==epoch||!token)return;$('#login-panel').hidden=true;$('#workspace-content').hidden=false;const saved=new URL(location.href).searchParams.get('workspace')??sessionStorage.getItem('flashfirm:selected-workspace');if(firms?.some(f=>f.id===saved))await select(saved);message('Workspace unlocked.');});});
@@ -143,6 +153,9 @@ for(const [id,enabled]of [['email-enable',true],['email-disable',false]])action(
  message(result.deliveryEnabled?(enabled?'Email subscription enabled.':'Email subscription disabled.'):'Preference saved. Email delivery remains disabled until a verified sender is configured.');
 });
 action('#export-flow',async()=>{download(await api(`/${firm.id}/flow`),`flashfirm-evaluation-${firm.id}.json`);});
+action('#export-readiness',async()=>{const id=firm.id,value=await api(`/${id}/flow/readiness`);download(value,`flashfirm-checklist-${id}.json`);message('Current readiness checklist downloaded. No evidence was changed.');});
+action('#export-review-package',async()=>{const id=firm.id,value=await api(`/${id}/flow/review-package`);download(value,`flashfirm-review-${id}.json`);message('Public-source reviewer handoff downloaded. Share privately with the agreed reviewers; use npm run review:human to prepare and sign their actual judgments.');});
+action('#export-native',async()=>{const id=firm.id,value=await api(`/${id}/flow/execution-package`);download(value,`flashfirm-escrow-preview-${id}.json`);message('Exact escrow transaction preview downloaded. Execution is disabled in the generated policy.');});
 action('#submit-flow',async()=>{
  const op=$('#flow-operation').value,value=$('#flow-input').value.trim();
  message('Validating this step. Chain and hardware proofs may take up to 90 seconds. No payment is initiated.');

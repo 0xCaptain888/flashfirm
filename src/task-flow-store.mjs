@@ -6,20 +6,30 @@ import {bindTaskQuote,verifyTaskPayment,verifyNativeRefund} from './settlement-p
 import {verifyTaskPrivacy} from './task-privacy.mjs';
 import {validateNativeSettlement,verifyNativeTaskSettlement} from './native-task-settlement.mjs';
 import {acceptInferenceCertificates} from './aci-policy.mjs';
+import {taskReadiness} from './task-readiness.mjs';
+import {createReviewPackage} from './review-package.mjs';
+import {nativeExecutionPackage} from './native-execution-package.mjs';
 const q=(db,sql,...args)=>db.prepare(sql).bind(...args);
 // The adapter supplies authenticated access, encryption and operator-pinned
 // verifier functions. None of those trust roots can come from an HTTP payload.
 export async function taskFlowOperation(adapter,owner,firmId,operation,input={},now=Date.now()){
   const {db}=adapter;
-  const firm=await adapter.access(owner,firmId,operation!=='status');
+  const readOnly=['status','readiness','review-package','execution-package'].includes(operation);
+  const firm=await adapter.access(owner,firmId,!readOnly);
   const {record,review}=await adapter.context(firm);
   const row=await q(db,'SELECT * FROM task_flows WHERE firm=?',firmId).first();
   let flow=row?await adapter.decrypt(firmId,row.blob):null;
-  if(operation==='status')return {flow,record,status:taskFlowStatus(flow),
+  const recoveryHold=!!await q(db,'SELECT 1 FROM recovery_holds WHERE firm=?',firmId).first();
+  if(operation==='review-package')return createReviewPackage(flow,record,review,now);
+  if(operation==='execution-package')return nativeExecutionPackage(flow??{},now);
+  const readiness=()=>taskReadiness({record,review,flow,security:adapter.security,
+    active:firm.state==='ACTIVE',recoveryHold},now);
+  if(operation==='readiness')return readiness();
+  if(operation==='status')return {flow,record,status:taskFlowStatus(flow),readiness:readiness(),
     samples:record?qualitySamples(record.receipt):[],
     claims:record?citationLocations(record.receipt).map(c=>({...c,claimHash:hash(c)})):[],
     identityAuthorityConfigured:!!adapter.security?.authority};
-  if(!['verify','refund','native-verify'].includes(operation)&&await q(db,'SELECT 1 FROM recovery_holds WHERE firm=?',firmId).first())
+  if(!['verify','refund','native-verify'].includes(operation)&&recoveryHold)
     throw Error('RESTORED_TASK_REQUIRES_OPERATOR_RECONCILIATION');
   if(!record)throw Error('REPORT_REQUIRED');
   if(operation==='plan'){
@@ -59,18 +69,23 @@ export async function taskFlowOperation(adapter,owner,firmId,operation,input={},
     if(hash(flow.manifest)!==hash(settlementManifest(flow,record,review,adapter.security,now)))throw Error('MANIFEST_BINDING_CHANGED');
     if(flow.invoices.length)throw Error('PAYMENT_PATH_ALREADY_LOCKED');
     const native=validateNativeSettlement(input,flow,now);
+    if(native.network==='mainnet'&&adapter.security?.nativeMainnetEnabled!==true)
+      throw Error('MAINNET_ESCROW_NOT_ENABLED_BY_OPERATOR');
     if(flow.nativeSettlement){
       if(hash(flow.nativeSettlement.authorization)!==hash(input))throw Error('NATIVE_AUTHORIZATION_ALREADY_LOCKED');
       return {status:taskFlowStatus(flow)};
     }
     flow.nativeSettlement={authorization:input,evidence:null};
-    claims.push(['native-treasury:testnet',native.plan.contractId,native.authorizationHash]);
+    claims.push(['native-treasury:'+native.network,native.plan.contractId,native.authorizationHash]);
   }else if(operation==='native-verify'){
     if(!flow.nativeSettlement)throw Error('NATIVE_AUTHORIZATION_REQUIRED');
     if(!adapter.verifiers?.nativeRpc)throw Error('PINNED_NATIVE_VERIFIER_NOT_CONFIGURED');
-    const evidence=await verifyNativeTaskSettlement(flow.nativeSettlement.authorization,flow,input,adapter.verifiers.nativeRpc,now);
+    const network=flow.nativeSettlement.authorization.payload.network;
+    const rpc=network==='mainnet'?adapter.verifiers?.nearRpc:adapter.verifiers?.nativeRpc;
+    if(!rpc)throw Error('PINNED_NATIVE_VERIFIER_NOT_CONFIGURED');
+    const evidence=await verifyNativeTaskSettlement(flow.nativeSettlement.authorization,flow,input,rpc,now);
     flow.nativeSettlement.evidence=evidence;
-    for(const tx of evidence.transactions)claims.push(['testnet',tx.hash,evidence.authorizationHash]);
+    for(const tx of evidence.transactions)claims.push([network==='mainnet'?'near':'testnet',tx.hash,evidence.authorizationHash]);
   }else if(operation==='invoice'){
     if(flow.nativeSettlement)throw Error('PAYMENT_PATH_ALREADY_LOCKED');
     if(!flow.manifest)throw Error('MANIFEST_REQUIRED');

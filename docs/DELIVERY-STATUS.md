@@ -1,4 +1,21 @@
-# Delivery status — 2026-11-03
+# Delivery status — 2026-11-04
+
+**Current upgrade:** [Escrow, review and confidential teams](ESCROW-REVIEW-UPGRADE.md)
+adds a default-off native NEAR mainnet common-budget adapter with mandatory
+keyless treasury verification, separately approved bounded gas sponsorship and
+exact final Transfer proofs. The workspace and SDK now expose current readiness,
+public-source reviewer handoffs and exact transaction previews. Actual human
+review forms contain no pre-approved scores; criterion/marginal conflicts block
+release. A private team runner checks the original whole-team budget before any
+model dispatch. Real mainnet escrow, independent human review, private ACI
+execution and cross-chain refund acceptance remain pending. No additional paid
+call, mainnet transaction or Phala restart is implied.
+
+Validation for this upgrade: **160/160 automated tests passed**, a disposable
+keyless local treasury completed five exact transfers and closed, and the
+[public release workflow acceptance](../evidence/release-workflow-upgrade.json)
+passed with synthetic review fixtures, no financial transaction and no paid
+model call. The temporary QA workspace is closed and its token revoked.
 
 **Settlement v2 / ACI:** [New implementation guide](SETTLEMENT-V2-ACI.md).
 One recorded report plus synthetic review/identity fixtures has completed five

@@ -1,5 +1,14 @@
 # Integration upgrade — 2026-11-02
 
+**Current November 4 status:** use [delivery status](DELIVERY-STATUS.md) and
+[escrow/review/ACI guide](ESCROW-REVIEW-UPGRADE.md) for the latest boundaries.
+The earlier sections below are historical. Scheduled external monitoring,
+encrypted offsite backup and actual isolated D1 recovery are complete.
+ACI inference and native mainnet escrow adapters are implemented, but real
+private inference and mainnet escrow acceptance have not run. Organization
+identity/email providers, real independent reviewers, device delivery and the
+full publicly hosted paid Node runner still need setup/acceptance.
+
 **2026-11-03 follow-up:** [Task settlement](TASK-SETTLEMENT.md) and
 [operations/recovery](OPERATIONS-UPGRADE.md) supersede the earlier implementation
 status below. A verified-identity organization adapter, opt-in encrypted email

@@ -5,9 +5,12 @@ import {nativeFixture} from '../test-support/native-task.mjs';
 import {validateNativeSettlement,verifyNativeTaskSettlement} from '../src/native-task-settlement.mjs';
 import {executeNativeClaims} from '../src/native-claim-queue.mjs';
 import {base58} from '../src/near-deployment.mjs';
+import {hash,seal} from '../src/protocol.mjs';
+import {taskFlowStatus} from '../src/task-settlement.mjs';
+import {nativeExecutionPackage} from '../src/native-execution-package.mjs';
 const wasm=readFileSync(new URL('../artifacts/flashfirm_treasury.wasm',import.meta.url));
-function fixture(){
- const f=nativeFixture(),v=validateNativeSettlement(f.authorization,f.flow,f.nativeNow);
+function fixture(network='testnet'){
+ const f=nativeFixture(network),v=validateNativeSettlement(f.authorization,f.flow,f.nativeNow);
  const status={version:'flashfirm-treasury/0.2',...v.plan.init,arbitration_deadline_ns:v.plan.arbitrationDeadlineNs,
   plan_hash:v.planHash,evidence_root:v.evidenceRoot,funded_yocto:v.budgetYocto,paid_yocto:v.budgetYocto,
   phase:'Closed',credits_yocto:v.amountsYocto.map(()=>'0'),pending_yocto:v.amountsYocto.map(()=>'0'),approvals:[true,true,false]};
@@ -28,10 +31,11 @@ function fixture(){
   approvals:v.plan.init.evaluators.slice(0,2).map(accountId=>({accountId,hash:tx(accountId,'approve',{plan_hash:v.planHash})})),
   claims:v.plan.init.recipients.filter((r,i)=>v.amountsYocto[i]!=='0').map(recipient=>({recipient,hash:tx(v.relayer,'claim_for',{recipient})}))};
  const rpc=async(method,params)=>{
-  if(method==='status')return {chain_id:'testnet'};
+  if(method==='status')return {chain_id:network};
   if(method==='block')return {header:{hash:'final-block',height:100,timestamp_nanosec:String(BigInt(f.nativeNow+1)*1000000n)}};
   if(['tx','EXPERIMENTAL_tx_status'].includes(method))return transactions.get(params.tx_hash);
   if(params.request_type==='view_code')return {block_hash:'final-block',hash:base58(Buffer.from(f.nativePayload.wasmSha256,'hex')),code_base64:wasm.toString('base64')};
+  if(params.request_type==='view_access_key_list')return {block_hash:'final-block',keys:[]};
   return {block_hash:'final-block',result:[...Buffer.from(JSON.stringify(status))]};
  };
  return {...f,v,status,proof,transactions,rpc};
@@ -56,7 +60,42 @@ test('native verifier checks every final action and callback, exact code and the
  const codeForged=async(m,p)=>m==='query'&&p.request_type==='view_code'?{block_hash:'final-block',code_base64:'ZmFrZQ=='}:f.rpc(m,p);
  await assert.rejects(verifyNativeTaskSettlement(f.authorization,f.flow,f.proof,codeForged,f.nativeNow+2),/WASM/);
  const sandbox=async(m,p)=>m==='status'?{chain_id:'sandbox'}:f.rpc(m,p);
- await assert.rejects(verifyNativeTaskSettlement(f.authorization,f.flow,f.proof,sandbox,f.nativeNow+2),/TESTNET/);
+ await assert.rejects(verifyNativeTaskSettlement(f.authorization,f.flow,f.proof,sandbox,f.nativeNow+2),/NETWORK/);
+});
+test('mainnet common escrow verifies actual conserved transfers and requires zero access keys at every historical block',async()=>{
+ const f=fixture('mainnet'),evidence=await verifyNativeTaskSettlement(f.authorization,f.flow,f.proof,f.rpc,f.nativeNow+2);
+ f.flow.nativeSettlement={authorization:f.authorization,evidence};
+ assert.equal(evidence.commonEscrowBudgetVerified,true);assert.equal(evidence.mainnetPayment,true);
+ const status=taskFlowStatus(f.flow);assert.equal(status.taskSettlementComplete,true);
+ assert.equal(status.nativeMainnetSettlementVerified,true);assert.equal(status.crossChainSettlementVerified,false);
+ assert.equal(status.nativeTestnetSettlementVerified,false);
+ const pkg=nativeExecutionPackage(f.flow,f.nativeNow);
+ assert.equal(pkg.executionPolicy.enabled,false);assert.equal(pkg.allocations.length,5);assert.equal(pkg.fundsMoved,false);
+ assert.equal(pkg.stages[0].transaction.actions[0].params.deposit,f.v.budgetYocto);
+ const unlocked=async(m,p)=>m==='query'&&p.request_type==='view_access_key_list'?
+  {block_hash:'final-block',keys:[{access_key:{permission:'FullAccess'}}]}:f.rpc(m,p);
+ await assert.rejects(verifyNativeTaskSettlement(f.authorization,f.flow,f.proof,unlocked,f.nativeNow+2),/NO_ACCESS_KEYS/);
+ const forged=structuredClone(f.flow);forged.nativeSettlement.evidence.manifestHash=hash('wrong-task');
+ assert.equal(taskFlowStatus(forged).taskSettlementComplete,false);
+ for(const field of ['requireLockedContract','commonEscrowBudget','noFxConversion']){
+  const p=structuredClone(f.nativePayload);p[field]=false;
+  assert.throws(()=>validateNativeSettlement(seal(p,f.buyer),f.flow,f.nativeNow),/AUTHORIZATION/);
+ }
+});
+test('mainnet keeper requires separate exact operator gas approval and locks before any send',async()=>{
+ const f=fixture('mainnet');f.status.phase='Approved';f.status.release_allowed=true;
+ f.status.credits_yocto=[...f.v.amountsYocto];f.flow.nativeSettlement={authorization:f.authorization};
+ let sends=0,reserves=0;
+ const input={flow:f.flow,rpc:f.rpc,journal:{reserve:async()=>{reserves++;},record:async()=>{}},
+  send:async()=>{sends++;throw Error('AMBIGUOUS_SEND');},now:()=>f.nativeNow};
+ await assert.rejects(executeNativeClaims(input),/EXACT_LOCAL_MAINNET/);assert.equal(sends,0);assert.equal(reserves,0);
+ const executionPolicy={...nativeExecutionPackage(f.flow,f.nativeNow).executionPolicy,enabled:true};
+ await assert.rejects(executeNativeClaims({...input,executionPolicy:{...executionPolicy,authorizationHash:hash('different')}}),/EXACT_LOCAL_MAINNET/);
+ const rpc=async(m,p)=>m==='query'&&p.request_type==='view_access_key_list'?
+  {block_hash:'final-block',keys:[{access_key:{permission:{FunctionCall:{}}}}]}:f.rpc(m,p);
+ await assert.rejects(executeNativeClaims({...input,executionPolicy,rpc}),/NO_ACCESS_KEYS/);assert.equal(sends,0);
+ await assert.rejects(executeNativeClaims({...input,executionPolicy}),/AMBIGUOUS_SEND/);
+ assert.equal(reserves,1);assert.equal(sends,1);
 });
 test('native claim queue persists dispatch before send and refuses an ambiguous retry',async()=>{
  const f=fixture();

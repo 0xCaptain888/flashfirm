@@ -91,17 +91,19 @@ export async function handle(request,env){
    if((orgMatch[1]==='members'&&request.method!=='GET')||(orgMatch[1]!=='members'&&request.method!=='POST'))fail('METHOD_DENIED',405);
    return json(await organizationOperation(env,identity,orgMatch[1],request.method==='POST'?await body(request):{}));
   }
-  const flowMatch=path.match(/^\/([a-f0-9-]{36})\/flow(?:\/(plan|quality|privacy|inference|manifest|invoice|quote|verify|refund|native|native-verify))?$/);
+  const flowMatch=path.match(/^\/([a-f0-9-]{36})\/flow(?:\/(plan|quality|privacy|inference|manifest|invoice|quote|verify|refund|native|native-verify|readiness|review-package|execution-package))?$/);
   if(flowMatch){
    const [,id,op]=flowMatch;
-   if((op&&request.method!=='POST')||(!op&&request.method!=='GET'))fail('METHOD_DENIED',405);
-   if(op)await quota(env.DB,`write:${day}`,500);
+   const reading=!op||['readiness','review-package','execution-package'].includes(op);
+   if(request.method!==(reading?'GET':'POST'))fail('METHOD_DENIED',405);
+   if(!reading)await quota(env.DB,`write:${day}`,500);
    const adapter={db:env.DB,access:(o,f,a)=>access(env.DB,o,f,a),context:f=>caseContext(env,f),
     encrypt:(f,v)=>encrypt(env,`${f}:flow`,v),decrypt:(f,b)=>decrypt(env,`${f}:flow`,b),
     security:{authority:env.IDENTITY_AUTHORITY_KEY,releaseAuthority:env.SECRET_RELEASE_AUTHORITY_KEY,
-     inferenceAuthority:env.INFERENCE_VERIFIER_KEY,revokedSubjects:JSON.parse(env.REVOKED_IDENTITY_SUBJECTS??'[]')},
+     inferenceAuthority:env.INFERENCE_VERIFIER_KEY,nativeMainnetEnabled:env.NATIVE_MAINNET_ENABLED==='yes',
+     revokedSubjects:JSON.parse(env.REVOKED_IDENTITY_SUBJECTS??'[]')},
     verifiers:pinnedTaskVerifiers()};
-   return json(await taskFlowOperation(adapter,owner,id,op??'status',op?await body(request):{}));
+   return json(await taskFlowOperation(adapter,owner,id,op??'status',reading?{}:await body(request)));
   }
   if(path==='/model-status')return json({enabled:false,reason:'CLOUD_PAID_RUNS_DISABLED_KEEP_EXISTING_LOCAL_LEDGER',budget:{calls:10,maxCalls:12,reservedFen:1591,capFen:2000},snapshotOnly:true,recordedAt:'2026-11-02'});
   if(path==='/integration-status')return json({deployment:'CLOUDFLARE_FREE',workflows:true,teeConfigured:false,settlementEnabled:false,routeIds:[],independentOperatorsVerified:false});

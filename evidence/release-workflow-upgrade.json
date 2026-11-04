@@ -1,0 +1,21 @@
+{
+  "version": "flashfirm-release-workflow-upgrade/1",
+  "at": "2026-11-04T01:54:37.560Z",
+  "endpoint": "https://flashfirm-api.fluoridated-rhinoceros.workers.dev",
+  "workspaceId": "2e6eef91-3b81-47e5-bc3c-ea22f438a8df",
+  "network": "PUBLIC_WORKERS_D1",
+  "exactReportBound": true,
+  "blankReviewHandoffValidated": true,
+  "twoSyntheticReviewerResponsesValidated": true,
+  "readonlyChecklistPreservesEvents": true,
+  "missingExternalIdentityBlocksRelease": true,
+  "mainnetDefaultOff": true,
+  "closedWorkspaceRetainsEvidence": true,
+  "testTokenRevokedAndRejected": true,
+  "syntheticIdentityAndReviewFixture": true,
+  "independentHumanReview": false,
+  "confidentialLiveInference": false,
+  "financialTransactions": 0,
+  "paidCalls": 0,
+  "taskSettlementComplete": false
+}

@@ -5,6 +5,9 @@ if(process.env.FLASHFIRM_USE_SYSTEM_PROXY==='1'){
  setGlobalDispatcher(new ProxyAgent('http://127.0.0.1:7897'));
 }
 const targets=process.argv.includes('--pages')?[
+ ['https://0xcaptain888.github.io/flashfirm/upgrade.html','dist/upgrade.html'],
+ ['https://0xcaptain888.github.io/flashfirm/locked-escrow-sandbox.json','dist/locked-escrow-sandbox.json'],
+ ['https://0xcaptain888.github.io/flashfirm/release-workflow-upgrade.json','dist/release-workflow-upgrade.json'],
  ['https://0xcaptain888.github.io/flashfirm/delivery.html','dist/delivery.html'],
  ['https://0xcaptain888.github.io/flashfirm/revised-live-receipt.json','dist/revised-live-receipt.json'],
  ['https://0xcaptain888.github.io/flashfirm/cloudflare-case-upgrade.json','dist/cloudflare-case-upgrade.json']

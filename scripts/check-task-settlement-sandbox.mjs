@@ -7,6 +7,7 @@ import {hash} from '../src/protocol.mjs';
 import {checkTransaction} from '../src/treasury-policy.mjs';
 import {createHash} from 'node:crypto';
 const worker=await Worker.init(),gas=100000000000000n;
+const locked=process.argv.includes('--locked');
 try{
  const f=nativeFixture(),manifest=f.flow.manifest,root=worker.rootAccount;
  const actors={};
@@ -25,6 +26,17 @@ try{
   recipients,task_root:manifest.taskRoot,policy_hash:f.plan.payload.reviewPolicyHash,arbiter:actors.arbiter.accountId,
   deadline_ns:String(BigInt(head.header.timestamp_nanosec)+3600000000000n),
   appeal_window_ns:'60000000000',arbitration_window_ns:'60000000000'});
+ let lockTransactionHash=null;
+ if(locked){
+  const key=await contract.getKey();
+  const result=await contract.batch(contract).deleteKey(key.getPublicKey()).transact();
+  assert(result.succeeded);lockTransactionHash=result.result.transaction.hash;
+  const final=await worker.provider.sendJsonRpc('tx',{tx_hash:lockTransactionHash,
+   sender_account_id:contract.accountId,wait_until:'FINAL'});
+  assert.equal(final.final_execution_status,'FINAL');
+  const keys=await worker.provider.sendJsonRpc('query',{request_type:'view_access_key_list',finality:'final',account_id:contract.accountId});
+  assert.equal(keys.keys.length,0);
+ }
  const records=[];
  async function call(actor,method,args,deposit='0'){
   const result=await actor.callRaw(contract,method,args,{gas,attachedDeposit:BigInt(deposit)});
@@ -54,13 +66,14 @@ try{
   at:new Date().toISOString(),resultRoot:manifest.resultRoot,taskRoot:manifest.taskRoot,manifestHash:hash(manifest),
   recordedAiReport:true,syntheticIdentityAndReviewFixture:true,independentHumanReview:false,
   mainnetPayment:false,publicTestnetPayment:false,exactTransferBodiesVerified:true,wasmSha256:NATIVE_TREASURY_SHA256,
+  lockedContractVerified:locked,lockTransactionHash,
   budgetYocto:budget,obligations:mappings.map(m=>({...m,...parts.find(p=>p.obligationId===m.obligationId)})),
   transactions:records,closedStatus:status,
   scope:'Recorded AI report and synthetic signed semantic/identity fixtures bind one manifest to actual local sandbox transfers: three workers, protocol fee and buyer unused budget. No new AI call or external money movement.'};
  evidence.syntheticTrustRoots={identityAuthority:f.authority.publicKey};
  evidence.signedTestFlow=f.flow;evidence.syntheticReview=f.review;
  await mkdir(new URL('../.runtime/',import.meta.url),{recursive:true});
- await writeFile(new URL('../.runtime/same-task-sandbox.json',import.meta.url),JSON.stringify(evidence,null,2));
+ await writeFile(new URL(locked?'../.runtime/locked-escrow-sandbox.json':'../.runtime/same-task-sandbox.json',import.meta.url),JSON.stringify(evidence,null,2));
  console.log(JSON.stringify({status:'PASS',network:evidence.network,obligations:mappings.length,
-  reportHash:manifest.resultRoot,workerTransfers:3,feeTransfers:1,refundTransfers:1,mainnetPayment:false},null,2));
+  reportHash:manifest.resultRoot,workerTransfers:3,feeTransfers:1,refundTransfers:1,lockedContractVerified:locked,mainnetPayment:false},null,2));
 }finally{await worker.tearDown();}

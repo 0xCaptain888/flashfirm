@@ -11,6 +11,8 @@ import {reserveAciSpend} from '../src/aci-budget.mjs';
 import {computeSessionId,receiptTranscript,hashBody} from '@phala/aci-verifier';
 import {taskFixture} from '../test-support/task-flow.mjs';
 import {settlementManifest} from '../src/task-settlement.mjs';
+import {preflightConfidentialTeam} from '../src/confidential-team.mjs';
+import {aciAuditor} from '../src/aci-auditor.mjs';
 const pass=ids=>({verdict:{verified:true},lines:ids.map(id=>({id,status:'pass'}))});
 async function fixture(){
  const now=Date.now(),authority=identity(),task={instruction:'Analyze supplied private fixture',document:'Synthetic confidential input only.'},
@@ -128,4 +130,37 @@ test('confidential manifest needs exact certificates for all artifacts and separ
  const changed=structuredClone(proofs);changed[0].certificate.payload.artifactHash=hash('wrong-artifact');
  assert.throws(()=>acceptInferenceCertificates(f.flow,{proofs:changed},security,time),/EXACT_TASK/);
  assert.throws(()=>settlementManifest(f.flow,f.record,f.review,security,f.now+300001),/APPROVAL/);
+});
+test('whole confidential team preflight refuses partial budget, changed private input and reused approvals without a provider call',async()=>{
+ const f=await fixture(),verifier=identity();
+ const workers=['research-a','research-b','research-c'].map(workerId=>({workerId,model:f.input.model,
+  approval:seal({...f.input.approval.payload,workerId},f.authority)}));
+ const input={taskRoot:f.input.taskRoot,task:f.input.task,workers};
+ const state={policy:{enabled:true,capFen:2000,origin:'https://inference.phala.com',reservationFen:100},
+  original:{enabled:true,capFen:2000,maxCalls:12,maxTokens:1000},
+  ledger:{capFen:2000,reservedFen:1591,calls:Array.from({length:10},(_,i)=>({reserveFen:i?0:1591}))},
+  releaseAuthority:f.authority.publicKey,inferenceAuthority:verifier.publicKey,apiKeyPresent:true};
+ const before=JSON.stringify(state);
+ assert.throws(()=>preflightConfidentialTeam(input,state,f.now),/INSUFFICIENT_SHARED_BUDGET/);
+ const two={...input,workers:workers.slice(0,2)};
+ const checked=preflightConfidentialTeam(two,state,f.now);assert.equal(checked.callsRequired,2);
+ assert.equal(checked.privateInferenceVerified,false);assert.equal(checked.paidCalls,0);
+ assert.throws(()=>preflightConfidentialTeam({...two,task:{changed:true}},state,f.now),/RELEASE/);
+ assert.throws(()=>preflightConfidentialTeam(two,{...state,apiKeyPresent:false},f.now),/CONFIGURED_ACI/);
+ assert.equal(JSON.stringify(state),before);
+ state.ledger.calls[0].purpose='CONFIDENTIAL_ACI';state.ledger.calls[0].approvalHash=hash(workers[0].approval);
+ assert.throws(()=>preflightConfidentialTeam(two,state,f.now),/RECONCILE/);
+});
+test('auditor callback is fixed HTTPS and receives only public attestation fields',async()=>{
+ for(const url of ['http://auditor.example','https://user:password@auditor.example','https://auditor.example/?secret=x'])
+  assert.throws(()=>aciAuditor(url,'test'),/HTTPS_AUDITOR/);
+ let sent;
+ const call=aciAuditor('https://auditor.example/appraise','unit-only',async(url,init)=>{
+  sent=JSON.parse(init.body);assert.equal(init.redirect,'error');return new Response(JSON.stringify({audit:'synthetic'}));
+ });
+ await call({report:{attestation:{evidence:{quote:'public'}}},composeHash:hash('compose'),
+  workloadKeysetDigest:hash('keyset'),privateTask:'MUST NOT SEND'},
+  {model:'test-model',sessionIds:[hash('session')],privateInput:'MUST NOT SEND'});
+ assert.deepEqual(Object.keys(sent).sort(),['composeHash','model','report','sessionIds','workloadKeysetDigest']);
+ assert(!JSON.stringify(sent).includes('MUST NOT SEND'));
 });

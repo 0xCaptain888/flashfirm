@@ -16,6 +16,14 @@ export function allocationPolicy(p) {
     throw Error('INVALID_SIGNED_ALLOCATION_POLICY');
   return policy;
 }
+export function evaluationPolicy(p){
+ const v=p.evaluationPolicy;
+ if(v===undefined)return {maximumCriterionSpread:25,requireMarginalAgreement:true};
+ if(v?.version!=='flashfirm-evaluation-policy/1'||!Number.isInteger(v.maximumCriterionSpread)||
+  v.maximumCriterionSpread<0||v.maximumCriterionSpread>25||v.requireMarginalAgreement!==true)
+  throw Error('INVALID_SIGNED_EVALUATION_POLICY');
+ return v;
+}
 export function reportWorkers(receipt) {
   if (!verifyReport(receipt).valid) throw Error('INVALID_REPORT');
   return receipt.payload.workers.map(w => ({id:w.worker.id, artifact:w.analysis}));
@@ -68,6 +76,7 @@ export function validatePlan(envelope, record, review, now=Date.now()) {
       p.reviewerKeys.includes(w.key) || w.key===p.buyerKey || !hex(w.subject) ||
       !/^0x[a-f0-9]{40}$/.test(w.recipient??'') || /^0x0{40}$/.test(w.recipient))) throw Error('INVALID_WORKER_ROSTER');
   allocationPolicy(p);
+  evaluationPolicy(p);
   return {planHash:hash(envelope),plan:p,commitmentTiming:'POST_DELIVERY_PRE_EVALUATION',fundsMoved:false};
 }
 export function qualitySamples(receipt) {
@@ -127,16 +136,26 @@ export function assessTaskQuality(planEnvelope, receipt, evaluations) {
   // Normalizing prose catches simple formatting/case-copying. Paraphrase and
   // collusion remain challenges for external identity and independent reviewers.
   const fingerprints=workers.map(w=>hash(w.artifact.claims.map(c=>(c.statement+' '+c.quote).normalize('NFKC').toLowerCase().replace(/\s+/g,' ').trim()).sort()));
+  const disagreements=[],evaluationRules=evaluationPolicy(p);
+  for(const sample of samples)for(const criterion of p.rubric){
+    const values=evaluations.map(e=>e.payload.samples.find(s=>s.sampleHash===sample.sampleHash).criteria.find(c=>c.id===criterion.id).score);
+    if(Math.max(...values)-Math.min(...values)>evaluationRules.maximumCriterionSpread)
+      disagreements.push({type:'CRITERION_SPREAD',sampleHash:sample.sampleHash,criterionId:criterion.id,values});
+  }
   const score=s=>Math.round(scored.reduce((n,row)=>n+row[s],0)/scored.length);
   const rows=workers.map((w,i)=>{
     const duplicate=fingerprints.filter(f=>f===fingerprints[i]).length>1;
     const marginal=score(0)-score(i+1);
+    const signs=scored.map(row=>Math.sign(row[0]-row[i+1]));
+    if(evaluationRules.requireMarginalAgreement&&new Set(signs).size>1)
+      disagreements.push({type:'MARGINAL_DIRECTION',workerId:w.id,signs});
     return {id:w.id,duplicate,full:score(0),without:score(i+1),marginal,score:duplicate?0:Math.max(0,marginal),eligible:!duplicate&&marginal>0};
   });
   const issues=claims.filter(c=>evaluations.some(e=>e.payload.claims.find(v=>v.workerId===c.workerId&&v.claimIndex===c.claimIndex)?.verdict!=='SUPPORTED'));
   const policy=allocationPolicy(p),allocation=allocate(policy?.spendUnits??p.budgetUnits,rows,policy?.feeBps??200);
   if(policy){allocation.budget=p.budgetUnits;allocation.refund+=p.budgetUnits-policy.spendUnits;}
-  return {planHash,resultRoot:p.resultRoot,qualityHash:hash(evaluations),state:issues.length?'CHALLENGED':'ASSESSED',
+  return {planHash,resultRoot:p.resultRoot,qualityHash:hash(evaluations),state:issues.length?'CHALLENGED':disagreements.length?'REVIEWER_DISAGREEMENT':'ASSESSED',
+    disagreements,evaluationRules,
     issues:issues.map(c=>({workerId:c.workerId,claimIndex:c.claimIndex})),scores:rows,
     allocation,methods:[...new Set(evaluations.map(e=>e.payload.method))],
     scope:'Signed semantic judgments and separately evaluated full/removal samples. Not objective truth or exact Shapley value.'};

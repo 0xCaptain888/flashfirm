@@ -76,17 +76,26 @@ export function taskFlowStatus(flow) {
   const invoices=flow.invoices??[];
   const obligations=flow.manifest?.obligations;
   const paid=o=>invoices.some(i=>i.obligationId===o.id&&i.state==='VERIFIED'&&i.evidence?.paymentVerified===true);
-  const complete=!!obligations?.length&&obligations.every(paid);
-  const native=flow.nativeSettlement?.evidence?.verified===true;
+  const invoiceComplete=!!obligations?.length&&obligations.every(paid);
+  const proof=flow.nativeSettlement?.evidence,authorization=flow.nativeSettlement?.authorization;
+  const nativeBound=!!authorization&&proof?.verified===true&&proof.authorizationHash===hash(authorization)&&
+    proof.manifestHash===hash(flow.manifest)&&proof.taskRoot===flow.manifest?.taskRoot&&
+    proof.resultRoot===flow.manifest?.resultRoot&&proof.network===authorization.payload.network&&
+    proof.commonEscrowBudgetVerified===true;
+  const native=nativeBound&&proof.network==='testnet';
+  const mainnetNative=nativeBound&&proof.network==='mainnet'&&proof.mainnetPayment===true&&proof.lockedContractVerified===true;
+  const complete=invoiceComplete||mainnetNative;
   return {planHash:hash(flow.plan),state:!flow.manifest?'AWAITING_QUALITY_AND_IDENTITY':
-    native?'NATIVE_TESTNET_SETTLED':complete?'ALL_TASK_PAYMENTS_VERIFIED':
+    native?'NATIVE_TESTNET_SETTLED':mainnetNative?'NATIVE_MAINNET_ESCROW_SETTLED':complete?'ALL_TASK_PAYMENTS_VERIFIED':
     flow.manifest.payouts.length>0&&flow.manifest.payouts.every(p=>invoices.some(i=>i.workerId===p.id&&i.state==='VERIFIED'))?'WORKER_PAYOUTS_VERIFIED':
     invoices.some(i=>i.state==='REFUNDED')?'REFUND_REVIEW_REQUIRED':'AWAITING_PAYMENT',
     invoices:invoices.map(({quote,...i})=>i),manifest:flow.manifest??null,
     commitmentTiming:'POST_DELIVERY_PRE_EVALUATION',confidentialInferenceVerified:flow.inference?.confidentialInferenceVerified===true,
-    protocolFeePaymentVerified:!!obligations&&obligations.filter(o=>o.kind==='PROTOCOL_FEE').every(paid),
-    refundPaymentVerified:!!obligations&&obligations.filter(o=>o.kind==='UNSPENT_REFUND').every(paid),
+    protocolFeePaymentVerified:mainnetNative||!!obligations&&obligations.filter(o=>o.kind==='PROTOCOL_FEE').every(paid),
+    refundPaymentVerified:mainnetNative||!!obligations&&obligations.filter(o=>o.kind==='UNSPENT_REFUND').every(paid),
     taskSettlementComplete:complete,nativeTestnetSettlementVerified:native,
+    nativeMainnetSettlementVerified:mainnetNative,commonEscrowBudgetVerified:mainnetNative,
+    crossChainSettlementVerified:invoiceComplete,
     nativeSettlement:flow.nativeSettlement??null,
     crossChainLinkageTrust:'Both chains via pinned RPC plus signed 1Click quote and relay mapping'};
 }

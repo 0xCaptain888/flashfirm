@@ -2,6 +2,12 @@
 
 Updated November 3, 2026.
 
+**November 4 follow-up:** [Escrow, reviewer handoff and confidential teams](ESCROW-REVIEW-UPGRADE.md)
+adds a default-off native mainnet common-budget path, mandatory keyless treasury
+checks and whole-team inference preflight. The invoice-only and testnet-only
+limitations below describe the earlier version. Cross-chain batching and actual
+mainnet/private live acceptance remain pending.
+
 ## What is implemented and what actually ran
 
 The authenticated local service, Workers/D1 API and SDK accept one immutable report, buyer-signed evaluation plan, signed contribution claims, externally certified identities, reviewer decisions, semantic/removal evaluations and a locked allocation manifest. Mainnet worker payments, protocol fees and unused-budget returns are separate signed obligations. The task is not marked fully settled until **every** obligation has independently verified payment evidence.

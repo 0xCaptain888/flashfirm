@@ -3,7 +3,7 @@ export function pinnedTaskVerifiers(fetcher=fetch){
   const rpc=url=>async(method,params)=>{
     const allowed=url.includes('near.org')?['status','tx','EXPERIMENTAL_tx_status','block','query']:['eth_chainId','eth_getTransactionReceipt','eth_getBlockByNumber'];
     if(!allowed.includes(method))throw Error('READ_ONLY_RPC');
-    if(method==='query'&&!['view_code','call_function'].includes(params?.request_type))throw Error('READ_ONLY_QUERY');
+    if(method==='query'&&!['view_code','call_function','view_access_key_list'].includes(params?.request_type))throw Error('READ_ONLY_QUERY');
     if(method==='query'&&params.request_type==='call_function'&&
       (params.method_name!=='get_status'||params.args_base64!=='e30='))throw Error('READ_ONLY_TREASURY_VIEW');
     const response=await fetcher(url,{method:'POST',redirect:'error',signal:AbortSignal.timeout(20000),
