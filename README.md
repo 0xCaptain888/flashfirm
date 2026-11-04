@@ -138,3 +138,7 @@ The sample uses deterministic workers and fixture rubric coverage, not objective
 The original rejected OKX FunctionCall order remains locked. The later successful native transfer is separate evidence and does not authorize replay or a second payment. Retained failures, challenges and corrections remain available in the linked records.
 
 Product planning is maintained separately in `../flashfirm-prep`. Implementation began on **November 2, 2026**. Original planning and implementation history are preserved; event eligibility must be checked against organizer rules.
+
+## License
+
+FlashFirm is available under the [MIT License](LICENSE). Third-party dependencies retain their respective licenses.
