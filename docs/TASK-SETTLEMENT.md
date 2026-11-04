@@ -1,5 +1,11 @@
 # One task, from delivery to verified payment
 
+For real participants, use the [Chinese reviewer step-by-step guide](REVIEWER-PARTICIPATION.zh-CN.md).
+The loopback `review:console` signs actual blank human forms; `review:assemble`
+verifies separate responses without manufacturing identity certificates. The
+new authenticated GET `flow/payment-handoff` and SDK `paymentHandoff` produce
+read-only exact v2 invoice previews and per-source limits. They never open a wallet.
+
 **Settlement v2 / ACI update:** the original worker-only v1 route below is retained for compatibility. New buyer-signed v2 plans include fee and unused-budget obligations, a fixed-recipient native testnet execution adapter and per-artifact ACI certificate gates. See [the current implementation and evidence boundaries](SETTLEMENT-V2-ACI.md). Actual new five-transfer evidence is **local sandbox**, with explicitly synthetic identities.
 
 This upgrade adds a durable pipeline to both the local service and Cloudflare D1.
@@ -117,5 +123,8 @@ protection and places task flows on an operator reconciliation hold.
 
 Refund verification supports **native NEAR** receipt actions only. The archival
 RPC must expose full receipt bodies through `EXPERIMENTAL_tx_status`. Missing
-bodies, wrapped-token refunds or unlinked transactions stay unverified.
+bodies, wrapped-token balance claims or unlinked transactions stay unverified.
+The verifier freshly rechecks the exact original deposit, complete receipt
+reachability and successful native refund actions. A `wrap.near` withdrawal
+requires an exact amount and a deposit-originating ancestor `near_withdraw`.
 No real cross-chain refund has been executed or independently captured yet.

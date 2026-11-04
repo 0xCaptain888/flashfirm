@@ -26,6 +26,8 @@ await api(path+'/flow/plan','POST',f.plan);
 const pkg=await api(path+'/flow/review-package');validateReviewPackage(pkg);
 const before=await api(path+'/events'),checklist=await api(path+'/flow/readiness');
 assert.equal(checklist.next.id,'identity');assert.equal(checklist.mainnetEscrowEnabled,false);
+await api(path+'/flow/payment-handoff','GET',undefined,400);
+await api(path+'/flow/payment-handoff','POST',{},405);
 assert.equal((await api(path+'/events')).length,before.length);
 const evaluations=[];
 for(const [i,key]of f.reviewers.slice(0,2).entries()){
@@ -49,6 +51,7 @@ const evidence={version:'flashfirm-release-workflow-upgrade/1',at:new Date().toI
  workspaceId:firm.id,network:base.startsWith('https:')?'PUBLIC_WORKERS_D1':'LOCAL_WORKERS_D1',
  exactReportBound:true,blankReviewHandoffValidated:true,twoSyntheticReviewerResponsesValidated:true,
  readonlyChecklistPreservesEvents:true,missingExternalIdentityBlocksRelease:true,
+ paymentHandoffRejectsMissingManifest:true,paymentHandoffRejectsWrites:true,
  mainnetDefaultOff:true,closedWorkspaceRetainsEvidence:true,testTokenRevokedAndRejected:true,
  syntheticIdentityAndReviewFixture:true,independentHumanReview:false,confidentialLiveInference:false,
  financialTransactions:0,paidCalls:0,taskSettlementComplete:false};

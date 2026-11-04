@@ -36,7 +36,7 @@ jobs:
       - run: docker build -t flashfirm-smoke .
       - name: Verify packaged offline tools load without sending requests
         run: |
-          for tool in human-review prepare-native-settlement run-confidential-inference run-confidential-team; do
+          for tool in human-review prepare-native-settlement run-confidential-inference run-confidential-team assemble-human-reviews run-private-quotation task-envelope; do
             if docker run --rm --network none flashfirm-smoke node "scripts/$tool.mjs" > /tmp/flashfirm-tool.log 2>&1; then
               echo "Expected missing-argument refusal for $tool"
               exit 1

@@ -84,10 +84,10 @@ const server = http.createServer(async (req, res) => {
       const now=Date.now(),window=limiter.get(owner);
       if(!window||window.until<=now)limiter.set(owner,{until:now+60000,count:1});
       else if(++window.count>120){res.setHeader('Retry-After','60');return send(res,429,{error:'Request limit reached'});}
-      const flowPath=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)\/flow(?:\/(plan|quality|privacy|inference|manifest|invoice|quote|verify|refund|native|native-verify|readiness|review-package|execution-package))?$/);
+      const flowPath=url.pathname.match(/^\/api\/workspaces\/([a-f0-9-]+)\/flow(?:\/(plan|quality|privacy|inference|manifest|invoice|quote|verify|refund|native|native-verify|readiness|review-package|execution-package|payment-handoff))?$/);
       if(flowPath){
         const [,id,op]=flowPath;
-        const reading=!op||['readiness','review-package','execution-package'].includes(op);
+        const reading=!op||['readiness','review-package','execution-package','payment-handoff'].includes(op);
         if(req.method!==(reading?'GET':'POST'))return send(res,405,{error:'Method denied'});
         return send(res,200,await taskFlowOperation(flowAdapter,owner,id,op??'status',reading?{}:await body(req)));
       }
@@ -198,6 +198,7 @@ const server = http.createServer(async (req, res) => {
     }
     const staticFiles = { '/': ['index.html','text/html'], '/live.html':['live.html','text/html'], '/live.js':['live.js','text/javascript'], '/app.js': ['app.js','text/javascript'], '/style.css': ['style.css','text/css'], '/favicon.svg': ['favicon.svg','image/svg+xml'] };
     staticFiles['/workspace.html']=['workspace.html','text/html'];
+    staticFiles['/review-guide.html']=['review-guide.html','text/html'];
     staticFiles['/workspace.js']=['workspace.js','text/javascript'];
     staticFiles['/operations.css']=['operations.css','text/css'];
     staticFiles['/revised-live-receipt.json']=['../evidence/revised-live-receipt.json','application/json'];

@@ -1,5 +1,17 @@
 # Delivery status — 2026-11-04
 
+**Latest acceptance tooling:** [real reviewer participation steps](REVIEWER-PARTICIPATION.zh-CN.md)
+and [private TEE/mainnet/refund runbook](LIVE-ACCEPTANCE.zh-CN.md) now accompany a
+local-only reviewer browser console, signed-response assembly, single-release
+private quotation runner, read-only task invoice handoffs and stricter refund
+receipt-tree checks. A real free official-SDK ACI connection check passed five
+hardware/channel checks; key custody was skipped. No private input or paid
+inference request was sent. Real external participation, private live inference
+and task-bound mainnet/refund receipts are still missing.
+
+Current automated validation: **166/166 passed**. No additional paid model call,
+mainnet transaction or dedicated Phala instance restart was made.
+
 **Current upgrade:** [Escrow, review and confidential teams](ESCROW-REVIEW-UPGRADE.md)
 adds a default-off native NEAR mainnet common-budget adapter with mandatory
 keyless treasury verification, separately approved bounded gas sponsorship and

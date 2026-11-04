@@ -52,6 +52,9 @@ test('readiness and reviewer handoff are authenticated read-only routes with exa
   const readiness=await(await f.request(path+'/readiness')).json();assert.equal(readiness.next.id,'identity');
   assert.equal(readiness.mainnetEscrowEnabled,false);assert.equal(readiness.paidCalls,0);
   assert.equal((await f.request(path+'/readiness','POST',{})).status,405);
+  assert.equal((await f.request(path+'/payment-handoff')).status,400);
+  assert.equal((await f.request(path+'/payment-handoff','GET',undefined,f.b)).status,404);
+  assert.equal((await f.request(path+'/payment-handoff','POST',{})).status,405);
   assert.equal(f.DB.db.prepare('SELECT count(*) n FROM events').get().n,before);
  }finally{f.DB.db.close();}
 });

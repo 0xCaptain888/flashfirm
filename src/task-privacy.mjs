@@ -1,6 +1,7 @@
 import {createPublicKey,verify} from 'node:crypto';
 import {hash,validSeal,canonical} from './protocol.mjs';
 import {verifyPhalaEvidence,parseTdxQuote} from './phala-attestation.mjs';
+import {readBounded} from './live.mjs';
 // This proof contains commitments and encrypted-task result metadata, never the
 // private source documents. The relying service obtains the hardware verdict.
 export async function verifyTaskPrivacy(flow,{proof,approval},authority,fetcher=fetch,now=Date.now()){
@@ -17,19 +18,18 @@ export async function verifyTaskPrivacy(flow,{proof,approval},authority,fetcher=
     proof.approvalHash!==hash(approval)||proof.expected?.taskDigest!==p.privateTaskDigest||
     proof.expected?.dockerCompose!==a.dockerCompose||proof.expected?.appId!==a.appId)
     throw Error('TASK_BOUND_PRIVATE_QUOTATION_APPROVAL_REQUIRED');
-  const read=async response=>{
-    const text=await response.text();
-    if(!response.ok||text.length>2000000)throw Error('OFFICIAL_ATTESTATION_SERVICE_UNAVAILABLE');
-    return JSON.parse(text);
-  };
+  const read=async response=>JSON.parse(await readBounded(response,2000000));
   const hardware=await read(await fetcher('https://cloud-api.phala.com/api/v1/attestations/verify',{
     method:'POST',redirect:'error',signal:AbortSignal.timeout(30000),headers:{'Content-Type':'application/json'},
     body:JSON.stringify({hex:proof.bundle?.attestation?.quote})}));
   if(!/^[a-f0-9]{64}$/.test(hardware.checksum??''))throw Error('OFFICIAL_HARDWARE_REPORT_REQUIRED');
   const download=await fetcher('https://cloud-api.phala.com/api/v1/attestations/raw/'+hardware.checksum,
     {redirect:'error',signal:AbortSignal.timeout(30000)});
-  if(!download.ok)throw Error('OFFICIAL_QUOTE_DOWNLOAD_REQUIRED');
-  const raw=Buffer.from(await download.arrayBuffer());
+  if(!download.ok||Number(download.headers.get('content-length')??0)>32768)throw Error('BOUNDED_OFFICIAL_QUOTE_DOWNLOAD_REQUIRED');
+  const reader=download.body.getReader(),chunks=[];let size=0;
+  while(true){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;
+    if(size>32768){await reader.cancel();throw Error('BOUNDED_OFFICIAL_QUOTE_DOWNLOAD_REQUIRED');}chunks.push(Buffer.from(value));}
+  const raw=Buffer.concat(chunks);
   const verifiedAt=now+Math.max(0,Date.now()-started);
   if(a.expiresAt<=verifiedAt||p.expiresAt<=verifiedAt)throw Error('PRIVATE_APPROVAL_EXPIRED_DURING_VERIFICATION');
   const verification=verifyPhalaEvidence(proof.bundle,proof.expected,hardware,verifiedAt,raw);

@@ -91,10 +91,10 @@ export async function handle(request,env){
    if((orgMatch[1]==='members'&&request.method!=='GET')||(orgMatch[1]!=='members'&&request.method!=='POST'))fail('METHOD_DENIED',405);
    return json(await organizationOperation(env,identity,orgMatch[1],request.method==='POST'?await body(request):{}));
   }
-  const flowMatch=path.match(/^\/([a-f0-9-]{36})\/flow(?:\/(plan|quality|privacy|inference|manifest|invoice|quote|verify|refund|native|native-verify|readiness|review-package|execution-package))?$/);
+  const flowMatch=path.match(/^\/([a-f0-9-]{36})\/flow(?:\/(plan|quality|privacy|inference|manifest|invoice|quote|verify|refund|native|native-verify|readiness|review-package|execution-package|payment-handoff))?$/);
   if(flowMatch){
    const [,id,op]=flowMatch;
-   const reading=!op||['readiness','review-package','execution-package'].includes(op);
+   const reading=!op||['readiness','review-package','execution-package','payment-handoff'].includes(op);
    if(request.method!==(reading?'GET':'POST'))fail('METHOD_DENIED',405);
    if(!reading)await quota(env.DB,`write:${day}`,500);
    const adapter={db:env.DB,access:(o,f,a)=>access(env.DB,o,f,a),context:f=>caseContext(env,f),

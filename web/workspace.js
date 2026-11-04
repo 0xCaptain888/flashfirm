@@ -21,6 +21,7 @@ function controls() {
   $('#export-review-package').disabled=busy||!currentFlow?.flow?.plan||
     ['CONFIDENTIAL_INFERENCE','CONFIDENTIAL_QUOTATIONS'].includes(currentFlow?.flow?.plan?.payload.privacyMode);
   $('#export-native').disabled=busy||!currentFlow?.flow?.nativeSettlement;
+  $('#export-payment').disabled=busy||!currentFlow?.flow?.manifest||!!currentFlow?.flow?.nativeSettlement;
   $('#refresh-jobs').disabled = busy || !firm; $('#create button').disabled = busy;
 }
 function lock() {
@@ -154,8 +155,9 @@ for(const [id,enabled]of [['email-enable',true],['email-disable',false]])action(
 });
 action('#export-flow',async()=>{download(await api(`/${firm.id}/flow`),`flashfirm-evaluation-${firm.id}.json`);});
 action('#export-readiness',async()=>{const id=firm.id,value=await api(`/${id}/flow/readiness`);download(value,`flashfirm-checklist-${id}.json`);message('Current readiness checklist downloaded. No evidence was changed.');});
-action('#export-review-package',async()=>{const id=firm.id,value=await api(`/${id}/flow/review-package`);download(value,`flashfirm-review-${id}.json`);message('Public-source reviewer handoff downloaded. Share privately with the agreed reviewers; use npm run review:human to prepare and sign their actual judgments.');});
+action('#export-review-package',async()=>{const id=firm.id,value=await api(`/${id}/flow/review-package`);download(value,`flashfirm-review-${id}.json`);message('Public-source package downloaded. Each agreed reviewer runs npm run review:console on their own computer. Confirm plan and buyer fingerprints through a separate trusted channel.');});
 action('#export-native',async()=>{const id=firm.id,value=await api(`/${id}/flow/execution-package`);download(value,`flashfirm-escrow-preview-${id}.json`);message('Exact escrow transaction preview downloaded. Execution is disabled in the generated policy.');});
+action('#export-payment',async()=>{const id=firm.id,value=await api(`/${id}/flow/payment-handoff`);download(value,`flashfirm-payment-handoff-${id}.json`);message('Task-bound payment handoff downloaded. Submitted or expired orders are held for reconciliation; no wallet action was opened.');});
 action('#submit-flow',async()=>{
  const op=$('#flow-operation').value,value=$('#flow-input').value.trim();
  message('Validating this step. Chain and hardware proofs may take up to 90 seconds. No payment is initiated.');

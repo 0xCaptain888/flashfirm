@@ -61,7 +61,7 @@ export async function verifyTaskPayment(invoice,sourceHash,{nearRpc,evmRpc,statu
     if(relay.quoteResponse.quoteRequest?.[k]!==quote.quoteRequest[k])throw Error('RELAY_REQUEST_CHANGED');
   const origin=await verifyNearNative({hash:sourceHash,signer:invoice.sourceAccount,
     receiver:quote.quote.depositAddress,amount:invoice.originAmountYocto,notBefore:invoice.quoteBoundAt,
-    notAfter:relay.status==='REFUNDED'?Number.MAX_SAFE_INTEGER:Date.parse(quote.quote.deadline),maxFee:invoice.maximumFeeYocto},nearRpc);
+    notAfter:relay.status==='REFUNDED'?invoice.expiresAt:Date.parse(quote.quote.deadline),maxFee:invoice.maximumFeeYocto},nearRpc);
   const d=relay.swapDetails;
   if(!d?.originChainTxHashes?.some(t=>t.hash===sourceHash))throw Error('SOURCE_RELAY_LINK_REQUIRED');
   if(relay.status==='REFUNDED')return {state:'REFUND_PENDING',origin,relayStatus:'REFUNDED',refundedAmount:d.refundedAmount,
@@ -76,31 +76,72 @@ export async function verifyTaskPayment(invoice,sourceHash,{nearRpc,evmRpc,statu
 }
 // No acceptance based on balance changes or a relay REFUNDED label. Native
 // refunds must be visible as an exact successful action in a relay-linked NEAR
-// receipt tree. Wrapped-token refunds deliberately remain unsupported.
+// receipt tree. A wrap.near withdrawal is accepted only with its exact
+// deposit-originating ancestor; wrapped-token balances alone are insufficient.
 export async function verifyNativeRefund(invoice,refundHash,{nearRpc,status},verifySignature=verifyQuoteSignature){
+  if(invoice.state!=='REFUND_PENDING'||!invoice.sourceHash||invoice.evidence?.origin?.hash!==invoice.sourceHash||
+    invoice.evidence?.origin?.verified!==true)throw Error('VERIFIED_TASK_SOURCE_REQUIRED_BEFORE_REFUND');
   const relay=await status(invoice.quote),d=relay.swapDetails;
   if(relay.status!=='REFUNDED'||relay.quoteResponse?.signature!==invoice.quote.signature||
     !verifySignature(invoice.quote)||!verifySignature(relay.quoteResponse)||!units(d?.refundedAmount)||
     BigInt(d.refundedAmount)>BigInt(invoice.originAmountYocto)||!d.nearTxHashes?.includes(refundHash))
     throw Error('SIGNED_RELAY_LINKED_REFUND_REQUIRED');
+  if(canonical(relay.quoteResponse.quote)!==canonical(invoice.quote.quote))throw Error('SIGNED_RELAY_QUOTE_MISMATCH');
+  for(const key of ['amount','originAsset','destinationAsset','recipient','recipientType','refundTo','refundType','depositType','depositMode','dry','swapType','slippageTolerance'])
+    if(relay.quoteResponse.quoteRequest?.[key]!==invoice.quote.quoteRequest[key])throw Error('RELAY_REQUEST_CHANGED');
+  if(!d.originChainTxHashes?.some(t=>t.hash===invoice.sourceHash))throw Error('SOURCE_RELAY_LINK_REQUIRED');
+  const origin=await verifyNearNative({hash:invoice.sourceHash,signer:invoice.sourceAccount,
+    receiver:invoice.quote.quote.depositAddress,amount:invoice.originAmountYocto,notBefore:invoice.quoteBoundAt,
+    notAfter:invoice.expiresAt,maxFee:invoice.maximumFeeYocto},nearRpc);
   if((await nearRpc('status',[])).chain_id!=='mainnet')throw Error('WRONG_NEAR_NETWORK');
   const outcome=await nearRpc('EXPERIMENTAL_tx_status',{tx_hash:refundHash,sender_account_id:invoice.quote.quote.depositAddress,wait_until:'FINAL'});
   successful(outcome,refundHash);
-  const receipts=new Map((outcome.receipts??[]).map(r=>[r.receipt_id,r]));
+  if(!Array.isArray(outcome.receipts)||!Array.isArray(outcome.receipts_outcome)||
+    new Set(outcome.receipts.map(r=>r.receipt_id)).size!==outcome.receipts.length||
+    new Set(outcome.receipts_outcome.map(r=>r.id)).size!==outcome.receipts_outcome.length)
+    throw Error('FULL_UNIQUE_REFUND_RECEIPTS_REQUIRED');
+  const receipts=new Map(outcome.receipts.map(r=>[r.receipt_id,r])),
+    outcomes=new Map(outcome.receipts_outcome.map(r=>[r.id,r.outcome]));
+  const reachable=new Set(),parents=new Map(),queue=[...(outcome.transaction_outcome?.outcome?.receipt_ids??[])];
+  while(queue.length){
+    const id=queue.shift();if(reachable.has(id))continue;reachable.add(id);
+    for(const child of outcomes.get(id)?.receipt_ids??[]){if(!parents.has(child))parents.set(child,id);queue.push(child);}
+  }
+  const deposit=invoice.quote.quote.depositAddress;
+  const authorizedUnwrap=(id,amount)=>{
+    const visited=new Set();
+    for(let parent=parents.get(id);parent;parent=parents.get(parent)){
+      if(visited.has(parent))return false;visited.add(parent);
+      const body=receipts.get(parent),row=outcomes.get(parent),actions=body?.receipt?.Action?.actions;
+      if(body?.predecessor_id!==deposit||body.receiver_id!=='wrap.near'||row?.executor_id!=='wrap.near'||
+        !Array.isArray(actions)||actions.length!==1)continue;
+      const call=actions[0].FunctionCall;
+      if(call?.method_name!=='near_withdraw'||call.deposit!=='1')continue;
+      try{if(JSON.parse(Buffer.from(call.args,'base64').toString()).amount===amount)return true;}catch{}
+    }
+    return false;
+  };
   let refunded=0n;const evidence=[],seen=new Set();
   for(const row of outcome.receipts_outcome){
     const receipt=receipts.get(row.id);
-    if(!receipt||seen.has(row.id))continue;seen.add(row.id);
+    if(!receipt||!reachable.has(row.id)||seen.has(row.id))continue;seen.add(row.id);
     if(receipt.receiver_id!==invoice.sourceAccount||row.outcome.executor_id!==invoice.sourceAccount||
       !Object.hasOwn(row.outcome.status??{},'SuccessValue'))continue;
-    for(const action of receipt.receipt?.Action?.actions??[]){
-      if(action.Transfer&&units(action.Transfer.deposit)){refunded+=BigInt(action.Transfer.deposit);evidence.push(row.id);}
-    }
+    const actions=receipt.receipt?.Action?.actions;
+    if(!Array.isArray(actions)||actions.length!==1||Object.keys(actions[0]).join()!=='Transfer'||
+      !units(actions[0].Transfer?.deposit))continue;
+    const amount=actions[0].Transfer.deposit;
+    if(receipt.predecessor_id!==deposit&&!(receipt.predecessor_id==='wrap.near'&&authorizedUnwrap(row.id,amount)))continue;
+    refunded+=BigInt(amount);evidence.push(row.id);
   }
   if(refunded!==BigInt(d.refundedAmount)||!evidence.length)throw Error('EXACT_REFUND_RECEIPTS_REQUIRED');
   const block=await nearRpc('block',{block_id:outcome.transaction_outcome.block_hash});
   if(block.header.hash!==outcome.transaction_outcome.block_hash||
     Number(BigInt(block.header.timestamp_nanosec)/1000000n)<invoice.quoteBoundAt)throw Error('HISTORICAL_REFUND_REJECTED');
+  const refundAt=Number(BigInt(block.header.timestamp_nanosec)/1000000n);
+  if(refundAt<origin.at)throw Error('REFUND_PREDATES_TASK_SOURCE');
   return {state:'REFUNDED',refundVerified:true,refundHash,amount:String(refunded),receiptIds:evidence,
-    receiver:invoice.sourceAccount,scope:'Native NEAR receipt actions. RPC must expose receipt bodies; absent bodies fail closed.'};
+    origin,sourceHash:invoice.sourceHash,invoiceHash:invoice.invoiceHash,quoteHash:hash(invoice.quote),
+    receiver:invoice.sourceAccount,unreturnedPrincipalYocto:String(BigInt(invoice.originAmountYocto)-refunded),
+    refundAt,scope:'Reverified exact task deposit plus reachable native refund actions from the deposit or its exact wrapped-NEAR withdrawal. Shortfall is recorded, not assumed to be a fee.'};
 }

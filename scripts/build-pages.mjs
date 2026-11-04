@@ -22,7 +22,7 @@ await copyFile(path.join(root,'web/favicon.svg'),path.join(out,'favicon.svg'));
 await writeFile(path.join(out,'.nojekyll'),'');
 await writeFile(path.join(out,'receipt.json'),JSON.stringify(task.receipt,null,2));
 await copyFile(path.join(root,'web/style.css'),path.join(out,'style.css'));
-for (const file of ['treasury.html', 'treasury.bundle.js', 'treasury.bundle.js.LEGAL.txt', 'operations.css']) await copyFile(path.join(root,'web',file),path.join(out,file));
+for (const file of ['treasury.html', 'treasury.bundle.js', 'treasury.bundle.js.LEGAL.txt', 'operations.css','review-guide.html']) await copyFile(path.join(root,'web',file),path.join(out,file));
 // Content-address the wallet assets so cached scripts cannot lag behind new HTML.
 let treasuryHtml = await readFile(path.join(out, 'treasury.html'), 'utf8');
 for (const file of ['treasury.bundle.js', 'operations.css', 'style.css']) {

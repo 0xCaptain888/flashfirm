@@ -1,0 +1,70 @@
+{
+  "version": "flashfirm-aci-connection-observation/1",
+  "checkedAt": "2026-11-04T02:20:04.760Z",
+  "origin": "https://inference.phala.com",
+  "sdk": "@phala/aci-verifier 0.11.0",
+  "checks": [
+    {
+      "id": "id-1",
+      "status": "pass",
+      "title": "hardware quote verifies to the TEE vendor root and binds report_data"
+    },
+    {
+      "id": "id-2",
+      "status": "pass",
+      "title": "keyset JCS → digest → statement → report_data recomputed for our nonce"
+    },
+    {
+      "id": "id-3",
+      "status": "pass",
+      "title": "keyset not expired (now < not_after)"
+    },
+    {
+      "id": "id-4",
+      "status": "pass",
+      "title": "the running compose is measured into the quote (source provenance)"
+    },
+    {
+      "id": "id-5",
+      "status": "skip",
+      "title": "private-key custody satisfies the verifier policy"
+    },
+    {
+      "id": "id-6",
+      "status": "pass",
+      "title": "the channel actually used is bound to the attested keyset"
+    }
+  ],
+  "observedComposeHash": "f9c6a938bf10c9674d665d0a3327732f206e59411ac9dca4ae175ae18ef4d113",
+  "observedKeysetDigest": "sha256:5a0bf9116f25590608cea4ed687ebb9c8634f20ed7e8f35fdd9cabdc01b5156c",
+  "modelIds": [
+    "deepseek/deepseek-v4-flash-0731",
+    "meta-llama/llama-3.3-70b-instruct",
+    "qwen/qwen3.8-27b",
+    "z-ai/glm-5.2",
+    "qwen/qwen3.5-27b",
+    "qwen/qwen3.5-397b-a17b",
+    "z-ai/glm-5.3-flash",
+    "z-ai/glm-5.3",
+    "qwen/qwen3.6-27b",
+    "phala/qwen3.8-27b-uncensored",
+    "jaredpalmer/kev-4b",
+    "openai/gpt-oss-120b",
+    "phala/gemma-4-26b-a4b-uncensored",
+    "moonshotai/kimi-k2.6",
+    "google/gemma-4-31b-it",
+    "qwen/qwen3.6-35b-a3b",
+    "deepseek/deepseek-v4.1-flash-1017",
+    "z-ai/glm-5.1",
+    "deepseek/deepseek-v3.2",
+    "qwen/qwen3-vl-30b-a3b-instruct",
+    "qwen/qwen-2.5-7b-instruct",
+    "moonshotai/kimi-k3"
+  ],
+  "paidCalls": 0,
+  "privateInputReleased": false,
+  "modelInferenceExecuted": false,
+  "independentlyApprovedRelease": false,
+  "portableAttestationProof": false,
+  "scope": "Recorded free connection discovery by the operator. No raw attestation, channel transcript or inference receipt is published here. Key custody was skipped; observed hashes are not an approved release or trusted model appraisal."
+}

@@ -24,6 +24,7 @@ export class FlashFirmClient {
   taskReadiness(firmId){return this.request(`/${encodeURIComponent(firmId)}/flow/readiness`);}
   reviewPackage(firmId){return this.request(`/${encodeURIComponent(firmId)}/flow/review-package`);}
   executionPackage(firmId){return this.request(`/${encodeURIComponent(firmId)}/flow/execution-package`);}
+  paymentHandoff(firmId){return this.request(`/${encodeURIComponent(firmId)}/flow/payment-handoff`);}
   advanceTask(firmId,operation,envelope){
     if(!['plan','quality','privacy','inference','manifest','invoice','quote','verify','refund','native','native-verify'].includes(operation))throw Error('Unknown task-flow action');
     return this.request(`/${encodeURIComponent(firmId)}/flow/${operation}`,'POST',envelope);

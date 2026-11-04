@@ -9,12 +9,13 @@ import {acceptInferenceCertificates} from './aci-policy.mjs';
 import {taskReadiness} from './task-readiness.mjs';
 import {createReviewPackage} from './review-package.mjs';
 import {nativeExecutionPackage} from './native-execution-package.mjs';
+import {taskPaymentHandoff} from './task-payment-handoff.mjs';
 const q=(db,sql,...args)=>db.prepare(sql).bind(...args);
 // The adapter supplies authenticated access, encryption and operator-pinned
 // verifier functions. None of those trust roots can come from an HTTP payload.
 export async function taskFlowOperation(adapter,owner,firmId,operation,input={},now=Date.now()){
   const {db}=adapter;
-  const readOnly=['status','readiness','review-package','execution-package'].includes(operation);
+  const readOnly=['status','readiness','review-package','execution-package','payment-handoff'].includes(operation);
   const firm=await adapter.access(owner,firmId,!readOnly);
   const {record,review}=await adapter.context(firm);
   const row=await q(db,'SELECT * FROM task_flows WHERE firm=?',firmId).first();
@@ -24,6 +25,7 @@ export async function taskFlowOperation(adapter,owner,firmId,operation,input={},
   if(operation==='execution-package')return nativeExecutionPackage(flow??{},now);
   const readiness=()=>taskReadiness({record,review,flow,security:adapter.security,
     active:firm.state==='ACTIVE',recoveryHold},now);
+  if(operation==='payment-handoff')return taskPaymentHandoff(flow,readiness(),now);
   if(operation==='readiness')return readiness();
   if(operation==='status')return {flow,record,status:taskFlowStatus(flow),readiness:readiness(),
     samples:record?qualitySamples(record.receipt):[],

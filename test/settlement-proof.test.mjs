@@ -53,15 +53,48 @@ test('human-readable preview uses exact decimals and never invokes an unparsed w
  assert.equal(p.automaticWalletHandoff,false);assert.equal(p.contractCalls,0);
 });
 test('refund needs relay-linked exact successful native receipt bodies; a status or balance claim is insufficient',async()=>{
- const {invoice,quote}=data(),bound={...bindTaskQuote(invoice,quote,now,()=>true),state:'REFUND_PENDING'};
- const refundHash='2'.repeat(44),relay={status:'REFUNDED',quoteResponse:quote,swapDetails:{refundedAmount:'10000',nearTxHashes:[refundHash]}};
+ const {invoice,quote}=data(),bound={...bindTaskQuote(invoice,quote,now,()=>true),state:'REFUND_PENDING',
+  sourceHash,evidence:{origin:{hash:sourceHash,verified:true}}};
+ const refundHash='2'.repeat(44),relay={status:'REFUNDED',quoteResponse:quote,swapDetails:{refundedAmount:'10000',nearTxHashes:[refundHash],
+  originChainTxHashes:[{hash:sourceHash}]}};
+ const source={final_execution_status:'FINAL',status:{SuccessValue:''},transaction:{hash:sourceHash,signer_id:'payer.near',receiver_id:'deposit.near',
+  actions:[{Transfer:{deposit:invoice.originAmountYocto}}]},transaction_outcome:{block_hash:'source-block',outcome:{tokens_burnt:'1'}},
+  receipts_outcome:[{id:'source-receipt',outcome:{status:{SuccessValue:''},tokens_burnt:'2'}}]};
  const outcome={final_execution_status:'FINAL',status:{SuccessValue:''},transaction:{hash:refundHash},
-  transaction_outcome:{block_hash:'refund-block'},receipts:[{receipt_id:'receipt',receiver_id:'payer.near',
+  transaction_outcome:{block_hash:'refund-block',outcome:{receipt_ids:['receipt']}},receipts:[{receipt_id:'receipt',receiver_id:'payer.near',predecessor_id:'deposit.near',
    receipt:{Action:{actions:[{Transfer:{deposit:'10000'}}]}}}],
   receipts_outcome:[{id:'receipt',outcome:{executor_id:'payer.near',status:{SuccessValue:''}}}]};
- const nearRpc=async method=>method==='status'?{chain_id:'mainnet'}:method==='block'?{
-  header:{hash:'refund-block',timestamp_nanosec:String(BigInt(now+1000)*1000000n)}}:outcome;
+ const nearRpc=async(method,params)=>method==='status'?{chain_id:'mainnet'}:method==='block'?{
+  header:{hash:params.block_id,timestamp_nanosec:String(BigInt(now+1000)*1000000n)}}:method==='tx'?source:outcome;
  const verifiers={nearRpc,status:async()=>relay};
+ const proof=await verifyNativeRefund(bound,refundHash,verifiers,()=>true);
+ assert.equal(proof.refundVerified,true);assert.equal(proof.sourceHash,sourceHash);
+ assert.equal(proof.unreturnedPrincipalYocto,String(BigInt(invoice.originAmountYocto)-10000n));
+ outcome.receipts[0].predecessor_id='unrelated-donor.near';
+ await assert.rejects(verifyNativeRefund(bound,refundHash,verifiers,()=>true),/EXACT_REFUND/);
+ outcome.receipts[0].predecessor_id='deposit.near';
+ outcome.transaction_outcome.outcome.receipt_ids=[];
+ await assert.rejects(verifyNativeRefund(bound,refundHash,verifiers,()=>true),/EXACT_REFUND/);
+ outcome.transaction_outcome.outcome.receipt_ids=['receipt'];
+ outcome.receipts.push(structuredClone(outcome.receipts[0]));
+ await assert.rejects(verifyNativeRefund(bound,refundHash,verifiers,()=>true),/UNIQUE_REFUND/);
+ outcome.receipts.pop();
+ source.transaction.actions[0].Transfer.deposit='1';
+ await assert.rejects(verifyNativeRefund(bound,refundHash,verifiers,()=>true),/EXACT_NATIVE/);
+ source.transaction.actions[0].Transfer.deposit=invoice.originAmountYocto;
+ await assert.rejects(verifyNativeRefund({...bound,sourceHash:undefined},refundHash,verifiers,()=>true),/VERIFIED_TASK_SOURCE/);
+ const unchanged=structuredClone(relay.quoteResponse);
+ relay.quoteResponse=structuredClone(quote);relay.quoteResponse.quoteRequest.refundTo='attacker.near';
+ await assert.rejects(verifyNativeRefund(bound,refundHash,verifiers,()=>true),/RELAY_REQUEST_CHANGED/);
+ relay.quoteResponse=unchanged;
+ // Real native withdrawals can be emitted by wrap.near; require the exact
+ // reachable near_withdraw call from this deposit, never a generic gas refund.
+ outcome.receipts[0].predecessor_id='wrap.near';
+ await assert.rejects(verifyNativeRefund(bound,refundHash,verifiers,()=>true),/EXACT_REFUND/);
+ outcome.receipts.push({receipt_id:'unwrap',predecessor_id:'deposit.near',receiver_id:'wrap.near',
+  receipt:{Action:{actions:[{FunctionCall:{method_name:'near_withdraw',deposit:'1',args:Buffer.from(JSON.stringify({amount:'10000'})).toString('base64')}}]}}});
+ outcome.receipts_outcome.push({id:'unwrap',outcome:{executor_id:'wrap.near',status:{SuccessReceiptId:'receipt'},receipt_ids:['receipt']}});
+ outcome.transaction_outcome.outcome.receipt_ids=['unwrap'];
  assert.equal((await verifyNativeRefund(bound,refundHash,verifiers,()=>true)).refundVerified,true);
  outcome.receipts=[];
  await assert.rejects(verifyNativeRefund(bound,refundHash,verifiers,()=>true),/EXACT_REFUND/);

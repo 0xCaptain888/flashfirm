@@ -6,6 +6,8 @@ if(process.env.FLASHFIRM_USE_SYSTEM_PROXY==='1'){
 }
 const targets=process.argv.includes('--pages')?[
  ['https://0xcaptain888.github.io/flashfirm/upgrade.html','dist/upgrade.html'],
+ ['https://0xcaptain888.github.io/flashfirm/review-guide.html','dist/review-guide.html'],
+ ['https://0xcaptain888.github.io/flashfirm/aci-connection-discovery.json','dist/aci-connection-discovery.json'],
  ['https://0xcaptain888.github.io/flashfirm/locked-escrow-sandbox.json','dist/locked-escrow-sandbox.json'],
  ['https://0xcaptain888.github.io/flashfirm/release-workflow-upgrade.json','dist/release-workflow-upgrade.json'],
  ['https://0xcaptain888.github.io/flashfirm/delivery.html','dist/delivery.html'],
@@ -13,6 +15,7 @@ const targets=process.argv.includes('--pages')?[
  ['https://0xcaptain888.github.io/flashfirm/cloudflare-case-upgrade.json','dist/cloudflare-case-upgrade.json']
 ]:[
  ['https://flashfirm-api.fluoridated-rhinoceros.workers.dev/workspace.js','web/workspace.js'],
+ ['https://flashfirm-api.fluoridated-rhinoceros.workers.dev/review-guide','web/review-guide.html'],
  ['https://flashfirm-api.fluoridated-rhinoceros.workers.dev/operations.css','web/operations.css'],
  ['https://flashfirm-api.fluoridated-rhinoceros.workers.dev/revised-live-receipt.json','evidence/revised-live-receipt.json']
 ];

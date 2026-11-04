@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FlashFirm · 独立审核参与指南</title><link rel="icon" href="./favicon.svg"><link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./operations.css"></head>
+<body><aside class="sidebar"><a class="brand" href="https://0xcaptain888.github.io/flashfirm/">ϟ FlashFirm</a><nav><a class="nav active" href="./review-guide.html">审核参与指南</a><a class="nav" href="https://0xcaptain888.github.io/flashfirm/upgrade.html">验收进度</a></nav><div class="side-bottom">真人审核 · 本人签名<small>无需提供钱包私钥</small></div></aside>
+<main><header><span class="breadcrumb">FlashFirm / 独立审核</span><span class="pill">操作指南</span></header>
+<section class="page-heading"><p class="eyebrow">READ. QUESTION. SIGN.</p><h1>让独立审核<br>真正发生。</h1><p>邀请真实参与者，在他们自己的电脑上阅读材料、提出判断并签名。代码测试通过和不同公钥，都不能代替真实人的独立参与。</p><div class="toolbar"><a class="button primary" href="https://github.com/0xCaptain888/flashfirm/blob/main/docs/REVIEWER-PARTICIPATION.zh-CN.md">完整参与步骤 ↗</a><a class="button secondary" href="https://github.com/0xCaptain888/flashfirm/blob/main/docs/LIVE-ACCEPTANCE.zh-CN.md">TEE、付款与退款验收 ↗</a></div></section>
+<section class="panel allocation"><h2>先准备这些人</h2><p>预先固定 3 位独立审核者，至少 2 位提交实际签名；另需核实参与者实际控制关系与作者身份的外部核验方，以及预先固定的申诉仲裁者。审核可以提出质疑，不要求给出好评。</p><p class="muted">现有历史 Agent 由同一协调人控制，不能重新贴标签变成多个独立供应商。先做公开报告的真人事实审核；完整付款验收仍需要满足真实身份与作者规则的新任务。</p></section>
+<section class="panel allocation"><h2>审核者在自己电脑上操作</h2><ol>
+<li><p>安装 Node.js 22.13 或以上版本，下载代码并启动本机页面：</p><pre>git clone https://github.com/0xCaptain888/flashfirm.git
+cd flashfirm
+npm ci
+npm run review:console</pre></li>
+<li><p>打开终端显示的 <code>http://127.0.0.1:端口</code>。点击 <strong>Create my local review key</strong> 和 <strong>Download public key</strong>。仅把下载的公钥交给协调人和核验方；密钥文件留在本人电脑。</p></li>
+<li><p>公钥固定到计划后，接收公共审核包。通过另一个可信渠道向买方核对计划与买方公钥两个指纹，再点 <strong>Validate and open review</strong>。</p></li>
+<li><p>逐条阅读结论、引用和上下文，填写判断与理由；分别阅读完整/移除样本，填写每项分数与说明。所有判断从空白开始。可以下载草稿，稍后对同一包恢复。</p></li>
+<li><p>选择 APPROVE 或 CHALLENGE、说明理由，勾选本人独立完成后点 <strong>Sign and download my response</strong>。把响应文件发回约定渠道。工具不会向外发请求，也不会创建付款。</p></li>
+</ol><p class="muted">审核签名密钥与钱包无关。不要分享 <code>reviewer-key.json</code>、钱包助记词、访问令牌或整个运行目录。</p></section>
+<section class="panel allocation"><h2>协调人接收签名后</h2><p>下载精确审核包，分别提供可信指纹。取得至少 2 份真实响应后，用 <code>npm run review:assemble</code> 校验并组装，再向已认证的工作区提交 decision 与 quality。真实身份核验、作者签名、意见冲突、申诉和隐私证明仍会独立检查。</p><p>存在不支持的结论或评分冲突时应保留质疑并按政策处理。不能代签、删除不利结果或自动修改评分以放行资金。</p></section>
+<section class="panel allocation"><h2>当前真实验收边界</h2><p>本机审核工具、私密引用执行器、任务付款交接和严格退款核验已经实现。真实外部审核、机密推理、同任务主网付款与退款仍等待对应人员、审计与实际链上证据。</p><p>Phala ACI 的免费连接观察中，硬件、绑定、有效期、Compose 和 TLS 共 5 项通过；私钥保管项跳过。未执行私密模型推理。</p></section>
+<footer>FlashFirm <span>Proof before payout.</span></footer></main></body></html>
