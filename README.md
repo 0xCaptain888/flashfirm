@@ -1,138 +1,140 @@
 # FlashFirm
 
-**External acceptance tools:** real reviewers now have a loopback-only browser console to create their own off-chain review key, verify buyer/plan fingerprints, complete blank judgments and download signed responses. A private quotation runner verifies fresh hardware, application and approved platform measurements before one encrypted release. Task payment handoffs expose exact invoices, aggregate limits and missing obligations; submitted orders cannot produce a second payment preview. Refund verification now rechecks the exact task deposit and its linked native receipt tree. [具体审核参与步骤（中文）](docs/REVIEWER-PARTICIPATION.zh-CN.md) · [TEE、同任务付款与退款验收步骤](docs/LIVE-ACCEPTANCE.zh-CN.md) · [Browser guide](https://0xcaptain888.github.io/flashfirm/review-guide.html).
+**Temporary agent teams. Reproducible contribution allocation. Proof before payout.**
 
-**New free live check:** the official Phala ACI SDK passed hardware, nonce/keyset, expiry, measured Compose and actual TLS channel checks at `2026-11-04T02:20:04.760Z`. Key custody was skipped. No private material, inference request or paid call was sent. [Recorded connection observation](evidence/aci-connection-discovery.json) is not a portable attestation or independently approved model release. Actual external reviewers, confidential inference, same-task mainnet payment and cross-chain refund acceptance remain pending.
+FlashFirm coordinates scoped AI work, checks the delivered evidence, records review decisions and allocates a task budget before payment. It connects reports, sources, reviewer signatures and settlement receipts so another party can inspect why a contributor should be paid.
 
-**Current validation:** all **166 automated tests passed**, including loopback origin/CSRF isolation, signed reviewer response assembly, private-release rejection/replay fences, invoice handoffs and exact refund receipt linkage. These tests use explicit synthetic identities and hardware fixtures; they do not certify real human participation.
+**[Try the demo](https://0xcaptain888.github.io/flashfirm/)** · **[Explore the evidence](https://0xcaptain888.github.io/flashfirm/upgrade.html)** · [Development status](docs/DELIVERY-STATUS.md)
 
-**2026-11-04 escrow and review upgrade:** native NEAR mainnet common-budget execution is now implemented behind **default-off** operator and exact buyer/gas-sponsor approvals. Every verified mainnet escrow must have no access keys and exact final Transfer receipts for all worker, fee and unused-budget obligations. The workspace now shows fresh release blockers, next actions, an external reviewer handoff and exact escrow previews. Human review starts blank; large scoring disagreements block payout. A confidential team runner preflights the unchanged shared budget before any release. No new mainnet payment or private live inference is claimed. [Current guide and remaining acceptance](docs/ESCROW-REVIEW-UPGRADE.md).
+> Development prototype with real integration evidence. Independent reviewer participation, confidential model inference and a complete task-bound mainnet settlement still need live acceptance. The table below separates those gaps from completed tests.
 
-**Validation:** 160 automated tests pass. An actual [keyless local escrow run](evidence/locked-escrow-sandbox.json) completed five transfers and closed. The [updated public Workers/D1 acceptance](evidence/release-workflow-upgrade.json) passed with synthetic reviewers, zero financial transactions and zero paid calls; independent review and task-bound mainnet settlement remain pending.
+## Start here
 
-**2026-11-03 settlement v2 / ACI upgrade:** worker rewards, protocol fees and unspent-budget returns are now individually signed payment obligations under one report/review manifest. A native NEAR testnet claim keeper supports fixed-recipient automatic dispatch with durable replay fences; final receipt verification remains separate. A new **local NEAR sandbox** run tied the recorded AI report and synthetic review fixtures to five actual local transfers (three workers, fee, refund). The Node-only Phala ACI adapter verifies pinned SDK connections/receipts, requires external OS/KMS/model appraisal and shares the unchanged cumulative model budget. No task-bound mainnet payout or real private-model inference is claimed. [Implementation, APIs and remaining prerequisites](docs/SETTLEMENT-V2-ACI.md).
+| Experience | What you can inspect |
+| --- | --- |
+| [Interactive demo](https://0xcaptain888.github.io/flashfirm/) | A deterministic sample: team formation, source checks, failed-worker replacement and a signed allocation receipt. |
+| [Recorded AI analysis](https://0xcaptain888.github.io/flashfirm/live.html) | Real model output against pinned public OpenZeppelin source files. Viewing it makes no model calls. |
+| [Report and task dossier](https://0xcaptain888.github.io/flashfirm/delivery.html) | A traceable operator correction, exact quotations and preserved review history. |
+| [Testnet wallet console](https://0xcaptain888.github.io/flashfirm/treasury.html) | NEAR testnet wallet connection, treasury inspection and explicit transaction previews. |
+| [Public verification workspace](https://flashfirm-api.fluoridated-rhinoceros.workers.dev/) | Persistent report verification and task history. Requires a privately issued, expiring access token; paid cloud AI is disabled. |
+| [Reviewer guide](https://0xcaptain888.github.io/flashfirm/review-guide.html) | How an external person can inspect a package and return their own signed judgment. |
 
-**2026-11-03 upgrade — task-bound verification and cloud recovery:** the local service, public Workers/D1 backend and SDK now share a signed report → semantic/removal evaluation → externally certified roster → reviewed allocation → worker invoice → both-chain receipt pipeline. The public acceptance used explicitly synthetic reviewer judgments and did not move funds. A real encrypted D1 snapshot was restored into an isolated cloud database; all 21 business tables matched after the additive push migration, including the two empty new tables. Old sessions were revoked and restored payments held. [Task flow and signing](docs/TASK-SETTLEMENT.md) · [Organizations, notifications and recovery](docs/OPERATIONS-UPGRADE.md) · [Public acceptance](evidence/task-flow-public-upgrade.json) · [Actual cloud recovery](evidence/cloud-restore-upgrade.json) · [Upgrade demo](https://0xcaptain888.github.io/flashfirm/upgrade.html).
+## How it works
 
-The confidential quotation client verifies fresh hardware, exact application/platform measurements and external release approval before encrypting material. No private live trial or trusted model inference is claimed; the Phala instance remains off. Organization login and email delivery require identity/sender configuration. Foreground alerts and an encrypted background Web Push channel are implemented; private VAPID keys are configured, while organization sign-in and a real subscribed-device delivery test remain pending. The new native payment preview uses the wallet's own Send screen and preserves the original FunctionCall lock. A real task-bound mainnet payment and independently captured cross-chain refund remain pending.
+1. **Scope and assemble.** Match signed capability and price offers to a task budget.
+2. **Deliver with sources.** Bind worker outputs, source hashes and quotations to a signed report.
+3. **Review and challenge.** Pin reviewer identities and policy; collect judgments, compare full/removal samples and retain appeals.
+4. **Allocate and verify payment.** Produce worker, fee and unused-budget obligations; verify exact receipts before marking them paid.
+5. **Close with an audit trail.** Export the dossier and close the workspace while preserving evidence and spending limits.
 
-**Offsite recovery also verified:** GitHub's monitor/backup workflow succeeded, its encrypted artifact was downloaded back from GitHub, decrypted locally and restored with sessions and notifications disabled. The earlier 19-table snapshot remains recoverable after the additive push schema migration. [Downloaded artifact recovery](evidence/offsite-backup-upgrade.json). No private recovery key is stored in GitHub.
+The task protocol binds these stages to the same report and plan. The existing live demonstrations cover individual integrations; they do not yet establish a complete independently reviewed mainnet task.
 
-**Real NEAR → Arbitrum payment verified:** the approved **0.5 NEAR** mainnet demonstration delivered **1.861840 native USDC** to the user's Arbitrum One wallet. Exact final NEAR execution, the official signed 1Click quote/order mapping and the finalized Arbitrum ERC-20 receipt are recorded. Source gas: **0.0071149895375 NEAR**. [Both-chain evidence](evidence/mainnet-native-payment.json) · [Verification and scope](docs/NATIVE-NEAR-PAYMENT.md). Run `npm run mainnet:verify` offline or add `-- --online` to query both chains again. This demonstration is separate from the AI task and testnet treasury.
+## What has actually been verified
 
-**Task dossier upgrade:** one signed report, exact source locations, bound review rounds, persistent in-app reminders and portable exports now work through the local and free cloud code paths. A separately signed operator revision fixes the rejected quotation while preserving the original model output. All nine revised quotations pass exact checks; the revision still awaits a new review. Three pinned source files were actually retrieved again and matched against their complete recorded hashes. Zero extra model calls or financial transactions. [Task workflow and SDK](docs/TASK-DOSSIERS.md) · [Signed revision](evidence/revised-live-receipt.json) · [Source audit](evidence/source-audit.json).
+| Area | Recorded evidence | Remaining acceptance |
+| --- | --- | --- |
+| AI delivery and sources | Real public-source model runs; pinned-file hash checks; a separately signed correction passes all nine exact quotations. [Report](evidence/revised-live-receipt.json) · [Source audit](evidence/source-audit.json) | The later queued report remains `CHALLENGED`; its correction awaits new review. Exact quotations alone do not establish sound conclusions. |
+| NEAR testnet settlement | A real **0.001 NEAR payout**, challenge/arbitration and expiry refunds, and failed-transfer credit restoration followed by a successful retry. [Payout](evidence/testnet-settlement.json) · [Refunds](evidence/testnet-exceptions.json) · [Recovery](evidence/testnet-recovery.json) | Reviewers are development identities under one operator. Existing test treasuries are closed. |
+| Same-task allocation | Five actual **local sandbox** transfers: three workers, protocol fee and unused budget. A keyless local escrow variant also passed. [Sandbox](evidence/same-task-settlement-sandbox.json) · [Keyless escrow](evidence/locked-escrow-sandbox.json) | Uses a recorded report and synthetic review/identity fixtures. Same-task mainnet settlement is unverified; the mainnet adapter is default-off. |
+| Mainnet cross-chain payment | **0.5 NEAR → 1.861840 native USDC on Arbitrum One**, with exact source execution, signed 1Click order mapping and finalized destination receipt. [Both-chain evidence](evidence/mainnet-native-payment.json) | This was a separate payment demonstration. Task-bound mainnet payment and a real cross-chain refund remain unverified. |
+| TEE and inference | A real Phala TDX **public quotation task** passed hardware/application checks. A separate official-SDK ACI connection observation passed hardware/channel checks; key custody was skipped. [Public task](evidence/phala-public-task.json) · [Connection observation](evidence/aci-connection-discovery.json) | No confidential-input or trusted-model inference acceptance. The observation is not a portable attestation. The test instance is off; its retained disk remains billable. |
+| Public backend and recovery | Real Workers/D1/Workflows verification, persisted task history, isolated encrypted cloud restore and downloaded GitHub backup recovery. [Public acceptance](evidence/release-workflow-upgrade.json) · [Cloud restore](evidence/cloud-restore-upgrade.json) · [Offsite recovery](evidence/offsite-backup-upgrade.json) | Public acceptance used synthetic reviewers and made no payments or paid model calls. Organization login/email configuration and real-device notification delivery remain pending. |
 
-**Public acceptance passed:** the free Workers/D1/Workflows deployment completed actual report binding, revised-receipt background verification, duplicate prevention, mismatched-report rejection, persisted inbox acknowledgement, dossier export/reverification and closure/readback. [Remote upgrade evidence](evidence/cloudflare-case-upgrade.json). The verification checks report consistency and quotations; it does not approve quality or execute settlement.
+Latest recorded validation: **166 automated tests passed**, alongside CI checks for the managed container, Cloudflare integration, NEAR sandbox and Rust accounting/review logic. Synthetic identities and hardware fixtures test enforcement; they do not establish independent human participation or live confidential execution.
 
-**Real Phala TDX public-task proof recorded:** deploying a dedicated source-verifiable container succeeded after the earlier inline-source deployment refusals. A real test verified the hardware signature through the official API, nonce/task/key binding, exact measured Compose, RTMR3 replay, encrypted delivery and signed quotation results. The invented quotation was correctly challenged. The test instance is powered off; its retained disk still incurs storage charges. This is a historical public-document test, not attested AI inference or confidential production readiness. [Proof and reproduction](docs/PHALA-TEE.md).
-
-**Free public backend is live:** [Open cloud workspace](https://flashfirm-api.fluoridated-rhinoceros.workers.dev/) · [Deployment evidence](evidence/cloudflare-deployment.json). Workers + D1 + Workflows passed a real public write → signed-report verification → duplicate prevention → persistent read → workspace closure check on 2026-11-03. Access requires a privately issued, expiring token. Paid model calls remain disabled. [Access instructions and feature boundaries](docs/CLOUDFLARE-FREE.md).
-
-**2026-11-03 (Asia/Shanghai): real testnet failed-transfer recovery verified.** A 0.001 NEAR claim failed because its named recipient did not exist; the callback restored the entire credit. After creating that recipient, retry succeeded and the isolated treasury closed with zero remaining credit/pending balance. No account was deleted. [All transaction evidence](evidence/testnet-recovery.json). Reviewers remain development identities under one operator.
-
-**Verification lifecycle upgrade:** reviewer revocation and fresh account-key rechecks; persistent single-use TEE challenges; immutable destination requests with global transaction replay protection; backup restore invalidation; public-backend HTTPS smoke check and testnet recovery preflight. These local integration modules do not claim independent operators, a running enclave or a completed cross-chain transfer; the separate cloud workspace has the narrower scope described above. [Integration API and deployment guide](docs/EXTERNAL-INTEGRATIONS.md).
-
-**2026-11-02 integration upgrade:** real testnet challenge/arbitration refund and expiry refund completed; a four-call paid background job completed with a valid signed receipt and a `CHALLENGED` quality result. Cumulative conservative model reservation: **CNY 15.91 / 20**, 10 / 12 calls. [Upgrade evidence](evidence/integration-upgrade.json) · [Refund transactions](evidence/testnet-exceptions.json) · [Deployment and integration boundaries](docs/PRODUCTION-READINESS.md).
-
-Testnet settlement verified on 2026-11-02: buyer wallet funding → signed allocation → two development approvals → 60-second appeal window → fixed-recipient payout. **0.001 testnet NEAR paid; treasury Closed.** [Settlement evidence](evidence/testnet-settlement.json) · [Deployment evidence](evidence/testnet-deployment.json) · [Public configuration](evidence/testnet-config.json). Account deployment and role gas used faucet funds; the buyer explicitly signed task funding and allocation in Meteor. The rejected Full Access Key setup remains disabled.
-
-Temporary agent teams. Reproducible contribution allocation. Proof before payout.
-
-[Public demo](https://0xCaptain888.github.io/flashfirm/) · [Recorded real AI analysis](https://0xCaptain888.github.io/flashfirm/live.html) · [Testnet wallet console](https://0xCaptain888.github.io/flashfirm/treasury.html) · [Delivery status](docs/DELIVERY-STATUS.md)
-
-[Traceable report correction and task dossier](https://0xCaptain888.github.io/flashfirm/delivery.html)
-
-Development status: real model output + local durable backend + free public verification workspace + verified NEAR testnet settlement + recorded real Phala TDX quotation-task proof + a verified real NEAR-to-Arbitrum Intents payment. **Not a production service; independent operator quorum, confidential production TEE and automatic task-bound mainnet payouts remain unfinished. The TEE test instance is stopped.**
-
-**Original FunctionCall wallet attempt remains blocked:** its OKX response failed the exact-action check; the original saved order and signing lock are preserved. Later observations found no executed outgoing payment for that order. A separate native Transfer via OKX `sendMoney` completed the real payment documented above, with final wallet confirmation performed by the user. The original batch encoder issue is still unresolved. [Original runbook](docs/MAINNET-PAYMENT.md) · [Native payment evidence](docs/NATIVE-NEAR-PAYMENT.md) · [Historical signed dry quote](evidence/mainnet-route-preview.json).
-
-An isolated official OKX SDK roundtrip of all four FunctionCall actions passes the unchanged validator using a random test key, without broadcasting. That narrows the investigation but does not establish browser-wallet compatibility or recover the original rejected response.
-
-Wallet console: choose **Meteor Wallet** or **MyNearWallet**. For the Meteor extension, open the demo in the browser where it is installed. The connection targets NEAR testnet; no delegated key is requested and Meteor transactions explicitly disable function-call-key execution. Meteor buyer funding and allocation signatures have been verified; MyNearWallet signing is not verified.
-
-Meteor testnet connection has been verified in Chrome. The console includes a read-only **Load and verify project treasury** action. Six development roles were created under the independent faucet-funded account and the tested contract was atomically deployed and initialized. See [deployment procedure](docs/INDEPENDENT-TESTNET-DEPLOYMENT.md). The same-operator reviewers are not independent reviewers; deployment is not payment evidence.
+See [Delivery status](docs/DELIVERY-STATUS.md) for detailed evidence, earlier milestones and unresolved integration boundaries.
 
 ## Run locally
 
-Requires Node.js >=22.13 (24 recommended). Run `npm ci` to install the pinned wallet build tools and sandbox dependencies. JavaScript protocol tests still use Node built-ins; viewing evidence requires no API key.
+Requires **Node.js 22.13 or newer**; Node 24 is recommended.
 
 ```sh
+git clone https://github.com/0xCaptain888/flashfirm.git
+cd flashfirm
 npm ci
 npm start
-# http://127.0.0.1:43180
-npm test
-npm run verify -- /absolute/path/to/downloaded-receipt.json
-npm run operator:token
-# http://127.0.0.1:43180/workspace.html
 ```
 
-## What works in v0.1.0
+Open **http://127.0.0.1:43180**. The sample console and recorded evidence require no model API key.
 
-### Durable workspace and signed coordination
+To use the private local workspace, run this in a separate terminal:
 
-- SQLite transactions, ownership isolation, expiring/revocable operator tokens, request limits and durable activity history.
-- AES-256-GCM encrypted private documents and queued inputs; local key storage, not TEE.
-- Background receipt verification with idempotency keys, restart recovery, worker leases and stale-completion rejection. The bounded public-source AI job runner completed a real four-call queued run once, with budget preflight, heartbeats and no automatic retry of possibly charged work. Its signed result remains CHALLENGED because one exact quotation failed verification.
-- Workspace closure cancels unfinished work and removes active documents; it does not certify backup erasure or blockchain refunds.
-- Signed capability/price offers, complete-team selection under budget, pinned review keys, challenge/appeal verification, and signed-rubric counterfactual coverage scoring. These modules are not yet a live multi-operator marketplace. Treasury v0.2 separately enforces native NEAR account review and arbitration; mapping off-chain keys to those accounts remains external.
-- Integration client in `src/client.mjs` covers jobs, reviewer registration, pinned reviews, decisions and appeals. [Reviewer onboarding](docs/REVIEWER-ONBOARDING.md) includes offline, domain-separated signing with existing local testnet development keys; no wallet key export, access-key creation or transaction is performed. Account control is checked at a fresh finalized block, not certified as real-world independence. API instructions: [Operations](docs/OPERATIONS.md).
-- JavaScript protocol/integration tests, 11 pure Rust accounting tests, 5 appeal timing tests and actual local NEAR sandbox execution, including failed-transfer recovery and all three arbitration outcomes. New tests cover managed HTTP controls, encrypted backup/restore, reviewer account binding, Intents delivery checks and TEE claim rejection. Sandbox evidence: [evidence/sandbox.json](evidence/sandbox.json).
-- Testnet configuration validation and read-only deployed-bytecode/participant verification: [testnet instructions](docs/TESTNET.md). No deployment or payment is implied by an offline configuration check.
-- Browser testnet wallet console: connect/disconnect, verify deployed bytecode and roles, preview exact actions, request wallet signing, and verify final execution receipts. No function-call access key is requested. Meteor funding/allocation signing and the fixed-recipient testnet payout have final execution evidence.
-- Workspace UI shows durable job history, downloadable model receipts, budget status, safe idempotent recovery from uncertain submissions, and closed-workspace activity. Viewing it incurs no model calls.
+```sh
+npm run operator:token
+```
 
-### Live-model development milestone
+Open **http://127.0.0.1:43180/workspace.html** and read the token locally from `.runtime/operator-token.txt`. A replacement revokes the prior token; it expires after 24 hours.
 
-The local `/live.html` page now shows a **recorded real DeepSeek analysis**, separate from the fixture console. Three specialist calls reviewed pinned OpenZeppelin source files, and a further model review assessed their conclusions. The first snippet-limited critique was challenged; a complete-excerpt follow-up passed and preserves the earlier critique in its history. One follow-up attempt returned 429. There were five successful calls and one failed call in total.
+The local backend provides encrypted SQLite storage, ownership checks, durable jobs, idempotency and activity history. Its encryption key is stored locally; this is not TEE protection. Workspace closure cancels work and removes active documents, but does not certify backup erasure or trigger blockchain refunds.
 
-The original report's exact quotation checks and receipt verifier pass. A later four-call queued run produced a valid signed receipt but one quotation failed the exact-source gate, so its quality state is CHALLENGED even though model critique said PASS. The original report remains separately preserved. Cumulative reservations are now CNY 15.91 against the approved CNY 20 cap; actual provider charges have not been queried. This is not a security audit or independent operator quorum.
+### Verify and build
 
-### Fixture console
+```sh
+npm test
+npm run verify -- /absolute/path/to/downloaded-receipt.json
+npm run mainnet:verify
+npm run build:pages
+```
 
-- Responsive task console, persistent history, receipt viewer and capability dashboard.
-- Durable local task progression; refresh or restart and resume an unfinished run.
-- Three deterministic specialist workers and a source checker for a synthetic technical due-diligence case.
-- Fabricated-source detection, failed-agent exclusion and backup replacement.
-- Ed25519 signed work DAG and completion allocation receipt.
-- Deterministic leave-one-out **fixture rubric coverage** scoring, not exact Shapley values or a claim of objective fairness.
-- Integer largest-remainder allocation, 2% fee, zero payout for failed work, full refund for an empty eligible set.
-- Standalone Node verifier recomputing signatures, graph, sources, coverage and payouts.
-- Compiled NEAR treasury v0.2 with fixed recipients, two-of-three approval, appeal timing, challenge freeze, pinned arbiter, timeout, pull claims and callback recovery. The same bytecode completed a real testnet payout, two real testnet refund scenarios, and failed-transfer credit restoration followed by a successful retry. The remaining arbitration variants still have sandbox-only evidence.
+`mainnet:verify` checks the recorded payment offline; add `-- --online` to query both chains. Contract and sandbox checks are described in the [testnet guide](docs/TESTNET.md).
 
-## Honest boundaries
+GitHub Pages serves the public read-only build in `dist/`; it does not host the authenticated backend. Viewing Pages makes no paid model calls. Credentials, customer documents and `.runtime/` must never be committed or published.
 
-The main console is a **local fixture implementation**, not a production autonomous company or payment service. Its documents are synthetic and outputs deterministic. The separate live report uses real public source retrieval and model calls as described above. All fixture worker keys are owned by one coordinator; the live report is signed by one coordinator. Embedded keys establish consistency, not independent identity. The verifier is a separate entry point using the same reference implementation; it is not an independent security audit.
+## Integrate with another project
 
-The sample console's last state is `PLANNED`. Private workspace closure is local data/work management, not on-chain dissolution. The separate real testnet run used a buyer-signed 0.001 NEAR deposit and paid a fixed development worker. Its two reviewers share one operator; they checked the recorded receipt and exact allocation, not independently attested model quality. No mainnet funds, TEE or independent operator quorum are involved. The evidence checker receives no performance payout in the initial fixture model. Availability pay, sealed bids, live model-based counterfactual scoring, trusted identity onboarding and provider economics remain unfinished.
+The repository includes a Node/browser client in [`src/client.mjs`](src/client.mjs) for authenticated workspaces, report verification, review packages, task readiness, payment handoffs and portable exports.
 
-## Next integration milestones
+```js
+import { FlashFirmClient } from './src/client.mjs';
 
-1. Recruit independent evaluator operators and cover remaining arbitration outcomes on testnet. Payout, dispute/expiry refunds and failed-transfer recovery already have real evidence. Existing treasuries are Closed; do not fund or replay them.
-2. Exercise the model-based semantic/removal evaluator with an explicitly renewed call allowance. The current remaining two calls cannot cover its required four; the cumulative ¥20 cap is unchanged.
-3. Enroll an independent identity authority and real evaluator operators, then exercise the implemented report/review/allocation/invoice pipeline with their signatures. Current plan commitments occur after delivery and before evaluation.
-4. Exercise confidential quotations and the new official-SDK ACI adapter with real private input, reviewed release measurements, external OS/KMS/model appraisal and approved paid-provider access. Unit fixtures do not supply those external trust roots.
-5. Perform a newly approved task's own mainnet worker, fee and unused-budget obligations and capture a real cross-chain refund. Native fixed-recipient batch dispatch and all-obligation verification are implemented; the new five-transfer evidence is local sandbox only. No unattended mainnet wallet or mainnet escrow is introduced.
-6. Configure Cloudflare Access and an authenticated email sender, then verify real email and subscribed-device push delivery. VAPID keys are already configured. Scheduled offsite backups and isolated cloud recovery now have their own operational path. Preserve the private offline recovery key described in the operations guide.
+const client = new FlashFirmClient({
+  baseUrl: 'http://127.0.0.1:43180',
+  token: process.env.FLASHFIRM_OPERATOR_TOKEN
+});
 
-## GitHub Pages deployment
+// Set FLASHFIRM_WORKSPACE_ID to an existing workspace owned by this token.
+const readiness = await client.taskReadiness(process.env.FLASHFIRM_WORKSPACE_ID);
+console.log(readiness);
+```
 
-`npm run build:pages` creates `dist/`: an explicitly labeled read-only sample, recorded real AI report, signed receipts, sandbox/deployment evidence and the testnet wallet console. Asset URLs are relative. The console bundles public treasury configuration and only asks for signing after an explicit preview and user action. `.github/workflows/pages.yml` builds and deploys with GitHub Actions. The workflow requires no model credential. Pages does not host the authenticated Node backend and viewing the site invokes no paid models. Only public evidence is copied; `.runtime/` is never published.
+Use short-lived tokens supplied privately by a trusted backend. Never bundle a token into a public site. Writes are not automatically retried, and the workspace API does not sign or broadcast wallet transfers.
 
-The user-selected gateway is `https://api.apikey.fan/v1`. Authenticated discovery and real JSON completions have passed using `deepseek-flash`. The private local policy records the approved CNY 20 development cap and 12-call limit. `.env.example` documents settings, while the CLI and authenticated public-review job runner read ignored `.runtime` JSON configuration and share the cumulative reservation ledger. The queued runner requires room for all four calls; the current 10/12 calls and CNY 15.91/20 conservative reservations block a fresh complete run. Viewing the report never incurs model calls. Do not upload the runtime directory or credentials to GitHub.
+- [Workspace operations and SDK](docs/OPERATIONS.md)
+- [Task protocol, signatures and API](docs/TASK-SETTLEMENT.md)
+- [Settlement obligations and ACI integration](docs/SETTLEMENT-V2-ACI.md)
+- [Free public backend access and scope](docs/CLOUDFLARE-FREE.md)
 
-## Local API
+## Participate in live acceptance
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/api/status` | Explicit capability status |
-| GET / POST | `/api/tasks` | List / create local sample tasks |
-| GET | `/api/tasks/:id` | Read durable state |
-| POST | `/api/tasks/:id/advance` | Advance one persisted step |
-| GET | `/api/tasks/:id/receipt` | Download signed proof |
-| POST | `/api/verify` | Replay a supplied receipt |
+The next milestone is a genuinely independent task: delivery → review → allocation → actual payment, with every artifact bound to one task.
 
-Run only on loopback. This first server is not intended for public deployment. Host and Origin checks block cross-origin requests; private local signing keys and task state are stored in ignored `.runtime/`, with restricted filesystem permissions. No credentials belong in Git. Do not upload private customer files to this fixture app.
+- **Independent review:** recruit three real reviewers, pin their own keys and collect at least two signed responses under the conflict/appeal policy. Independent identity and authorship checks are also required. [具体参与步骤（中文）](docs/REVIEWER-PARTICIPATION.zh-CN.md)
+- **Confidential execution:** approve runtime/model measurements and complete a real private-input TEE/inference run with the required external trust checks. A public-document task or connection check is insufficient.
+- **Settlement and refunds:** execute a newly approved task's exact worker, fee and unused-budget obligations, then capture a real cross-chain refund. Do not fund closed treasuries or replay historical orders.
+- **Production operations:** configure organization authentication and a verified email sender; test email and subscribed-device push delivery.
 
-## Development provenance
+[TEE、同任务付款与退款验收步骤（中文）](docs/LIVE-ACCEPTANCE.zh-CN.md) · [Escrow and review requirements](docs/ESCROW-REVIEW-UPGRADE.md)
 
-Product planning exists separately in `../flashfirm-prep`. Implementation began during this development session on November 2, 2026. Preserve original planning and implementation history. Event dates and eligibility should be confirmed from organizer rules before submitting; this README does not assert eligibility.
+Paid AI remains bounded by the original cumulative **¥20 / 12-call** allowance. Recorded usage is **10 calls / ¥15.91 in conservative reservations**, not a provider invoice. The remaining allowance cannot cover a new complete four-call evaluation; paid retries and ledger resets are not automatic.
+
+## Documentation
+
+| Topic | Guides |
+| --- | --- |
+| Status and readiness | [Delivery status](docs/DELIVERY-STATUS.md) · [Production readiness](docs/PRODUCTION-READINESS.md) |
+| Reports and review | [Task dossiers](docs/TASK-DOSSIERS.md) · [Reviewer onboarding](docs/REVIEWER-ONBOARDING.md) · [Human participation](docs/REVIEWER-PARTICIPATION.zh-CN.md) |
+| Settlement | [Task protocol](docs/TASK-SETTLEMENT.md) · [Settlement v2 / ACI](docs/SETTLEMENT-V2-ACI.md) · [Keyless escrow](docs/ESCROW-REVIEW-UPGRADE.md) |
+| NEAR and wallets | [Testnet](docs/TESTNET.md) · [Deployment procedure](docs/INDEPENDENT-TESTNET-DEPLOYMENT.md) · [Verified native payment](docs/NATIVE-NEAR-PAYMENT.md) · [Original wallet attempt and recovery lock](docs/MAINNET-PAYMENT.md) |
+| Privacy | [Phala TEE proof and scope](docs/PHALA-TEE.md) · [Live acceptance runbook](docs/LIVE-ACCEPTANCE.zh-CN.md) |
+| Hosting and operations | [Free Cloudflare deployment](docs/CLOUDFLARE-FREE.md) · [Local operations](docs/OPERATIONS.md) · [Authentication, notifications and recovery](docs/OPERATIONS-UPGRADE.md) |
+| Models and integrations | [Model integration](docs/MODEL-INTEGRATION.md) · [External integrations](docs/EXTERNAL-INTEGRATIONS.md) |
+
+For current acceptance claims, start with **Delivery status**; individual runbooks also retain earlier checkpoints and failed attempts.
+
+## Trust boundaries and provenance
+
+The sample uses deterministic workers and fixture rubric coverage, not objective fairness or exact Shapley values. Current live agents share one coordinator. Signatures establish key possession and artifact consistency, not real-world independence, expertise or correctness. The verifier uses the same reference implementation and is not an independent security audit.
+
+The original rejected OKX FunctionCall order remains locked. The later successful native transfer is separate evidence and does not authorize replay or a second payment. Retained failures, challenges and corrections remain available in the linked records.
+
+Product planning is maintained separately in `../flashfirm-prep`. Implementation began on **November 2, 2026**. Original planning and implementation history are preserved; event eligibility must be checked against organizer rules.
